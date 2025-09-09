@@ -204,3 +204,11 @@ export function calculateConfidence(property: MockProperty): number {
 
   return Math.min(99.8, Math.max(85.0, confidence))
 }
+
+// Dynamic constraint evaluation (to be used with real data)
+// const constraints = {
+//   article4Direction: await isInArticle4Area(postcode), // your real scraper/API
+//   conservationArea: await isInConservationArea(lat, lon), // your ArcGIS API
+//   listedBuilding: await isListedBuilding(lat, lon), // your real API
+//   // ...other constraints
+// }

@@ -1,4 +1,3 @@
-import type { MockProperty } from "./mock-data"
 import type { PlanningCheck } from "@/components/planning-result"
 
 // Rule severity levels
@@ -11,7 +10,7 @@ export interface PlanningRule {
   description: string
   severity: RuleSeverity
   priority: number // Higher number = higher priority
-  evaluate: (property: MockProperty) => RuleResult
+  evaluate: (property: PropertyForRules) => RuleResult
 }
 
 // Result of evaluating a rule
@@ -32,6 +31,26 @@ export interface RulesEngineResult {
   ruleResults: RuleResult[]
 }
 
+// Property constraints interface
+export interface PropertyConstraints {
+  article4Direction: boolean
+  conservationArea: boolean
+  listedBuilding: boolean
+  nationalPark: boolean
+  aonb: boolean
+  worldHeritage: boolean
+  tpo: boolean
+  floodZone: boolean
+}
+export interface PropertyForRules {
+  address: string
+  postcode: string
+  localAuthority: string
+  propertyType: "house" | "flat" | "maisonette" | "commercial"
+  constraints: PropertyConstraints
+  notes?: string
+}
+
 // Core planning rules
 export const planningRules: PlanningRule[] = [
   // BLOCKING RULES (Completely remove PD rights)
@@ -41,7 +60,7 @@ export const planningRules: PlanningRule[] = [
     description: "Article 4 Directions remove specific Permitted Development rights",
     severity: "blocking",
     priority: 100,
-    evaluate: (property: MockProperty): RuleResult => ({
+    evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.article4Direction,
       status: property.constraints.article4Direction ? "fail" : "pass",
       message: property.constraints.article4Direction
@@ -60,7 +79,7 @@ export const planningRules: PlanningRule[] = [
     description: "Listed buildings require Listed Building Consent for alterations",
     severity: "blocking",
     priority: 95,
-    evaluate: (property: MockProperty): RuleResult => ({
+    evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.listedBuilding,
       status: property.constraints.listedBuilding ? "fail" : "pass",
       message: property.constraints.listedBuilding
@@ -79,7 +98,7 @@ export const planningRules: PlanningRule[] = [
     description: "Flats and maisonettes have severely limited Permitted Development rights",
     severity: "blocking",
     priority: 90,
-    evaluate: (property: MockProperty): RuleResult => {
+    evaluate: (property: PropertyForRules): RuleResult => {
       const isFlat = property.propertyType === "flat" || property.propertyType === "maisonette"
       return {
         applies: isFlat,
@@ -102,7 +121,7 @@ export const planningRules: PlanningRule[] = [
     description: "Conservation areas have additional planning controls",
     severity: "restrictive",
     priority: 80,
-    evaluate: (property: MockProperty): RuleResult => ({
+    evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.conservationArea,
       status: property.constraints.conservationArea ? "warning" : "pass",
       message: property.constraints.conservationArea
@@ -121,7 +140,7 @@ export const planningRules: PlanningRule[] = [
     description: "World Heritage Sites have the highest level of protection",
     severity: "restrictive",
     priority: 85,
-    evaluate: (property: MockProperty): RuleResult => ({
+    evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.worldHeritage,
       status: property.constraints.worldHeritage ? "warning" : "pass",
       message: property.constraints.worldHeritage
@@ -140,7 +159,7 @@ export const planningRules: PlanningRule[] = [
     description: "National Parks have enhanced planning controls",
     severity: "restrictive",
     priority: 75,
-    evaluate: (property: MockProperty): RuleResult => ({
+    evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.nationalPark,
       status: property.constraints.nationalPark ? "warning" : "pass",
       message: property.constraints.nationalPark
@@ -159,7 +178,7 @@ export const planningRules: PlanningRule[] = [
     description: "AONBs have landscape protection measures",
     severity: "restrictive",
     priority: 70,
-    evaluate: (property: MockProperty): RuleResult => ({
+    evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.aonb,
       status: property.constraints.aonb ? "warning" : "pass",
       message: property.constraints.aonb
@@ -179,7 +198,7 @@ export const planningRules: PlanningRule[] = [
     description: "TPOs protect important trees and may affect development",
     severity: "advisory",
     priority: 60,
-    evaluate: (property: MockProperty): RuleResult => ({
+    evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.tpo,
       status: property.constraints.tpo ? "warning" : "pass",
       message: property.constraints.tpo
@@ -198,7 +217,7 @@ export const planningRules: PlanningRule[] = [
     description: "Flood zones may have development restrictions",
     severity: "advisory",
     priority: 50,
-    evaluate: (property: MockProperty): RuleResult => ({
+    evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.floodZone,
       status: property.constraints.floodZone ? "warning" : "pass",
       message: property.constraints.floodZone
@@ -221,7 +240,7 @@ export class PlanningRulesEngine {
   }
 
   // Evaluate all rules for a property
-  evaluate(property: MockProperty): RulesEngineResult {
+  evaluate(property: PropertyForRules): RulesEngineResult {
     const ruleResults: RuleResult[] = []
     const primaryReasons: string[] = []
     let baseConfidence = 95.0
@@ -274,7 +293,7 @@ export class PlanningRulesEngine {
   }
 
   // Get detailed explanation for the decision
-  generateSummary(property: MockProperty, result: RulesEngineResult): string {
+  generateSummary(property: PropertyForRules, result: RulesEngineResult): string {
     if (result.hasPermittedDevelopmentRights) {
       const restrictiveRules = result.ruleResults.filter(
         (ruleResult, index) => ruleResult.applies && this.rules[index].severity === "restrictive",

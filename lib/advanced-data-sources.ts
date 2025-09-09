@@ -1,4 +1,5 @@
 import type { GeoJSON } from "geojson"
+import { isInConservationArea } from "./conservation-area-api"
 
 export interface DataSource {
   id: string
@@ -95,7 +96,7 @@ export const DATA_SOURCES: DataSource[] = [
   {
     id: "os_data",
     name: "Ordnance Survey Data Hub",
-    baseUrl: "https://api.os.uk/features/v1",
+    baseUrl: "https://api.os.uk/search/places/v1",
     rateLimit: 600,
     reliability: 0.98,
     lastUpdated: new Date(),
@@ -161,7 +162,7 @@ class RateLimiter {
 
 export const rateLimiter = new RateLimiter()
 
-// Advanced data fetcher with fallbacks
+// Advanced data fetcher with real API calls
 export class AdvancedDataIntegration {
   private sources: DataSource[]
 
@@ -174,7 +175,6 @@ export class AdvancedDataIntegration {
     const cached = dataCache.get(cacheKey)
     if (cached) return cached
 
-    // Try multiple sources in order of reliability
     for (const source of this.sources) {
       if (source.status !== "active") continue
       if (!rateLimiter.canMakeRequest(source.id, source.rateLimit)) continue
@@ -183,7 +183,7 @@ export class AdvancedDataIntegration {
         const data = await this.fetchFromSource(source, address)
         if (data) {
           rateLimiter.recordRequest(source.id)
-          dataCache.set(cacheKey, data, 30) // Cache for 30 minutes
+          dataCache.set(cacheKey, data, 30)
           return data
         }
       } catch (error) {
@@ -195,94 +195,88 @@ export class AdvancedDataIntegration {
     return null
   }
 
+  // --- Real API calls for OS Data and Planning Portal ---
   private async fetchFromSource(source: DataSource, address: string): Promise<PropertyData | null> {
-    // Mock implementation - in real app, this would make actual API calls
-    console.log(`[v0] Fetching from ${source.name} for address: ${address}`)
+    if (source.id === "os_data") {
+      // Ordnance Survey Places API
+      const apiKey = process.env.OS_PLACES_API_KEY
+      if (!apiKey) throw new Error("Missing OS_PLACES_API_KEY")
+      const url = `${source.baseUrl}/find?query=${encodeURIComponent(address)}&key=${apiKey}`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error("OS API error")
+      const data = await res.json()
+      if (!data.results || data.results.length === 0) return null
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000 + 500))
+      const result = data.results[0].DPA
+      const lat = parseFloat(result.LATITUDE)
+      const lon = parseFloat(result.LONGITUDE)
 
-    // Return enhanced mock data based on source
-    return this.generateEnhancedMockData(address, source)
-  }
+      // --- Conservation Area Real-Time Check ---
+      let constraints: PlanningConstraint[] = []
+      const inConservation = await isInConservationArea(lat, lon)
+      if (inConservation) {
+        constraints.push({
+          id: "conservation_area",
+          type: "conservation_area",
+          name: "Conservation Area",
+          description: "This property is within a designated conservation area.",
+          severity: "restrictive",
+          confidence: 0.99,
+          source: "ArcGIS Conservation Areas",
+          lastVerified: new Date(),
+          geometry: undefined,
+          metadata: {},
+        })
+      }
 
-  private generateEnhancedMockData(address: string, source: DataSource): PropertyData {
-    const mockConstraints: PlanningConstraint[] = []
-
-    // Generate realistic constraints based on address
-    if (address.toLowerCase().includes("bath")) {
-      mockConstraints.push({
-        id: "ca_bath_001",
-        type: "conservation_area",
-        name: "Bath City Centre Conservation Area",
-        description: "Historic city centre with strict design controls",
-        severity: "restrictive",
-        confidence: 0.95,
-        source: source.name,
-        lastVerified: new Date(),
-        metadata: {
-          designation_date: "1987-03-15",
-          authority: "Bath and North East Somerset Council",
-        },
-      })
+      return {
+        uprn: result.UPRN || "",
+        address: result.ADDRESS || address,
+        postcode: result.POSTCODE || "",
+        localAuthority: result.LOCAL_CUSTODIAN_CODE_DESCRIPTION || "",
+        coordinates: [lat, lon],
+        propertyType: result.BLPU_STATE || "unknown",
+        constraints,
+        planningHistory: [],
+        lastUpdated: new Date(),
+      }
     }
 
-    if (address.toLowerCase().includes("london")) {
-      mockConstraints.push({
-        id: "a4_london_001",
-        type: "article_4",
-        name: "Article 4 Direction - Single Dwelling Houses",
-        description: "Removes permitted development rights for extensions",
-        severity: "blocking",
-        confidence: 0.88,
-        source: source.name,
-        lastVerified: new Date(),
-        metadata: {
-          direction_date: "2019-05-30",
-          authority: "Greater London Authority",
-        },
-      })
-    }
-
-    return {
-      uprn: `${Math.floor(Math.random() * 1000000000)}`,
-      address,
-      postcode: this.extractPostcode(address) || "SW1A 1AA",
-      localAuthority: this.getLocalAuthority(address),
-      coordinates: [51.5074, -0.1278], // Default to London
-      propertyType: "residential",
-      constraints: mockConstraints,
-      planningHistory: this.generatePlanningHistory(),
-      lastUpdated: new Date(),
-    }
-  }
-
-  private extractPostcode(address: string): string | null {
-    const postcodeRegex = /[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}/gi
-    const match = address.match(postcodeRegex)
-    return match ? match[0] : null
-  }
-
-  private getLocalAuthority(address: string): string {
-    if (address.toLowerCase().includes("bath")) return "Bath and North East Somerset Council"
-    if (address.toLowerCase().includes("london")) return "Greater London Authority"
-    if (address.toLowerCase().includes("manchester")) return "Manchester City Council"
-    return "Local Planning Authority"
-  }
-
-  private generatePlanningHistory(): PlanningApplication[] {
-    return [
-      {
-        reference: `${new Date().getFullYear()}/0${Math.floor(Math.random() * 9999)}`,
-        description: "Single storey rear extension",
-        status: "approved",
-        submittedDate: new Date(2023, 5, 15),
-        decisionDate: new Date(2023, 7, 20),
-        applicationType: "householder",
-        developmentType: "extension",
+    if (source.id === "planning_portal") {
+      // Example: Planning Portal API (replace with real endpoint and params)
+      const url = `${source.baseUrl}/applications?address=${encodeURIComponent(address)}`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error("Planning Portal API error")
+      const data = await res.json()
+      // Map data to PlanningApplication[]
+      const planningHistory = (data.applications || []).map((app: any) => ({
+        reference: app.reference,
+        description: app.description,
+        status: app.status,
+        submittedDate: new Date(app.submittedDate),
+        decisionDate: app.decisionDate ? new Date(app.decisionDate) : undefined,
+        applicationType: app.applicationType,
+        developmentType: app.developmentType,
         source: "Planning Portal",
-      },
-    ]
+      }))
+      // You may want to merge this with OS data for full PropertyData
+      return {
+        uprn: "",
+        address,
+        postcode: "",
+        localAuthority: "",
+        coordinates: [0, 0],
+        propertyType: "",
+        constraints: [],
+        planningHistory,
+        lastUpdated: new Date(),
+      }
+    }
+
+    // Add more real API integrations for other sources here...
+
+    // Fallback: return null if no real integration
+    return null
   }
 
   async getDataSourceStatus(): Promise<DataSource[]> {
@@ -293,15 +287,19 @@ export class AdvancedDataIntegration {
   }
 
   async validateAddress(address: string): Promise<boolean> {
-    // Enhanced address validation using multiple sources
     const cacheKey = `validate:${address.toLowerCase()}`
     const cached = dataCache.get(cacheKey)
     if (cached !== null) return cached
 
-    // Mock validation - in real app, use OS Places API or similar
-    const isValid = address.length > 10 && /\d/.test(address)
+    // Example: Use OS Places API for validation
+    const apiKey = process.env.OS_PLACES_API_KEY
+    if (!apiKey) return false
+    const url = `https://api.os.uk/search/places/v1/find?query=${encodeURIComponent(address)}&key=${apiKey}`
+    const res = await fetch(url)
+    if (!res.ok) return false
+    const data = await res.json()
+    const isValid = data.results && data.results.length > 0
     dataCache.set(cacheKey, isValid, 60)
-
     return isValid
   }
 }
