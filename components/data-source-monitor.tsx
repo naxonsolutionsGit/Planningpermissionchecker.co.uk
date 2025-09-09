@@ -27,7 +27,7 @@ export function DataSourceMonitor() {
 
   useEffect(() => {
     fetchSourceStatus()
-    const interval = setInterval(fetchSourceStatus, 30000) // Refresh every 30 seconds
+    const interval = setInterval(fetchSourceStatus, 10000) // Refresh every 30 seconds
     return () => clearInterval(interval)
   }, [])
 

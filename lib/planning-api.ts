@@ -1,12 +1,17 @@
 import type { PlanningResult, PlanningCheck } from "@/components/planning-result"
-import { findPropertyByAddress, mockCouncils, type MockProperty } from "./mock-data"
+import { webScrapeCouncilData, fetchFromPlanningPortal, fetchFromHistoricEngland } from "./web-scraping"
 import { defaultRulesEngine } from "./planning-rules-engine"
+import {
+  geocodeAddress as osGeocodeAddress,
+  fetchGovernmentDesignations as osFetchGovernmentDesignations,
+  extractPostcodeFromAddress as osExtractPostcodeFromAddress,
+} from "./utils"
 
 // Simulate API delay
 const simulateApiDelay = () => new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000))
 
 // Determine if property has PD rights using rules engine
-function evaluatePropertyWithRulesEngine(property: MockProperty): {
+function evaluatePropertyWithRulesEngine(property: any): {
   hasRights: boolean
   confidence: number
   checks: PlanningCheck[]
@@ -25,72 +30,132 @@ function evaluatePropertyWithRulesEngine(property: MockProperty): {
 
 // Main API function
 export async function checkPlanningRights(address: string): Promise<PlanningResult> {
-  await simulateApiDelay()
+  console.log(`[v0] Checking planning rights for: ${address}`)
 
-  const property = findPropertyByAddress(address)
+  try {
+    // Fetch real property data from multiple sources
+    const propertyData = await fetchRealPropertyData(address)
 
-  if (!property) {
-    // Return a default "no restrictions found" result for unknown addresses
+    // Use rules engine to evaluate the property
+    const evaluation = defaultRulesEngine.evaluate(propertyData)
+
+    return {
+      address: propertyData.address,
+      hasPermittedDevelopmentRights: evaluation.hasPermittedDevelopmentRights,
+      confidence: Math.min(propertyData.confidence, evaluation.confidence),
+      localAuthority: propertyData.localAuthority,
+      summary: defaultRulesEngine.generateSummary(propertyData, evaluation),
+      checks: evaluation.checks,
+    }
+  } catch (error) {
+    console.error("Planning rights check error:", error)
+
+    // Return fallback result with lower confidence
     return {
       address: address,
       hasPermittedDevelopmentRights: true,
-      confidence: 85.0, // Lower confidence for unknown properties
+      confidence: 75.0,
       localAuthority: "Unknown Council",
       summary:
-        "No specific planning restrictions identified for this address. However, this result has lower confidence due to limited data availability. We recommend checking with your local planning authority.",
+        "Unable to access all planning data sources. This result has lower confidence. We recommend checking with your local planning authority for definitive guidance.",
       checks: [
         {
+          type: "Data Availability",
+          status: "warning",
+          description: "Limited planning data available for this address. Some restrictions may not be detected.",
+        },
+        {
           type: "Article 4 Direction",
-          status: "pass",
-          description: "No Article 4 Directions found in our database for this location.",
+          status: "warning",
+          description: "Unable to verify Article 4 Direction status - check with local planning authority.",
         },
         {
           type: "Conservation Area",
-          status: "pass",
-          description: "No Conservation Area designation found in our records.",
-        },
-        {
-          type: "Listed Building",
-          status: "pass",
-          description: "No Listed Building status found in our database.",
-        },
-        {
-          type: "Property Type - Flat/Maisonette",
-          status: "pass",
-          description: "Assumed to be standard residential dwelling based on address format.",
-        },
-        {
-          type: "National Park",
-          status: "pass",
-          description: "No National Park designation found.",
-        },
-        {
-          type: "Area of Outstanding Natural Beauty",
-          status: "pass",
-          description: "No AONB designation found.",
-        },
-        {
-          type: "Tree Preservation Order",
           status: "warning",
-          description: "Limited local data available - TPOs may exist. Check with local planning authority.",
+          description: "Unable to verify Conservation Area status - check with local planning authority.",
         },
       ],
     }
-  }
-
-  const evaluation = evaluatePropertyWithRulesEngine(property)
-
-  return {
-    address: property.address,
-    hasPermittedDevelopmentRights: evaluation.hasRights,
-    confidence: evaluation.confidence,
-    localAuthority: property.localAuthority,
-    summary: evaluation.summary,
-    checks: evaluation.checks,
   }
 }
 
 // Get council information
 export function getCouncilInfo(councilName: string) {
-  return mockCouncils[councilName as keyof typeof mockCouncils] || null
+  // TODO: Implement real council data fetching logic
+  return null
+}
+
+async function fetchRealPropertyData(address: string): Promise<any> {
+  const sources: string[] = []
+  let confidence = 85.0
+
+  try {
+    // 1. Get postcode and coordinates from address
+    const addressData = await osGeocodeAddress(address)
+    if (!addressData) {
+      throw new Error("Address not found")
+    }
+
+    // 2. Check Historic England API for listed buildings
+    const listedBuildingData = await fetchFromHistoricEngland(addressData.coordinates)
+    sources.push("Historic England API")
+
+    // 3. Web scrape local council planning portal
+    const councilData = await webScrapeCouncilData(addressData.localAuthority, addressData.postcode)
+    if (councilData) {
+      sources.push(`${addressData.localAuthority} Planning Portal`)
+      confidence += 5.0
+    }
+
+    // 4. Check Planning Portal API for planning applications
+    const planningPortalData = await fetchFromPlanningPortal(addressData.postcode)
+    if (planningPortalData) {
+      sources.push("Planning Portal API")
+      confidence += 3.0
+    }
+
+    // 5. Check government datasets for designations
+    const designationData = await osFetchGovernmentDesignations(addressData.coordinates)
+    sources.push("Government Open Data")
+
+    return {
+      address: addressData.address,
+      postcode: addressData.postcode,
+      localAuthority: addressData.localAuthority,
+      propertyType: addressData.propertyType || "house",
+      constraints: {
+        article4Direction: councilData?.article4Direction || false,
+        conservationArea: designationData.conservationArea || false,
+        listedBuilding: listedBuildingData.isListed || false,
+        nationalPark: designationData.nationalPark || false,
+        aonb: designationData.aonb || false,
+        worldHeritage: designationData.worldHeritage || false,
+        tpo: councilData?.tpo || false,
+        floodZone: designationData.floodZone || false,
+      },
+      confidence: Math.min(99.8, confidence),
+      sources,
+    }
+  } catch (error) {
+    console.error("Error fetching real property data:", error)
+    // Fallback to basic data with lower confidence
+    return {
+      address,
+      postcode: osExtractPostcodeFromAddress(address) || "Unknown",
+      localAuthority: "Unknown Council",
+      propertyType: "house",
+      constraints: {
+        article4Direction: false,
+        conservationArea: false,
+        listedBuilding: false,
+        nationalPark: false,
+        aonb: false,
+        worldHeritage: false,
+        tpo: false,
+        floodZone: false,
+      },
+      confidence: 75.0,
+      sources: ["Limited data available"],
+    }
+  }
 }

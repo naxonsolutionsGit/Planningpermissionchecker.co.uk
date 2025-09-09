@@ -2,27 +2,14 @@
 
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { EnhancedAddressSearch } from "@/components/enhanced-address-search"
-import { EnhancedPlanningResult } from "@/components/enhanced-planning-result"
+import { AddressSearchForm } from "@/components/address-search-form"
 import { Header } from "@/components/header"
 import { LegalDisclaimer } from "@/components/legal-disclaimer"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle } from "lucide-react"
-import type { PropertyData } from "@/lib/advanced-data-sources"
 
 export default function HomePage() {
-  const [propertyData, setPropertyData] = useState<PropertyData | null>(null)
   const [activeTab, setActiveTab] = useState("search")
-
-  const handleSearchResult = (data: PropertyData) => {
-    setPropertyData(data)
-    setActiveTab("results")
-  }
-
-  const handleNewSearch = () => {
-    setPropertyData(null)
-    setActiveTab("search")
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,7 +20,7 @@ export default function HomePage() {
             <TabsTrigger value="search" className="text-sm font-medium">
               Property Search
             </TabsTrigger>
-            <TabsTrigger value="results" disabled={!propertyData} className="text-sm font-medium">
+            <TabsTrigger value="results" className="text-sm font-medium">
               PD Rights Analysis
             </TabsTrigger>
           </TabsList>
@@ -50,12 +37,12 @@ export default function HomePage() {
                   </h1>
                   <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                     Get a reliable, near-instant answer to: "Do full Permitted Development rights still apply to this
-                    property?" Enter any UK property address and receive a clear result with 99.8% confidence.
+                    property?" Enter any UK property address and receive a clear result with confidence.
                   </p>
                 </div>
               </div>
 
-              <EnhancedAddressSearch onResult={handleSearchResult} />
+              <AddressSearchForm />
 
               <div className="bg-card rounded-xl p-8 border border-border shadow-sm">
                 <h2 className="text-2xl font-semibold text-card-foreground mb-6 text-center">What We Check For</h2>
@@ -82,15 +69,10 @@ export default function HomePage() {
           </TabsContent>
 
           <TabsContent value="results" className="space-y-6">
-            {propertyData ? (
-              <div className="max-w-6xl mx-auto">
-                <EnhancedPlanningResult propertyData={propertyData} onNewSearch={handleNewSearch} />
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No property data available. Please search for a property first.</p>
-              </div>
-            )}
+            {/* Results will be handled by AddressSearchForm component */}
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Search results will appear here after checking a property.</p>
+            </div>
           </TabsContent>
         </Tabs>
       </main>
