@@ -37,6 +37,7 @@ export async function geocodeAddress(address: string): Promise<AddressData | nul
 
     const response = await fetch(`${apiUrl}?${params}`)
     const data = await response.json()
+    console.log("OS API response for", address, ":", JSON.stringify(data, null, 2))
 
     if (data.results && data.results.length > 0) {
       const result = data.results[0].DPA

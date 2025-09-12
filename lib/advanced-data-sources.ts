@@ -208,8 +208,8 @@ export class AdvancedDataIntegration {
       if (!data.results || data.results.length === 0) return null
 
       const result = data.results[0].DPA
-      const lat = parseFloat(result.LATITUDE)
-      const lon = parseFloat(result.LONGITUDE)
+      const lat = parseFloat(result.LAT || result.LATITUDE)
+      const lon = parseFloat(result.LNG || result.LONGITUDE)
 
       // --- Conservation Area Real-Time Check ---
       let constraints: PlanningConstraint[] = []
