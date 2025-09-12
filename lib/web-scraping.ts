@@ -205,7 +205,8 @@ export async function fetchFromHistoricEngland(coordinates: [number, number]): P
 
     console.log(`[v0] Would check Historic England API for coordinates: ${coordinates}`)
 
-    return {}
+    // TODO: Implement real fetch and parsing here
+    return { isListed: false }
   } catch (error) {
     console.error("Historic England API error:", error)
     return { isListed: false }

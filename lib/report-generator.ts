@@ -559,7 +559,7 @@ ${this.generateComplianceRequirements()}
   }
 
   private generateComplianceRequirements(): string {
-    const requirements = []
+    const requirements: string[] = []
     const constraintTypes = new Set(this.propertyData.constraints.map((c) => c.type))
 
     constraintTypes.forEach((type) => {

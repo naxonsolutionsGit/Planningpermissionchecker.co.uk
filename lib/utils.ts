@@ -57,35 +57,17 @@ export async function geocodeAddress(address: string): Promise<AddressData | nul
   }
 }
 
-export async function fetchGovernmentDesignations(coordinates: [number, number]): Promise<GovernmentDesignations> {
-  try {
-    const [conservationArea] = await Promise.all([
-      checkConservationArea(coordinates),
-      // Add other real API calls here for nationalPark, aonb, etc.
-    ])
-
-    return {
-      conservationArea,
-      nationalPark: false, // TODO: Replace with real API
-      aonb: false,         // TODO: Replace with real API
-      worldHeritage: false,// TODO: Replace with real API
-      floodZone: false,    // TODO: Replace with real API
-    }
-  } catch (error) {
-    console.error("Government designations API error:", error)
-    return {
-      conservationArea: false,
-      nationalPark: false,
-      aonb: false,
-      worldHeritage: false,
-      floodZone: false,
-    }
-  }
-}
-
-async function checkConservationArea(coordinates: [number, number]): Promise<boolean> {
+export async function fetchGovernmentDesignations(coordinates: [number, number]) {
+  // coordinates: [lat, lon]
   const [lat, lon] = coordinates
-  return await isInConservationArea(lat, lon)
+  const conservationArea = await isInConservationArea(lat, lon)
+  return {
+    conservationArea,
+    nationalPark: false, // TODO: add real API
+    aonb: false,         // TODO: add real API
+    worldHeritage: false,// TODO: add real API
+    floodZone: false,    // TODO: add real API
+  }
 }
 
 export function extractPostcodeFromAddress(address: string): string | null {
