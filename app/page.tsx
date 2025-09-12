@@ -32,7 +32,7 @@ export default function HomePage() {
                   <Badge variant="secondary" className="mb-4">
                     Permitted Development Rights Checker
                   </Badge>
-                  <h1 className="text-4xl md:text-5xl font-bold text-foreground leading-tight">
+                  <h1 className="w-full max-w-full text-2xl sm:text-3xl md:text-5xl font-bold text-foreground leading-tight text-center break-words px-2">
                     PlanningCheckers.co.uk
                   </h1>
                   <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
