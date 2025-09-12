@@ -41,10 +41,15 @@ export async function geocodeAddress(address: string): Promise<AddressData | nul
 
     if (data.results && data.results.length > 0) {
       const result = data.results[0].DPA
+      const lat = parseFloat(result.LAT || result.LATITUDE)
+      const lon = parseFloat(result.LNG || result.LONGITUDE)
+      console.log("Parsed coordinates:", lat, lon)
+      const inConservation = await isInConservationArea(lat, lon)
+
       return {
         address: result.ADDRESS,
         postcode: result.POSTCODE,
-        coordinates: [parseFloat(result.LATITUDE), parseFloat(result.LONGITUDE)],
+        coordinates: [lat, lon],
         localAuthority: result.LOCAL_CUSTODIAN_CODE_DESCRIPTION,
         propertyType: determinePropertyType(result.ADDRESS)
       }
@@ -57,17 +62,36 @@ export async function geocodeAddress(address: string): Promise<AddressData | nul
   }
 }
 
-export async function fetchGovernmentDesignations(coordinates: [number, number]) {
-  // coordinates: [lat, lon]
-  const [lat, lon] = coordinates
-  const conservationArea = await isInConservationArea(lat, lon)
-  return {
-    conservationArea,
-    nationalPark: false, // TODO: add real API
-    aonb: false,         // TODO: add real API
-    worldHeritage: false,// TODO: add real API
-    floodZone: false,    // TODO: add real API
+export async function fetchGovernmentDesignations(coordinates: [number, number]): Promise<GovernmentDesignations> {
+  try {
+    const [conservationArea] = await Promise.all([
+      checkConservationArea(coordinates),
+      // Add other real API calls here for nationalPark, aonb, etc.
+    ])
+
+    return {
+      conservationArea,
+      nationalPark: false, // TODO: Replace with real API
+      aonb: false,         // TODO: Replace with real API
+      worldHeritage: false,// TODO: Replace with real API
+      floodZone: false,    // TODO: Replace with real API
+    }
+  } catch (error) {
+    console.error("Government designations API error:", error)
+    return {
+      conservationArea: false,
+      nationalPark: false,
+      aonb: false,
+      worldHeritage: false,
+      floodZone: false,
+    }
   }
+}
+
+async function checkConservationArea(coordinates: [number, number]): Promise<boolean> {
+  const [lat, lon] = coordinates
+  console.log("checkConservationArea called with:", lat, lon)
+  return await isInConservationArea(lat, lon)
 }
 
 export function extractPostcodeFromAddress(address: string): string | null {
