@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Search, MapPin } from "lucide-react"
-import { type PlanningResult, PlanningResult as PlanningResultComponent } from "@/components/planning-result"
+import { type PlanningResult, PlanningResult as PlanningResultComponent,PlanningCheck } from "@/components/planning-result"
 
 interface GooglePlacesService {
   getPlacePredictions: (request: any, callback: (predictions: any[], status: any) => void) => void
@@ -101,36 +101,120 @@ export function AddressSearchForm() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!address.trim()) return
+  e.preventDefault()
+  if (!address.trim()) return
 
-    setIsLoading(true)
-    setResult(null)
-    setError(null)
-    setShowSuggestions(false)
+  setIsLoading(true)
+  setResult(null)
+  setError(null)
+  setShowSuggestions(false)
 
-    try {
-      const response = await fetch("/api/check-planning-rights", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ address: address.trim() }),
-      })
+  try {
+    const datasets = [
+      { name: "Article 4 Direction", key: "article-4-direction" },
+      { name: "Conservation Area", key: "conservation-area" },
+      { name: "Listed Building", key: "listed-building" },
+      { name: "National Park", key: "national-park" },
+      { name: "Area of Outstanding Natural Beauty", key: "area-of-outstanding-natural-beauty" },
+    ]
 
-      if (!response.ok) {
-        throw new Error("Failed to check planning rights")
+    let checks: PlanningCheck[] = []
+
+    for (const ds of datasets) {
+      try {
+        const url = `https://www.planning.data.gov.uk/entity.json?q=${encodeURIComponent(
+          address.trim()
+        )}&dataset=${ds.key}&limit=1`
+
+        const res = await fetch(url)
+        const data = await res.json()
+
+        if (data.entities && data.entities.length > 0) {
+          checks.push({
+            type: ds.name,
+            status: "fail",
+            description: `${ds.name} restriction applies at this address.`,
+          })
+        } else {
+          checks.push({
+            type: ds.name,
+            status: "pass",
+            description: `No ${ds.name} restriction detected.`,
+          })
+        }
+      } catch (err) {
+        checks.push({
+          type: ds.name,
+          status: "warning",
+          description: `Unable to confirm ${ds.name}. Please check with your local authority.`,
+        })
       }
-
-      const planningResult = await response.json()
-      setResult(planningResult)
-    } catch (err) {
-      setError("Failed to check planning rights. Please try again.")
-      console.error("Planning check error:", err)
-    } finally {
-      setIsLoading(false)
     }
+
+    // Extra check for flats/maisonettes
+    if (/flat|apartment|maisonette/i.test(address)) {
+      checks.push({
+        type: "Property Type",
+        status: "fail",
+        description: "Flat or maisonette detected — limited PD rights.",
+      })
+    }
+
+    // Decide overall status
+    const hasRestrictions = checks.some((c) => c.status === "fail")
+
+    // Build final result
+    const planningResult: PlanningResult = {
+      address: address.trim(),
+      hasPermittedDevelopmentRights: !hasRestrictions,
+      confidence: 99, // Example fixed number — you can adjust logic later
+      localAuthority: "Unknown Local Authority", // You can enhance by looking up via API
+      checks,
+      summary: hasRestrictions
+        ? "One or more planning restrictions were detected. You may need full planning permission."
+        : "No restrictions detected. Permitted Development Rights likely still apply.",
+    }
+
+    setResult(planningResult)
+  } catch (err) {
+    setError("Failed to check planning rights. Please try again.")
+    console.error("Planning check error:", err)
+  } finally {
+    setIsLoading(false)
   }
+}
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   if (!address.trim()) return
+
+  //   setIsLoading(true)
+  //   setResult(null)
+  //   setError(null)
+  //   setShowSuggestions(false)
+
+  //   try {
+  //     const response = await fetch("/api/check-planning-rights", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ address: address.trim() }),
+  //     })
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to check planning rights")
+  //     }
+
+  //     const planningResult = await response.json()
+  //     setResult(planningResult)
+  //   } catch (err) {
+  //     setError("Failed to check planning rights. Please try again.")
+  //     console.error("Planning check error:", err)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
   const handleNewSearch = () => {
     setResult(null)
