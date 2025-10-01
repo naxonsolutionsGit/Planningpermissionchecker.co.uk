@@ -100,89 +100,89 @@ export function AddressSearchForm() {
     setShowSuggestions(false)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  if (!address.trim()) return
+//   const handleSubmit = async (e: React.FormEvent) => {
+//   e.preventDefault()
+//   if (!address.trim()) return
 
-  setIsLoading(true)
-  setResult(null)
-  setError(null)
-  setShowSuggestions(false)
+//   setIsLoading(true)
+//   setResult(null)
+//   setError(null)
+//   setShowSuggestions(false)
 
-  try {
-    const datasets = [
-      { name: "Article 4 Direction", key: "article-4-direction" },
-      { name: "Conservation Area", key: "conservation-area" },
-      { name: "Listed Building", key: "listed-building" },
-      { name: "National Park", key: "national-park" },
-      { name: "Area of Outstanding Natural Beauty", key: "area-of-outstanding-natural-beauty" },
-    ]
+//   try {
+//     const datasets = [
+//       { name: "Article 4 Direction", key: "article-4-direction" },
+//       { name: "Conservation Area", key: "conservation-area" },
+//       { name: "Listed Building", key: "listed-building" },
+//       { name: "National Park", key: "national-park" },
+//       { name: "Area of Outstanding Natural Beauty", key: "area-of-outstanding-natural-beauty" },
+//     ]
 
-    let checks: PlanningCheck[] = []
+//     let checks: PlanningCheck[] = []
 
-    for (const ds of datasets) {
-      try {
-        const url = `https://www.planning.data.gov.uk/entity.json?q=${encodeURIComponent(
-          address.trim()
-        )}&dataset=${ds.key}&limit=1`
+//     for (const ds of datasets) {
+//       try {
+//         const url = `https://www.planning.data.gov.uk/entity.json?q=${encodeURIComponent(
+//           address.trim()
+//         )}&dataset=${ds.key}&limit=1`
 
-        const res = await fetch(url)
-        const data = await res.json()
+//         const res = await fetch(url)
+//         const data = await res.json()
 
-        if (data.entities && data.entities.length > 0) {
-          checks.push({
-            type: ds.name,
-            status: "fail",
-            description: `${ds.name} restriction applies at this address.`,
-          })
-        } else {
-          checks.push({
-            type: ds.name,
-            status: "pass",
-            description: `No ${ds.name} restriction detected.`,
-          })
-        }
-      } catch (err) {
-        checks.push({
-          type: ds.name,
-          status: "warning",
-          description: `Unable to confirm ${ds.name}. Please check with your local authority.`,
-        })
-      }
-    }
+//         if (data.entities && data.entities.length > 0) {
+//           checks.push({
+//             type: ds.name,
+//             status: "fail",
+//             description: `${ds.name} restriction applies at this address.`,
+//           })
+//         } else {
+//           checks.push({
+//             type: ds.name,
+//             status: "pass",
+//             description: `No ${ds.name} restriction detected.`,
+//           })
+//         }
+//       } catch (err) {
+//         checks.push({
+//           type: ds.name,
+//           status: "warning",
+//           description: `Unable to confirm ${ds.name}. Please check with your local authority.`,
+//         })
+//       }
+//     }
 
-    // Extra check for flats/maisonettes
-    if (/flat|apartment|maisonette/i.test(address)) {
-      checks.push({
-        type: "Property Type",
-        status: "fail",
-        description: "Flat or maisonette detected — limited PD rights.",
-      })
-    }
+//     // Extra check for flats/maisonettes
+//     if (/flat|apartment|maisonette/i.test(address)) {
+//       checks.push({
+//         type: "Property Type",
+//         status: "fail",
+//         description: "Flat or maisonette detected — limited PD rights.",
+//       })
+//     }
 
-    // Decide overall status
-    const hasRestrictions = checks.some((c) => c.status === "fail")
+//     // Decide overall status
+//     const hasRestrictions = checks.some((c) => c.status === "fail")
 
-    // Build final result
-    const planningResult: PlanningResult = {
-      address: address.trim(),
-      hasPermittedDevelopmentRights: !hasRestrictions,
-      confidence: 99, // Example fixed number — you can adjust logic later
-      localAuthority: "Unknown Local Authority", // You can enhance by looking up via API
-      checks,
-      summary: hasRestrictions
-        ? "One or more planning restrictions were detected. You may need full planning permission."
-        : "No restrictions detected. Permitted Development Rights likely still apply.",
-    }
+//     // Build final result
+//     const planningResult: PlanningResult = {
+//       address: address.trim(),
+//       hasPermittedDevelopmentRights: !hasRestrictions,
+//       confidence: 99, // Example fixed number — you can adjust logic later
+//       localAuthority: "Unknown Local Authority", // You can enhance by looking up via API
+//       checks,
+//       summary: hasRestrictions
+//         ? "One or more planning restrictions were detected. You may need full planning permission."
+//         : "No restrictions detected. Permitted Development Rights likely still apply.",
+//     }
 
-    setResult(planningResult)
-  } catch (err) {
-    setError("Failed to check planning rights. Please try again.")
-    console.error("Planning check error:", err)
-  } finally {
-    setIsLoading(false)
-  }
-}
+//     setResult(planningResult)
+//   } catch (err) {
+//     setError("Failed to check planning rights. Please try again.")
+//     console.error("Planning check error:", err)
+//   } finally {
+//     setIsLoading(false)
+//   }
+// }
 
   // const handleSubmit = async (e: React.FormEvent) => {
   //   e.preventDefault()
@@ -215,7 +215,117 @@ export function AddressSearchForm() {
   //     setIsLoading(false)
   //   }
   // }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  if (!address.trim()) return
 
+  setIsLoading(true)
+  setResult(null)
+  setError(null)
+  setShowSuggestions(false)
+
+  try {
+    const datasets = [
+      { name: "Article 4 Direction", key: "article-4-direction" },
+      { name: "Conservation Area", key: "conservation-area" },
+      { name: "Listed Building", key: "listed-building" },
+      { name: "National Park", key: "national-park" },
+      { name: "Area of Outstanding Natural Beauty", key: "area-of-outstanding-natural-beauty" },
+    ]
+
+    let checks: PlanningCheck[] = []
+
+    for (const ds of datasets) {
+      try {
+        const url = `https://www.planning.data.gov.uk/entity.json?q=${encodeURIComponent(
+          address.trim()
+        )}&dataset=${ds.key}&limit=1`
+
+        const res = await fetch(url)
+        const data = await res.json()
+
+        if (data.entities && data.entities.length > 0) {
+          const entity = data.entities[0]
+          let description = `${ds.name} restriction applies at this address.`
+          let documentationUrl = ""
+          
+          // Add specific description from the entity if available
+          if (entity.description) {
+            description += ` ${entity.description}`
+          } else if (entity.notes) {
+            description += ` ${entity.notes}`
+          } else if (entity.name) {
+            description += ` ${entity.name}.`
+          }
+          
+          // Extract documentation URL from various possible fields
+          if (entity.documentation_url) {
+            documentationUrl = entity.documentation_url
+          } else if (entity["documentation-url"]) {
+            documentationUrl = entity["documentation-url"]
+          } else if (entity["document-url"]) {
+            documentationUrl = entity["document-url"]
+          } else if (entity.document_url) {
+            documentationUrl = entity.document_url
+          }
+
+          checks.push({
+            type: ds.name,
+            status: "fail",
+            description: description,
+            documentationUrl: documentationUrl
+          })
+        } else {
+          checks.push({
+            type: ds.name,
+            status: "pass",
+            description: `No ${ds.name} restriction detected.`,
+            documentationUrl: ""
+          })
+        }
+      } catch (err) {
+        checks.push({
+          type: ds.name,
+          status: "warning",
+          description: `Unable to confirm ${ds.name}. Please check with your local authority.`,
+          documentationUrl: ""
+        })
+      }
+    }
+
+    // Extra check for flats/maisonettes
+    if (/flat|apartment|maisonette/i.test(address)) {
+      checks.push({
+        type: "Property Type",
+        status: "fail",
+        description: "Flat or maisonette detected — limited PD rights.",
+        documentationUrl: ""
+      })
+    }
+
+    // Decide overall status
+    const hasRestrictions = checks.some((c) => c.status === "fail")
+
+    // Build final result
+    const planningResult: PlanningResult = {
+      address: address.trim(),
+      hasPermittedDevelopmentRights: !hasRestrictions,
+      confidence: 99, // Example fixed number — you can adjust logic later
+      localAuthority: "Unknown Local Authority", // You can enhance by looking up via API
+      checks,
+      summary: hasRestrictions
+        ? "One or more planning restrictions were detected. You may need full planning permission."
+        : "No restrictions detected. Permitted Development Rights likely still apply.",
+    }
+
+    setResult(planningResult)
+  } catch (err) {
+    setError("Failed to check planning rights. Please try again.")
+    console.error("Planning check error:", err)
+  } finally {
+    setIsLoading(false)
+  }
+}
   const handleNewSearch = () => {
     setResult(null)
     setError(null)

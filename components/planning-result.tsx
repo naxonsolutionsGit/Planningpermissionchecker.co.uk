@@ -4,12 +4,17 @@ import { CheckCircle, XCircle, AlertTriangle, MapPin } from "lucide-react"
 import { LegalDisclaimer } from "@/components/legal-disclaimer"
 import { ConfidenceIndicator } from "@/components/confidence-indicator"
 
+// export interface PlanningCheck {
+//   type: string
+//   status: "pass" | "fail" | "warning"
+//   description: string
+// }
 export interface PlanningCheck {
   type: string
   status: "pass" | "fail" | "warning"
   description: string
+  documentationUrl?: string
 }
-
 export interface PlanningResult {
   address: string
   hasPermittedDevelopmentRights: boolean
@@ -87,6 +92,39 @@ export function PlanningResult({ result }: PlanningResultProps) {
         <CardContent>
           <div className="space-y-3">
             {result.checks.map((check, index) => (
+  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+    {getCheckIcon(check.status)}
+    <div className="flex-1">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="font-medium text-foreground">{check.type}</span>
+        <Badge
+          variant={
+            check.status === "pass" ? "default" : check.status === "fail" ? "destructive" : "secondary"
+          }
+          className="text-xs"
+        >
+          {check.status === "pass"
+            ? "Clear"
+            : check.status === "fail"
+              ? "Restriction Found"
+              : "Check Required"}
+        </Badge>
+      </div>
+      <p className="text-sm text-muted-foreground mb-2">{check.description}</p>
+      {check.documentationUrl && (
+        <a 
+          href={check.documentationUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-xs text-blue-600 hover:text-blue-800 underline"
+        >
+          View official documentation
+        </a>
+      )}
+    </div>
+  </div>
+))}
+            {/* {result.checks.map((check, index) => (
               <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                 {getCheckIcon(check.status)}
                 <div className="flex-1">
@@ -108,7 +146,7 @@ export function PlanningResult({ result }: PlanningResultProps) {
                   <p className="text-sm text-muted-foreground">{check.description}</p>
                 </div>
               </div>
-            ))}
+            ))} */}
           </div>
         </CardContent>
       </Card>
