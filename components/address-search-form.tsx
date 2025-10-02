@@ -6,11 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Search, MapPin } from "lucide-react"
-<<<<<<< HEAD
+
 import { type PlanningResult, PlanningResult as PlanningResultComponent,PlanningCheck } from "@/components/planning-result"
-=======
-import { type PlanningResult, PlanningResult as PlanningResultComponent } from "@/components/planning-result"
->>>>>>> 7826c29004a072c5004ccc592d62187b0643bca7
+
 
 interface GooglePlacesService {
   getPlacePredictions: (request: any, callback: (predictions: any[], status: any) => void) => void
@@ -104,7 +102,7 @@ export function AddressSearchForm() {
     setShowSuggestions(false)
   }
 
-<<<<<<< HEAD
+
 //   const handleSubmit = async (e: React.FormEvent) => {
 //   e.preventDefault()
 //   if (!address.trim()) return
@@ -331,7 +329,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setIsLoading(false)
   }
 }
-=======
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!address.trim()) return
@@ -364,7 +362,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
   }
 
->>>>>>> 7826c29004a072c5004ccc592d62187b0643bca7
   const handleNewSearch = () => {
     setResult(null)
     setError(null)
