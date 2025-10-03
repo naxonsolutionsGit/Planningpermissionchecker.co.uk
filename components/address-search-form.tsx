@@ -6,9 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Search, MapPin } from "lucide-react"
-
 import { type PlanningResult, PlanningResult as PlanningResultComponent,PlanningCheck } from "@/components/planning-result"
-
 
 interface GooglePlacesService {
   getPlacePredictions: (request: any, callback: (predictions: any[], status: any) => void) => void
@@ -101,7 +99,6 @@ export function AddressSearchForm() {
     setAddress(suggestion.description)
     setShowSuggestions(false)
   }
-
 
 //   const handleSubmit = async (e: React.FormEvent) => {
 //   e.preventDefault()
@@ -329,39 +326,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     setIsLoading(false)
   }
 }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!address.trim()) return
-
-    setIsLoading(true)
-    setResult(null)
-    setError(null)
-    setShowSuggestions(false)
-
-    try {
-      const response = await fetch("/api/check-planning-rights", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ address: address.trim() }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to check planning rights")
-      }
-
-      const planningResult = await response.json()
-      setResult(planningResult)
-    } catch (err) {
-      setError("Failed to check planning rights. Please try again.")
-      console.error("Planning check error:", err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleNewSearch = () => {
     setResult(null)
     setError(null)

@@ -4,25 +4,17 @@ import { CheckCircle, XCircle, AlertTriangle, MapPin } from "lucide-react"
 import { LegalDisclaimer } from "@/components/legal-disclaimer"
 import { ConfidenceIndicator } from "@/components/confidence-indicator"
 
-<<<<<<< HEAD
 // export interface PlanningCheck {
 //   type: string
 //   status: "pass" | "fail" | "warning"
 //   description: string
 // }
-=======
->>>>>>> 7826c29004a072c5004ccc592d62187b0643bca7
 export interface PlanningCheck {
   type: string
   status: "pass" | "fail" | "warning"
   description: string
-<<<<<<< HEAD
   documentationUrl?: string
 }
-=======
-}
-
->>>>>>> 7826c29004a072c5004ccc592d62187b0643bca7
 export interface PlanningResult {
   address: string
   hasPermittedDevelopmentRights: boolean
@@ -100,7 +92,6 @@ export function PlanningResult({ result }: PlanningResultProps) {
         <CardContent>
           <div className="space-y-3">
             {result.checks.map((check, index) => (
-<<<<<<< HEAD
   <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
     {getCheckIcon(check.status)}
     <div className="flex-1">
@@ -134,8 +125,6 @@ export function PlanningResult({ result }: PlanningResultProps) {
   </div>
 ))}
             {/* {result.checks.map((check, index) => (
-=======
->>>>>>> 7826c29004a072c5004ccc592d62187b0643bca7
               <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                 {getCheckIcon(check.status)}
                 <div className="flex-1">
@@ -157,11 +146,7 @@ export function PlanningResult({ result }: PlanningResultProps) {
                   <p className="text-sm text-muted-foreground">{check.description}</p>
                 </div>
               </div>
-<<<<<<< HEAD
             ))} */}
-=======
-            ))}
->>>>>>> 7826c29004a072c5004ccc592d62187b0643bca7
           </div>
         </CardContent>
       </Card>
