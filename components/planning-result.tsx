@@ -9,20 +9,42 @@ import { ConfidenceIndicator } from "@/components/confidence-indicator"
 //   status: "pass" | "fail" | "warning"
 //   description: string
 // }
+// Add these type definitions at the top of your file, before the component
 export interface PlanningCheck {
   type: string
   status: "pass" | "fail" | "warning"
   description: string
-  documentationUrl?: string
+  documentationUrl: string
+  entitiesFound?: number
+    allEntities?: any[] // Optional: store all entities for detailed display
 }
+
 export interface PlanningResult {
   address: string
+  coordinates?: {
+    lat: number
+    lng: number
+  }
   hasPermittedDevelopmentRights: boolean
   confidence: number
   localAuthority: string
   checks: PlanningCheck[]
   summary: string
 }
+// export interface PlanningCheck {
+//   type: string
+//   status: "pass" | "fail" | "warning"
+//   description: string
+//   documentationUrl?: string
+// }
+// export interface PlanningResult {
+//   address: string
+//   hasPermittedDevelopmentRights: boolean
+//   confidence: number
+//   localAuthority: string
+//   checks: PlanningCheck[]
+//   summary: string
+// }
 
 interface PlanningResultProps {
   result: PlanningResult
