@@ -26,7 +26,7 @@ export interface PlanningResult {
     lng: number
   }
   hasPermittedDevelopmentRights: boolean
-  confidence: number
+  confidence?: number
   localAuthority: string
   checks: PlanningCheck[]
   summary: string
@@ -87,7 +87,7 @@ export function PlanningResult({ result }: PlanningResultProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ConfidenceIndicator confidence={result.confidence} showDetails={true} />
+          {/* <ConfidenceIndicator confidence={result.confidence} showDetails={true} /> */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
               Located in <span className="font-semibold">{result.localAuthority}</span>
@@ -173,7 +173,7 @@ export function PlanningResult({ result }: PlanningResultProps) {
         </CardContent>
       </Card>
 
-      <LegalDisclaimer confidence={result.confidence} variant="full" />
+      {/* <LegalDisclaimer confidence={result.confidence} variant="full" /> */}
     </div>
   )
 }
