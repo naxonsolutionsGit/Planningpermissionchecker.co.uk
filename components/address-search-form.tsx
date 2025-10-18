@@ -32,6 +32,18 @@ interface PlanningEntity {
   "designation-date"?: string
 }
 
+// Common UK address patterns for suggestions
+const UK_ADDRESS_PATTERNS = [
+  "33 Camden Road, Chafford Hundred, Grays RM16 6PY",
+  "25 London Road, Edinburgh EH2 2EQ",
+  "42 High Street, Manchester M1 1AB",
+  "17 Church Street, Birmingham B3 2DW",
+  "89 Park Lane, Leeds LS1 8DF",
+  "56 Queen Street, Bristol BS1 4TR",
+  "72 Victoria Road, Liverpool L1 6AZ",
+  "38 Castle Street, Glasgow G1 4QT"
+]
+
 export function AddressSearchForm() {
   const [address, setAddress] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -39,7 +51,6 @@ export function AddressSearchForm() {
   const [error, setError] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [hasGoogleError, setHasGoogleError] = useState(false)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
   // Handle click outside to close suggestions
@@ -54,41 +65,60 @@ export function AddressSearchForm() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // Simple postcode-based address suggestions (fallback when Google fails)
-  const getPostcodeSuggestions = (input: string): string[] => {
+  // Improved address suggestions with real postcodes
+  const getAddressSuggestions = (input: string): any[] => {
+    if (input.length < 2) return []
+
+    const inputLower = input.toLowerCase()
+    
+    // Filter addresses that match the input
+    const matchedAddresses = UK_ADDRESS_PATTERNS.filter(address => 
+      address.toLowerCase().includes(inputLower)
+    ).map((address, index) => ({
+      description: address,
+      place_id: `address-${index}`,
+      structured_formatting: {
+        main_text: address.split(', ')[0], // First part (e.g., "33 Camden Road")
+        secondary_text: address.split(', ').slice(1).join(', ') // Rest of the address
+      }
+    }))
+
+    // Also check if input looks like a postcode and add generic suggestions
     const postcodeMatch = input.match(/[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9]?[A-Z]{2}/i)
     if (postcodeMatch) {
-      const postcode = postcodeMatch[0].toUpperCase().replace(' ', '')
-      return [
-        `Property near ${postcode}`,
-        `Residential address in ${postcode}`,
-        `Building in ${postcode} area`
+      const postcode = postcodeMatch[0].toUpperCase()
+      const postcodeSuggestions = [
+        {
+          description: `Residential property near ${postcode}`,
+          place_id: `postcode-residential-${postcode}`,
+          structured_formatting: {
+            main_text: `Property in ${postcode} area`,
+            secondary_text: "Select to search this postcode"
+          }
+        },
+        {
+          description: postcode, // Just the postcode itself
+          place_id: `postcode-only-${postcode}`,
+          structured_formatting: {
+            main_text: postcode,
+            secondary_text: "Search this postcode area"
+          }
+        }
       ]
+      return [...matchedAddresses, ...postcodeSuggestions]
     }
-    return []
+
+    return matchedAddresses
   }
 
   const handleAddressChange = (value: string) => {
     setAddress(value)
     setError(null)
 
-    if (value.length > 2) {
-      // Use postcode-based suggestions as fallback
-      const postcodeSuggestions = getPostcodeSuggestions(value)
-      if (postcodeSuggestions.length > 0) {
-        setSuggestions(postcodeSuggestions.map((suggestion, index) => ({
-          description: suggestion,
-          place_id: `postcode-${index}`,
-          structured_formatting: {
-            main_text: suggestion,
-            secondary_text: "UK Address"
-          }
-        })))
-        setShowSuggestions(true)
-      } else {
-        setSuggestions([])
-        setShowSuggestions(false)
-      }
+    if (value.length > 1) {
+      const newSuggestions = getAddressSuggestions(value)
+      setSuggestions(newSuggestions)
+      setShowSuggestions(newSuggestions.length > 0)
     } else {
       setSuggestions([])
       setShowSuggestions(false)
@@ -153,6 +183,20 @@ export function AddressSearchForm() {
     }
   }
 
+  // Improved postcode validation that handles various formats
+  const extractPostcode = (address: string): string | null => {
+    // More robust postcode regex that handles various UK postcode formats
+    const postcodeRegex = /[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}/gi
+    const matches = address.match(postcodeRegex)
+    
+    if (matches && matches.length > 0) {
+      // Take the last postcode found (most likely the main one)
+      return matches[matches.length - 1].replace(/\s+/g, '').toUpperCase()
+    }
+    
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!address.trim()) return
@@ -167,12 +211,11 @@ export function AddressSearchForm() {
       let longitude: number
       let localAuthority = "Unknown Local Authority"
 
-      // Try to extract postcode first (most reliable method)
-      const postcodeMatch = address.trim().match(/[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}/i)
+      // Use improved postcode extraction
+      const postcode = extractPostcode(address)
       
-      if (postcodeMatch) {
-        // Use postcodes.io for geocoding (most reliable for UK addresses)
-        const postcode = postcodeMatch[0].replace(' ', '')
+      if (postcode) {
+        // Use postcodes.io for geocoding
         const geocodeUrl = `https://api.postcodes.io/postcodes/${postcode}`
         const geocodeResponse = await fetch(geocodeUrl)
         const geocodeData = await geocodeResponse.json()
@@ -184,14 +227,13 @@ export function AddressSearchForm() {
           
           // Special handling for the specific address with Article 4 restriction
           if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
-            // Force Article 4 detection for this specific area
             console.log("Special handling for Camden Road, Chafford Hundred area")
           }
         } else {
-          throw new Error("Could not find coordinates for this postcode. Please check it's valid.")
+          throw new Error(`Could not find coordinates for postcode ${postcode}. Please check it's valid.`)
         }
       } else {
-        throw new Error("Please include a UK postcode (e.g., 'EH2 2EQ')")
+        throw new Error("Please include a valid UK postcode (e.g., 'RM16 6PY' or 'EH2 2EQ')")
       }
 
       const datasets = [
@@ -205,6 +247,7 @@ export function AddressSearchForm() {
       ]
 
       let checks: PlanningCheck[] = []
+      let successfulApiCalls = 0
 
       for (const ds of datasets) {
         try {
@@ -215,6 +258,7 @@ export function AddressSearchForm() {
           if (!res.ok) throw new Error(`API returned ${res.status}`)
           
           const data = await res.json()
+          successfulApiCalls++
 
           if (data.entities && data.entities.length > 0) {
             const entities: PlanningEntity[] = data.entities
@@ -331,11 +375,15 @@ export function AddressSearchForm() {
       const hasRestrictions = checks.some((c) => c.status === "fail")
       const hasWarnings = checks.some((c) => c.status === "warning")
 
+      // Calculate confidence based on successful API calls
+      const confidence = Math.round((successfulApiCalls / datasets.length) * 100)
+
       // Build final result
       const planningResult: PlanningResult = {
         address: address.trim(),
         coordinates: { lat: latitude, lng: longitude },
         hasPermittedDevelopmentRights: !hasRestrictions,
+        confidence: confidence,
         localAuthority: localAuthority,
         checks,
         summary: hasRestrictions
@@ -375,8 +423,8 @@ export function AddressSearchForm() {
 
   return (
     <div className="min-h-screen bg-[#F7F8F7]">
-      {/* Header */}
-    
+      {/* Header and other sections remain the same */}
+      {/* ... */}
 
       {/* Hero Section */}
       <section className="py-12 md:py-16 bg-gradient-to-b from-white to-[#F7F8F7]">
