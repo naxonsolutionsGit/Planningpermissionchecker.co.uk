@@ -16,18 +16,18 @@ export default function HomePage() {
       <Header />
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-2xl mx-auto mb-8 h-12 bg-muted/50">
+          {/* <TabsList className="grid w-full grid-cols-2 max-w-2xl mx-auto mb-8 h-12 bg-muted/50">
             <TabsTrigger value="search" className="text-sm font-medium">
               Property Search
             </TabsTrigger>
             <TabsTrigger value="results" className="text-sm font-medium">
               PD Rights Analysis
             </TabsTrigger>
-          </TabsList>
+          </TabsList> */}
 
           <TabsContent value="search" className="space-y-8">
             <div className="max-w-4xl mx-auto space-y-8">
-              <div className="text-center space-y-6 py-8">
+              {/* <div className="text-center space-y-6 py-8">
                 <div className="space-y-4">
                   <Badge variant="secondary" className="mb-4">
                     Permitted Development Rights Checker
@@ -40,7 +40,7 @@ export default function HomePage() {
                     property?" Enter any UK property address and receive a clear result with confidence.
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               <AddressSearchForm />
 

@@ -28,9 +28,9 @@ export function Header() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          {/* <div className="flex items-center space-x-4">
             <ModeToggle />
-          </div>
+          </div> */}
         </div>
       </div>
     </header>
