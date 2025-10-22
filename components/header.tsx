@@ -8,9 +8,16 @@ export function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md">
+            {/* <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md">
               <span className="text-primary-foreground font-bold text-lg">PC</span>
-            </div>
+            </div> */}
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md overflow-hidden">
+  <img 
+    src="/IMG_8330.PNG" 
+    alt="Planning Check Logo" 
+    className="w-full h-full object-cover"
+  />
+</div>
             <div className="flex flex-col">
               <span className="text-xl font-bold text-foreground">PlanningCheckers</span>
               <span className="text-xs text-muted-foreground font-medium">.co.uk</span>
