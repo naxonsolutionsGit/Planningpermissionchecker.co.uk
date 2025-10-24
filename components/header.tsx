@@ -11,9 +11,9 @@ export function Header() {
             {/* <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md">
               <span className="text-primary-foreground font-bold text-lg">PC</span>
             </div> */}
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md overflow-hidden">
+            <div className="w-10 h-10  from-primary to-accent rounded-xl flex items-center justify-center shadow-md overflow-hidden">
   <img 
-    src="/IMG_8330.PNG" 
+    src="/Logo1.PNG" 
     alt="Planning Check Logo" 
     className="w-full h-full object-cover"
   />
