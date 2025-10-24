@@ -13,7 +13,7 @@ export function Header() {
             </div> */}
             <div className="w-10 h-10  from-primary to-accent rounded-xl flex items-center justify-center shadow-md overflow-hidden">
   <img 
-    src="/Logo1.PNG" 
+    src="/Logo1.png" 
     alt="Planning Check Logo" 
     className="w-full h-full object-cover"
   />
