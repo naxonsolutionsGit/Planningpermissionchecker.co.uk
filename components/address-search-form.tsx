@@ -3357,7 +3357,7 @@ export function AddressSearchForm() {
                 <span className="text-2xl font-bold text-white">3</span>
               </div>
               <h3 className="text-xl font-semibold mb-3 text-[#1E7A6F]">Get your report</h3>
-              <p className="text-[#4C5A63]">Receive a comprehensive report showing PD rights status in minutes</p>
+              <p className="text-[#4C5A63]">Receive a comprehensive report showing PD rights status in seconds</p>
             </div>
           </div>
         </div>
