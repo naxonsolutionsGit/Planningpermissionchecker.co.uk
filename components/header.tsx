@@ -19,7 +19,7 @@ export function Header() {
   />
 </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-foreground">PlanningCheckers</span>
+              <span className="text-xl font-bold text-foreground">PDRIGHTSCHECK</span>
               <span className="text-xs text-muted-foreground font-medium">.co.uk</span>
             </div>
           </Link>
