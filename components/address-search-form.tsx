@@ -4464,7 +4464,7 @@ export function AddressSearchForm() {
             Instantly Check if Your Property Has Permitted Development Rights
           </h1>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Find out in minutes if your property qualifies for Permitted Development before you start work
+            Find out in seconds if your property qualifies for Permitted Development before you start work
           </p>
 
           {/* Search Form */}
