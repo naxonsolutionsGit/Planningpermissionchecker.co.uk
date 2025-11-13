@@ -19,7 +19,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "PlanningCheckers.co.uk - Permitted Development Rights Checker",
+  title: "PDRIGHTSCHECK.co.uk",
   description:
     "Get a reliable, near-instant answer: Do full Permitted Development rights still apply to this property? Enter any UK address for 99.8% accurate results.",
   generator: "v0.app",
