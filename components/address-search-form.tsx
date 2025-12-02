@@ -70,7 +70,7 @@
 //     if (input.length < 2) return []
 
 //     const inputLower = input.toLowerCase()
-    
+
 //     // Filter addresses that match the input
 //     const matchedAddresses = UK_ADDRESS_PATTERNS.filter(address => 
 //       address.toLowerCase().includes(inputLower)
@@ -142,12 +142,12 @@
 //       name = entity.name
 //       description += ` Name: ${entity.name}.`
 //     }
-    
+
 //     if (entity.reference) {
 //       reference = entity.reference
 //       description += ` Reference: ${entity.reference}.`
 //     }
-    
+
 //     if (entity.description) {
 //       description += ` ${entity.description}`
 //     } else if (entity.notes) {
@@ -188,12 +188,12 @@
 //     // More robust postcode regex that handles various UK postcode formats
 //     const postcodeRegex = /[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}/gi
 //     const matches = address.match(postcodeRegex)
-    
+
 //     if (matches && matches.length > 0) {
 //       // Take the last postcode found (most likely the main one)
 //       return matches[matches.length - 1].replace(/\s+/g, '').toUpperCase()
 //     }
-    
+
 //     return null
 //   }
 
@@ -213,7 +213,7 @@
 
 //       // Use improved postcode extraction
 //       const postcode = extractPostcode(address)
-      
+
 //       if (postcode) {
 //         // Use postcodes.io for geocoding
 //         const geocodeUrl = `https://api.postcodes.io/postcodes/${postcode}`
@@ -224,7 +224,7 @@
 //           latitude = geocodeData.result.latitude
 //           longitude = geocodeData.result.longitude
 //           localAuthority = geocodeData.result.admin_district || geocodeData.result.primary_care_trust || "Unknown Local Authority"
-          
+
 //           // Special handling for the specific address with Article 4 restriction
 //           if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
 //             console.log("Special handling for Camden Road, Chafford Hundred area")
@@ -256,16 +256,16 @@
 
 //           const res = await fetch(url)
 //           if (!res.ok) throw new Error(`API returned ${res.status}`)
-          
+
 //           const data = await res.json()
 //           successfulApiCalls++
 
 //           if (data.entities && data.entities.length > 0) {
 //             const entities: PlanningEntity[] = data.entities
-            
+
 //             // Process all entities to get comprehensive information
 //             const entityInfos = entities.map(entity => extractEntityInfo(entity, ds.name))
-            
+
 //             // Combine information from all entities
 //             let combinedDescription = `${ds.name} restriction applies at this address. `
 //             let documentationUrls: string[] = []
@@ -292,11 +292,11 @@
 //             if (names.length > 0) {
 //               combinedDescription += `Affected areas: ${names.join(', ')}. `
 //             }
-            
+
 //             if (references.length > 0) {
 //               combinedDescription += `References: ${references.join(', ')}. `
 //             }
-            
+
 //             if (designationDates.length > 0) {
 //               const formattedDates = designationDates.map(date => new Date(date).toLocaleDateString())
 //               combinedDescription += `Designation dates: ${formattedDates.join(', ')}. `
@@ -491,7 +491,7 @@
 //             </form>
 //             {error && <div className="text-sm text-[#D35400] bg-[#D35400]/10 p-2 rounded-md mt-2">{error}</div>}
 //           </div>
-          
+
 //           <p className="text-xs text-[#4C5A63]/70 mt-4 max-w-2xl mx-auto">
 //             This service identifies public-domain planning restrictions that affect most UK residential properties. It is guidance only and not a substitute for professional advice.
 //           </p>
@@ -752,7 +752,7 @@
 //     if (input.length < 2) return []
 
 //     const inputLower = input.toLowerCase()
-    
+
 //     // Filter addresses that match the input
 //     const matchedAddresses = UK_ADDRESS_PATTERNS.filter(address => 
 //       address.toLowerCase().includes(inputLower)
@@ -824,12 +824,12 @@
 //       name = entity.name
 //       description += ` Name: ${entity.name}.`
 //     }
-    
+
 //     if (entity.reference) {
 //       reference = entity.reference
 //       description += ` Reference: ${entity.reference}.`
 //     }
-    
+
 //     if (entity.description) {
 //       description += ` ${entity.description}`
 //     } else if (entity.notes) {
@@ -870,12 +870,12 @@
 //     // More robust postcode regex that handles various UK postcode formats
 //     const postcodeRegex = /[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}/gi
 //     const matches = address.match(postcodeRegex)
-    
+
 //     if (matches && matches.length > 0) {
 //       // Take the last postcode found (most likely the main one)
 //       return matches[matches.length - 1].replace(/\s+/g, '').toUpperCase()
 //     }
-    
+
 //     return null
 //   }
 
@@ -895,7 +895,7 @@
 
 //       // Use improved postcode extraction
 //       const postcode = extractPostcode(address)
-      
+
 //       if (postcode) {
 //         // Use postcodes.io for geocoding
 //         const geocodeUrl = `https://api.postcodes.io/postcodes/${postcode}`
@@ -906,7 +906,7 @@
 //           latitude = geocodeData.result.latitude
 //           longitude = geocodeData.result.longitude
 //           localAuthority = geocodeData.result.admin_district || geocodeData.result.primary_care_trust || "Unknown Local Authority"
-          
+
 //           // Special handling for the specific address with Article 4 restriction
 //           if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
 //             console.log("Special handling for Camden Road, Chafford Hundred area")
@@ -938,16 +938,16 @@
 
 //           const res = await fetch(url)
 //           if (!res.ok) throw new Error(`API returned ${res.status}`)
-          
+
 //           const data = await res.json()
 //           successfulApiCalls++
 
 //           if (data.entities && data.entities.length > 0) {
 //             const entities: PlanningEntity[] = data.entities
-            
+
 //             // Process all entities to get comprehensive information
 //             const entityInfos = entities.map(entity => extractEntityInfo(entity, ds.name))
-            
+
 //             // Combine information from all entities
 //             let combinedDescription = `${ds.name} restriction applies at this address. `
 //             let documentationUrls: string[] = []
@@ -974,11 +974,11 @@
 //             if (names.length > 0) {
 //               combinedDescription += `Affected areas: ${names.join(', ')}. `
 //             }
-            
+
 //             if (references.length > 0) {
 //               combinedDescription += `References: ${references.join(', ')}. `
 //             }
-            
+
 //             if (designationDates.length > 0) {
 //               const formattedDates = designationDates.map(date => new Date(date).toLocaleDateString())
 //               combinedDescription += `Designation dates: ${formattedDates.join(', ')}. `
@@ -1092,10 +1092,10 @@
 
 //   const handleDownloadReport = async () => {
 //     if (!result) return
-    
+
 //     // Dynamically import jsPDF to avoid SSR issues
 //     const { jsPDF } = await import('jspdf');
-    
+
 //     // Create PDF document
 //     const doc = new jsPDF();
 //     const pageWidth = doc.internal.pageSize.getWidth();
@@ -1105,12 +1105,12 @@
 //     // Add header with professional styling
 //     doc.setFillColor(30, 122, 111); // Dark teal
 //     doc.rect(0, 0, pageWidth, 40, 'F');
-    
+
 //     doc.setTextColor(255, 255, 255);
 //     doc.setFontSize(20);
 //     doc.setFont('helvetica', 'bold');
 //     doc.text('PLANNING CHECK REPORT', pageWidth / 2, 25, { align: 'center' });
-    
+
 //     doc.setFontSize(10);
 //     doc.text('Professional Planning Assessment', pageWidth / 2, 32, { align: 'center' });
 
@@ -1127,7 +1127,7 @@
 //     yPosition += 15;
 //     doc.setFontSize(10);
 //     doc.setFont('helvetica', 'normal');
-    
+
 //     doc.text(`Address: ${result.address}`, 15, yPosition);
 //     yPosition += 6;
 //     doc.text(`Local Authority: ${result.localAuthority}`, 15, yPosition);
@@ -1135,7 +1135,7 @@
 //     doc.text(`Report Date: ${new Date().toLocaleDateString('en-GB')}`, 15, yPosition);
 //     yPosition += 6;
 //     doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, 15, yPosition);
-    
+
 //     yPosition += 12;
 
 //     // Overall Result Section
@@ -1147,7 +1147,7 @@
 
 //     yPosition += 15;
 //     doc.setFontSize(11);
-    
+
 //     if (result.hasPermittedDevelopmentRights) {
 //       doc.setTextColor(39, 174, 96); // Green
 //       doc.text('✓ PERMITTED DEVELOPMENT RIGHTS APPLY', 15, yPosition);
@@ -1155,12 +1155,12 @@
 //       doc.setTextColor(231, 76, 60); // Red
 //       doc.text('✗ PLANNING PERMISSION LIKELY REQUIRED', 15, yPosition);
 //     }
-    
+
 //     yPosition += 7;
 //     doc.setTextColor(0, 0, 0);
 //     doc.setFontSize(9);
 //     doc.text(`Confidence Level: ${result.confidence}%`, 15, yPosition);
-    
+
 //     yPosition += 12;
 
 //     // Detailed Checks Section
@@ -1181,7 +1181,7 @@
 
 //       doc.setFontSize(10);
 //       doc.setFont('helvetica', 'bold');
-      
+
 //       // Set color based on status
 //       if (check.status === 'pass') {
 //         doc.setTextColor(39, 174, 96); // Green
@@ -1198,7 +1198,7 @@
 //       doc.setFontSize(8);
 //       doc.setFont('helvetica', 'normal');
 //       doc.setTextColor(0, 0, 0);
-      
+
 //       // Split description into multiple lines if needed
 //       const descriptionLines = doc.splitTextToSize(check.description, pageWidth - 30);
 //       doc.text(descriptionLines, 20, yPosition);
@@ -1253,7 +1253,7 @@
 //     yPosition += 15;
 //     doc.setFontSize(8);
 //     doc.setFont('helvetica', 'normal');
-    
+
 //     const disclaimerText = [
 //       'This report is generated based on publicly available planning data and is provided for informational purposes only.',
 //       'The accuracy of this report is estimated at ' + result.confidence + '%.',
@@ -1380,7 +1380,7 @@
 //             </form>
 //             {error && <div className="text-sm text-[#D35400] bg-[#D35400]/10 p-2 rounded-md mt-2">{error}</div>}
 //           </div>
-          
+
 //           <p className="text-xs text-[#4C5A63]/70 mt-4 max-w-2xl mx-auto">
 //             Simple, fast check of planning restrictions that might affect your property
 //           </p>
@@ -1585,7 +1585,7 @@
 //     if (input.length < 1) return []
 
 //     const inputLower = input.toLowerCase().trim()
-    
+
 //     // If input is just a number, show addresses starting with that number
 //     if (/^\d+$/.test(input)) {
 //       const number = parseInt(input)
@@ -1700,12 +1700,12 @@
 //       name = entity.name
 //       description += ` Name: ${entity.name}.`
 //     }
-    
+
 //     if (entity.reference) {
 //       reference = entity.reference
 //       description += ` Reference: ${entity.reference}.`
 //     }
-    
+
 //     if (entity.description) {
 //       description += ` ${entity.description}`
 //     } else if (entity.notes) {
@@ -1746,12 +1746,12 @@
 //     // More robust postcode regex that handles various UK postcode formats
 //     const postcodeRegex = /[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}/gi
 //     const matches = address.match(postcodeRegex)
-    
+
 //     if (matches && matches.length > 0) {
 //       // Take the last postcode found (most likely the main one)
 //       return matches[matches.length - 1].replace(/\s+/g, '').toUpperCase()
 //     }
-    
+
 //     return null
 //   }
 
@@ -1771,7 +1771,7 @@
 
 //       // Use improved postcode extraction
 //       const postcode = extractPostcode(address)
-      
+
 //       if (postcode) {
 //         // Use postcodes.io for geocoding
 //         const geocodeUrl = `https://api.postcodes.io/postcodes/${postcode}`
@@ -1782,7 +1782,7 @@
 //           latitude = geocodeData.result.latitude
 //           longitude = geocodeData.result.longitude
 //           localAuthority = geocodeData.result.admin_district || geocodeData.result.primary_care_trust || "Unknown Local Authority"
-          
+
 //           // Special handling for the specific address with Article 4 restriction
 //           if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
 //             console.log("Special handling for Camden Road, Chafford Hundred area")
@@ -1814,16 +1814,16 @@
 
 //           const res = await fetch(url)
 //           if (!res.ok) throw new Error(`API returned ${res.status}`)
-          
+
 //           const data = await res.json()
 //           successfulApiCalls++
 
 //           if (data.entities && data.entities.length > 0) {
 //             const entities: PlanningEntity[] = data.entities
-            
+
 //             // Process all entities to get comprehensive information
 //             const entityInfos = entities.map(entity => extractEntityInfo(entity, ds.name))
-            
+
 //             // Combine information from all entities
 //             let combinedDescription = `${ds.name} restriction applies at this address. `
 //             let documentationUrls: string[] = []
@@ -1850,11 +1850,11 @@
 //             if (names.length > 0) {
 //               combinedDescription += `Affected areas: ${names.join(', ')}. `
 //             }
-            
+
 //             if (references.length > 0) {
 //               combinedDescription += `References: ${references.join(', ')}. `
 //             }
-            
+
 //             if (designationDates.length > 0) {
 //               const formattedDates = designationDates.map(date => new Date(date).toLocaleDateString())
 //               combinedDescription += `Designation dates: ${formattedDates.join(', ')}. `
@@ -1968,10 +1968,10 @@
 
 //   const handleDownloadReport = async () => {
 //     if (!result) return
-    
+
 //     // Dynamically import jsPDF to avoid SSR issues
 //     const { jsPDF } = await import('jspdf');
-    
+
 //     // Create PDF document
 //     const doc = new jsPDF();
 //     const pageWidth = doc.internal.pageSize.getWidth();
@@ -1981,12 +1981,12 @@
 //     // Add header with professional styling
 //     doc.setFillColor(30, 122, 111); // Dark teal
 //     doc.rect(0, 0, pageWidth, 40, 'F');
-    
+
 //     doc.setTextColor(255, 255, 255);
 //     doc.setFontSize(20);
 //     doc.setFont('helvetica', 'bold');
 //     doc.text('PLANNING CHECK REPORT', pageWidth / 2, 25, { align: 'center' });
-    
+
 //     doc.setFontSize(10);
 //     doc.text('Professional Planning Assessment', pageWidth / 2, 32, { align: 'center' });
 
@@ -2003,7 +2003,7 @@
 //     yPosition += 15;
 //     doc.setFontSize(10);
 //     doc.setFont('helvetica', 'normal');
-    
+
 //     doc.text(`Address: ${result.address}`, 15, yPosition);
 //     yPosition += 6;
 //     doc.text(`Local Authority: ${result.localAuthority}`, 15, yPosition);
@@ -2011,7 +2011,7 @@
 //     doc.text(`Report Date: ${new Date().toLocaleDateString('en-GB')}`, 15, yPosition);
 //     yPosition += 6;
 //     doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, 15, yPosition);
-    
+
 //     yPosition += 12;
 
 //     // Overall Result Section
@@ -2023,7 +2023,7 @@
 
 //     yPosition += 15;
 //     doc.setFontSize(11);
-    
+
 //     if (result.hasPermittedDevelopmentRights) {
 //       doc.setTextColor(39, 174, 96); // Green
 //       doc.text('✓ PERMITTED DEVELOPMENT RIGHTS APPLY', 15, yPosition);
@@ -2031,12 +2031,12 @@
 //       doc.setTextColor(231, 76, 60); // Red
 //       doc.text('✗ PLANNING PERMISSION LIKELY REQUIRED', 15, yPosition);
 //     }
-    
+
 //     yPosition += 7;
 //     doc.setTextColor(0, 0, 0);
 //     doc.setFontSize(9);
 //     doc.text(`Confidence Level: ${result.confidence}%`, 15, yPosition);
-    
+
 //     yPosition += 12;
 
 //     // Detailed Checks Section
@@ -2057,7 +2057,7 @@
 
 //       doc.setFontSize(10);
 //       doc.setFont('helvetica', 'bold');
-      
+
 //       // Set color based on status
 //       if (check.status === 'pass') {
 //         doc.setTextColor(39, 174, 96); // Green
@@ -2074,7 +2074,7 @@
 //       doc.setFontSize(8);
 //       doc.setFont('helvetica', 'normal');
 //       doc.setTextColor(0, 0, 0);
-      
+
 //       // Split description into multiple lines if needed
 //       const descriptionLines = doc.splitTextToSize(check.description, pageWidth - 30);
 //       doc.text(descriptionLines, 20, yPosition);
@@ -2129,7 +2129,7 @@
 //     yPosition += 15;
 //     doc.setFontSize(8);
 //     doc.setFont('helvetica', 'normal');
-    
+
 //     const disclaimerText = [
 //       'This report is generated based on publicly available planning data and is provided for informational purposes only.',
 //       'The accuracy of this report is estimated at ' + result.confidence + '%.',
@@ -2257,7 +2257,7 @@
 //             </form>
 //             {error && <div className="text-sm text-[#D35400] bg-[#D35400]/10 p-2 rounded-md mt-2">{error}</div>}
 //           </div>
-          
+
 //           <p className="text-xs text-[#4C5A63]/70 mt-4 max-w-2xl mx-auto">
 //             Simple, fast check of planning restrictions that might affect your property
 //           </p>
@@ -2268,7 +2268,7 @@
 //       <section id="planning-info" className="py-16 bg-white">
 //         <div className="container mx-auto px-4">
 //           <h2 className="text-2xl font-bold text-center text-[#4C5A63] mb-12">Understanding Planning & Permitted Development</h2>
-          
+
 //           <div className="max-w-4xl mx-auto space-y-6">
 //             {/* What is Planning Permission */}
 //             <div className="bg-[#F7F8F7] rounded-lg border border-[#E6E8E6] overflow-hidden">
@@ -2333,7 +2333,7 @@
 //                       These rights are granted by the government through legislation, but they can be removed or 
 //                       restricted in certain areas or for specific properties.
 //                     </p>
-                    
+
 //                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
 //                       <div className="bg-green-50 p-4 rounded border border-green-200">
 //                         <h4 className="font-semibold text-green-800 mb-3 flex items-center">
@@ -2422,14 +2422,14 @@
 //                             Local councils can remove specific PD rights in certain areas to protect local character.
 //                           </p>
 //                         </div>
-                        
+
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#4C5A63]">Conservation Areas</h4>
 //                           <p className="text-sm mt-1">
 //                             Special protections for areas of architectural or historic interest.
 //                           </p>
 //                         </div>
-                        
+
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#4C5A63]">Listed Buildings</h4>
 //                           <p className="text-sm mt-1">
@@ -2437,7 +2437,7 @@
 //                           </p>
 //                         </div>
 //                       </div>
-                      
+
 //                       <div className="space-y-4">
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#4C5A63]">National Parks & AONBs</h4>
@@ -2445,14 +2445,14 @@
 //                             Enhanced protections in areas of outstanding natural beauty.
 //                           </p>
 //                         </div>
-                        
+
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#4C5A63]">Flats & Maisonettes</h4>
 //                           <p className="text-sm mt-1">
 //                             Most PD rights don't apply to flats - different rules for each dwelling type.
 //                           </p>
 //                         </div>
-                        
+
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#4C5A63]">Commercial Properties</h4>
 //                           <p className="text-sm mt-1">
@@ -2497,7 +2497,7 @@
 //                           Contact details for planning departments in your area.
 //                         </p>
 //                       </div>
-                      
+
 //                       <div className="bg-white p-4 rounded border border-[#E6E8E6]">
 //                         <h4 className="font-semibold text-[#4C5A63] mb-2">Professional Advice</h4>
 //                         <p className="text-sm text-[#4C5A63]">
@@ -2654,7 +2654,7 @@
 //     if (input.length < 1) return []
 
 //     const inputLower = input.toLowerCase().trim()
-    
+
 //     // If input is just a number, show addresses starting with that number
 //     if (/^\d+$/.test(input)) {
 //       const number = parseInt(input)
@@ -2769,12 +2769,12 @@
 //       name = entity.name
 //       description += ` Name: ${entity.name}.`
 //     }
-    
+
 //     if (entity.reference) {
 //       reference = entity.reference
 //       description += ` Reference: ${entity.reference}.`
 //     }
-    
+
 //     if (entity.description) {
 //       description += ` ${entity.description}`
 //     } else if (entity.notes) {
@@ -2815,12 +2815,12 @@
 //     // More robust postcode regex that handles various UK postcode formats
 //     const postcodeRegex = /[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}/gi
 //     const matches = address.match(postcodeRegex)
-    
+
 //     if (matches && matches.length > 0) {
 //       // Take the last postcode found (most likely the main one)
 //       return matches[matches.length - 1].replace(/\s+/g, '').toUpperCase()
 //     }
-    
+
 //     return null
 //   }
 
@@ -2840,7 +2840,7 @@
 
 //       // Use improved postcode extraction
 //       const postcode = extractPostcode(address)
-      
+
 //       if (postcode) {
 //         // Use postcodes.io for geocoding
 //         const geocodeUrl = `https://api.postcodes.io/postcodes/${postcode}`
@@ -2851,7 +2851,7 @@
 //           latitude = geocodeData.result.latitude
 //           longitude = geocodeData.result.longitude
 //           localAuthority = geocodeData.result.admin_district || geocodeData.result.primary_care_trust || "Unknown Local Authority"
-          
+
 //           // Special handling for the specific address with Article 4 restriction
 //           if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
 //             console.log("Special handling for Camden Road, Chafford Hundred area")
@@ -2883,16 +2883,16 @@
 
 //           const res = await fetch(url)
 //           if (!res.ok) throw new Error(`API returned ${res.status}`)
-          
+
 //           const data = await res.json()
 //           successfulApiCalls++
 
 //           if (data.entities && data.entities.length > 0) {
 //             const entities: PlanningEntity[] = data.entities
-            
+
 //             // Process all entities to get comprehensive information
 //             const entityInfos = entities.map(entity => extractEntityInfo(entity, ds.name))
-            
+
 //             // Combine information from all entities
 //             let combinedDescription = `${ds.name} restriction applies at this address. `
 //             let documentationUrls: string[] = []
@@ -2919,11 +2919,11 @@
 //             if (names.length > 0) {
 //               combinedDescription += `Affected areas: ${names.join(', ')}. `
 //             }
-            
+
 //             if (references.length > 0) {
 //               combinedDescription += `References: ${references.join(', ')}. `
 //             }
-            
+
 //             if (designationDates.length > 0) {
 //               const formattedDates = designationDates.map(date => new Date(date).toLocaleDateString())
 //               combinedDescription += `Designation dates: ${formattedDates.join(', ')}. `
@@ -3037,10 +3037,10 @@
 
 //   const handleDownloadReport = async () => {
 //     if (!result) return
-    
+
 //     // Dynamically import jsPDF to avoid SSR issues
 //     const { jsPDF } = await import('jspdf');
-    
+
 //     // Create PDF document
 //     const doc = new jsPDF();
 //     const pageWidth = doc.internal.pageSize.getWidth();
@@ -3050,12 +3050,12 @@
 //     // Add header with professional styling
 //     doc.setFillColor(30, 122, 111); // Dark teal
 //     doc.rect(0, 0, pageWidth, 40, 'F');
-    
+
 //     doc.setTextColor(255, 255, 255);
 //     doc.setFontSize(20);
 //     doc.setFont('helvetica', 'bold');
 //     doc.text('PLANNING CHECK REPORT', pageWidth / 2, 25, { align: 'center' });
-    
+
 //     doc.setFontSize(10);
 //     doc.text('Professional Planning Assessment', pageWidth / 2, 32, { align: 'center' });
 
@@ -3072,7 +3072,7 @@
 //     yPosition += 15;
 //     doc.setFontSize(10);
 //     doc.setFont('helvetica', 'normal');
-    
+
 //     doc.text(`Address: ${result.address}`, 15, yPosition);
 //     yPosition += 6;
 //     doc.text(`Local Authority: ${result.localAuthority}`, 15, yPosition);
@@ -3080,7 +3080,7 @@
 //     doc.text(`Report Date: ${new Date().toLocaleDateString('en-GB')}`, 15, yPosition);
 //     yPosition += 6;
 //     doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, 15, yPosition);
-    
+
 //     yPosition += 12;
 
 //     // Overall Result Section
@@ -3092,7 +3092,7 @@
 
 //     yPosition += 15;
 //     doc.setFontSize(11);
-    
+
 //     if (result.hasPermittedDevelopmentRights) {
 //       doc.setTextColor(39, 174, 96); // Green
 //       doc.text('✓ PERMITTED DEVELOPMENT RIGHTS APPLY', 15, yPosition);
@@ -3100,12 +3100,12 @@
 //       doc.setTextColor(231, 76, 60); // Red
 //       doc.text('✗ PLANNING PERMISSION LIKELY REQUIRED', 15, yPosition);
 //     }
-    
+
 //     yPosition += 7;
 //     doc.setTextColor(0, 0, 0);
 //     doc.setFontSize(9);
 //     doc.text(`Confidence Level: ${result.confidence}%`, 15, yPosition);
-    
+
 //     yPosition += 12;
 
 //     // Detailed Checks Section
@@ -3126,7 +3126,7 @@
 
 //       doc.setFontSize(10);
 //       doc.setFont('helvetica', 'bold');
-      
+
 //       // Set color based on status
 //       if (check.status === 'pass') {
 //         doc.setTextColor(39, 174, 96); // Green
@@ -3143,7 +3143,7 @@
 //       doc.setFontSize(8);
 //       doc.setFont('helvetica', 'normal');
 //       doc.setTextColor(0, 0, 0);
-      
+
 //       // Split description into multiple lines if needed
 //       const descriptionLines = doc.splitTextToSize(check.description, pageWidth - 30);
 //       doc.text(descriptionLines, 20, yPosition);
@@ -3198,7 +3198,7 @@
 //     yPosition += 15;
 //     doc.setFontSize(8);
 //     doc.setFont('helvetica', 'normal');
-    
+
 //     const disclaimerText = [
 //       'This report is generated based on publicly available planning data and is provided for informational purposes only.',
 //       'The accuracy of this report is estimated at ' + result.confidence + '%.',
@@ -3400,7 +3400,7 @@
 //       <section id="planning-info" className="py-16 bg-white">
 //         <div className="container mx-auto px-4">
 //           <h2 className="text-2xl font-bold text-center text-[#1E7A6F] mb-12">Understanding Planning & Permitted Development</h2>
-          
+
 //           <div className="max-w-4xl mx-auto space-y-6">
 //             {/* What is Planning Permission */}
 //             <div className="bg-[#F7F8F7] rounded-lg border border-[#E6E8E6] overflow-hidden">
@@ -3465,7 +3465,7 @@
 //                       These rights are granted by the government through legislation, but they can be removed or 
 //                       restricted in certain areas or for specific properties.
 //                     </p>
-                    
+
 //                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
 //                       <div className="bg-green-50 p-4 rounded border border-green-200">
 //                         <h4 className="font-semibold text-green-800 mb-3 flex items-center">
@@ -3554,14 +3554,14 @@
 //                             Local councils can remove specific PD rights in certain areas to protect local character.
 //                           </p>
 //                         </div>
-                        
+
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#1E7A6F]">Conservation Areas</h4>
 //                           <p className="text-sm mt-1">
 //                             Special protections for areas of architectural or historic interest.
 //                           </p>
 //                         </div>
-                        
+
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#1E7A6F]">Listed Buildings</h4>
 //                           <p className="text-sm mt-1">
@@ -3569,7 +3569,7 @@
 //                           </p>
 //                         </div>
 //                       </div>
-                      
+
 //                       <div className="space-y-4">
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#1E7A6F]">National Parks & AONBs</h4>
@@ -3577,14 +3577,14 @@
 //                             Enhanced protections in areas of outstanding natural beauty.
 //                           </p>
 //                         </div>
-                        
+
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#1E7A6F]">Flats & Maisonettes</h4>
 //                           <p className="text-sm mt-1">
 //                             Most PD rights don't apply to flats - different rules for each dwelling type.
 //                           </p>
 //                         </div>
-                        
+
 //                         <div className="border-l-4 border-red-500 pl-4">
 //                           <h4 className="font-semibold text-[#1E7A6F]">Commercial Properties</h4>
 //                           <p className="text-sm mt-1">
@@ -3629,7 +3629,7 @@
 //                           Contact details for planning departments in your area.
 //                         </p>
 //                       </div>
-                      
+
 //                       <div className="bg-white p-4 rounded border border-[#E6E8E6]">
 //                         <h4 className="font-semibold text-[#1E7A6F] mb-2">Professional Advice</h4>
 //                         <p className="text-sm text-[#4C5A63]">
@@ -3793,7 +3793,7 @@
 //     if (!input || input.length < 1) return []
 
 //     const inputLower = input.toLowerCase().trim()
-    
+
 //     // Exact number match (e.g., "33" matches "33 Camden Road")
 //     if (/^\d+$/.test(input)) {
 //       const number = parseInt(input)
@@ -3882,13 +3882,13 @@
 
 //     try {
 //       const apiKey = 'AIzaSyD2RcExrf04EUfYPJedokSIqGHcuNUZHQw';
-      
+
 //       // If no API key or in development, use fallback
-      
+
 //       const response = await fetch(
 //         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&components=country:uk&types=address&key=${apiKey}`
 //       )
-      
+
 //       if (!response.ok) {
 //         throw new Error(`Google Places API request failed: ${response.status}`)
 //       }
@@ -3938,7 +3938,7 @@
 //     }
 
 //     setIsLoadingSuggestions(true)
-    
+
 //     // Debounce API calls - 400ms delay
 //     debounceRef.current = setTimeout(async () => {
 //       try {
@@ -3982,12 +3982,12 @@
 //       name = entity.name
 //       description += ` Name: ${entity.name}.`
 //     }
-    
+
 //     if (entity.reference) {
 //       reference = entity.reference
 //       description += ` Reference: ${entity.reference}.`
 //     }
-    
+
 //     if (entity.description) {
 //       description += ` ${entity.description}`
 //     } else if (entity.notes) {
@@ -4028,12 +4028,12 @@
 //     // More robust postcode regex that handles various UK postcode formats
 //     const postcodeRegex = /[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}/gi
 //     const matches = address.match(postcodeRegex)
-    
+
 //     if (matches && matches.length > 0) {
 //       // Take the last postcode found (most likely the main one)
 //       return matches[matches.length - 1].replace(/\s+/g, '').toUpperCase()
 //     }
-    
+
 //     return null
 //   }
 
@@ -4053,7 +4053,7 @@
 
 //       // Use improved postcode extraction
 //       const postcode = extractPostcode(address)
-      
+
 //       if (postcode) {
 //         // Use postcodes.io for geocoding
 //         const geocodeUrl = `https://api.postcodes.io/postcodes/${postcode}`
@@ -4064,7 +4064,7 @@
 //           latitude = geocodeData.result.latitude
 //           longitude = geocodeData.result.longitude
 //           localAuthority = geocodeData.result.admin_district || geocodeData.result.primary_care_trust || "Unknown Local Authority"
-          
+
 //           // Special handling for the specific address with Article 4 restriction
 //           if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
 //             console.log("Special handling for Camden Road, Chafford Hundred area")
@@ -4096,16 +4096,16 @@
 
 //           const res = await fetch(url)
 //           if (!res.ok) throw new Error(`API returned ${res.status}`)
-          
+
 //           const data = await res.json()
 //           successfulApiCalls++
 
 //           if (data.entities && data.entities.length > 0) {
 //             const entities: PlanningEntity[] = data.entities
-            
+
 //             // Process all entities to get comprehensive information
 //             const entityInfos = entities.map(entity => extractEntityInfo(entity, ds.name))
-            
+
 //             // Combine information from all entities
 //             let combinedDescription = `${ds.name} restriction applies at this address. `
 //             let documentationUrls: string[] = []
@@ -4132,11 +4132,11 @@
 //             if (names.length > 0) {
 //               combinedDescription += `Affected areas: ${names.join(', ')}. `
 //             }
-            
+
 //             if (references.length > 0) {
 //               combinedDescription += `References: ${references.join(', ')}. `
 //             }
-            
+
 //             if (designationDates.length > 0) {
 //               const formattedDates = designationDates.map(date => new Date(date).toLocaleDateString())
 //               combinedDescription += `Designation dates: ${formattedDates.join(', ')}. `
@@ -4250,10 +4250,10 @@
 
 //   const handleDownloadReport = async () => {
 //     if (!result) return
-    
+
 //     // Dynamically import jsPDF to avoid SSR issues
 //     const { jsPDF } = await import('jspdf');
-    
+
 //     // Create PDF document
 //     const doc = new jsPDF();
 //     const pageWidth = doc.internal.pageSize.getWidth();
@@ -4263,12 +4263,12 @@
 //     // Add header with professional styling
 //     doc.setFillColor(30, 122, 111); // Dark teal
 //     doc.rect(0, 0, pageWidth, 40, 'F');
-    
+
 //     doc.setTextColor(255, 255, 255);
 //     doc.setFontSize(20);
 //     doc.setFont('helvetica', 'bold');
 //     doc.text('PLANNING CHECK REPORT', pageWidth / 2, 25, { align: 'center' });
-    
+
 //     doc.setFontSize(10);
 //     doc.text('Professional Planning Assessment', pageWidth / 2, 32, { align: 'center' });
 
@@ -4285,7 +4285,7 @@
 //     yPosition += 15;
 //     doc.setFontSize(10);
 //     doc.setFont('helvetica', 'normal');
-    
+
 //     doc.text(`Address: ${result.address}`, 15, yPosition);
 //     yPosition += 6;
 //     doc.text(`Local Authority: ${result.localAuthority}`, 15, yPosition);
@@ -4293,7 +4293,7 @@
 //     doc.text(`Report Date: ${new Date().toLocaleDateString('en-GB')}`, 15, yPosition);
 //     yPosition += 6;
 //     doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, 15, yPosition);
-    
+
 //     yPosition += 12;
 
 //     // Overall Result Section
@@ -4305,7 +4305,7 @@
 
 //     yPosition += 15;
 //     doc.setFontSize(11);
-    
+
 //     if (result.hasPermittedDevelopmentRights) {
 //       doc.setTextColor(39, 174, 96); // Green
 //       doc.text('✓ PERMITTED DEVELOPMENT RIGHTS APPLY', 15, yPosition);
@@ -4313,12 +4313,12 @@
 //       doc.setTextColor(231, 76, 60); // Red
 //       doc.text('✗ PLANNING PERMISSION LIKELY REQUIRED', 15, yPosition);
 //     }
-    
+
 //     yPosition += 7;
 //     doc.setTextColor(0, 0, 0);
 //     doc.setFontSize(9);
 //     doc.text(`Confidence Level: ${result.confidence}%`, 15, yPosition);
-    
+
 //     yPosition += 12;
 
 //     // Detailed Checks Section
@@ -4339,7 +4339,7 @@
 
 //       doc.setFontSize(10);
 //       doc.setFont('helvetica', 'bold');
-      
+
 //       // Set color based on status
 //       if (check.status === 'pass') {
 //         doc.setTextColor(39, 174, 96); // Green
@@ -4356,7 +4356,7 @@
 //       doc.setFontSize(8);
 //       doc.setFont('helvetica', 'normal');
 //       doc.setTextColor(0, 0, 0);
-      
+
 //       // Split description into multiple lines if needed
 //       const descriptionLines = doc.splitTextToSize(check.description, pageWidth - 30);
 //       doc.text(descriptionLines, 20, yPosition);
@@ -4411,7 +4411,7 @@
 //     yPosition += 15;
 //     doc.setFontSize(8);
 //     doc.setFont('helvetica', 'normal');
-    
+
 //     const disclaimerText = [
 //       'This report is generated based on publicly available planning data and is provided for informational purposes only.',
 //       'The accuracy of this report is estimated at ' + result.confidence + '%.',
@@ -4607,6 +4607,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, MapPin, Check, X, AlertCircle, ChevronRight, Home, Building, FileText, HelpCircle, Download, ChevronDown, ChevronUp } from "lucide-react"
 import { type PlanningResult, PlanningResult as PlanningResultComponent, type PlanningCheck } from "@/components/planning-result"
 
@@ -4678,8 +4679,9 @@ export function AddressSearchForm() {
   const [error, setError] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<GooglePlaceSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({})
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+  const [propertyType, setPropertyType] = useState<string>("house")
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -4734,7 +4736,7 @@ export function AddressSearchForm() {
     if (!input || input.length < 1) return []
 
     const inputLower = input.toLowerCase().trim()
-    
+
     // Exact number match (e.g., "33" matches "33 Camden Road")
     if (/^\d+$/.test(input)) {
       const number = parseInt(input)
@@ -4762,9 +4764,9 @@ export function AddressSearchForm() {
         const addressLower = address.toLowerCase()
         // Check if input matches any part of the address
         return addressLower.includes(inputLower) ||
-               inputLower.split(/\s+/).some(word => 
-                 word.length > 2 && addressLower.includes(word)
-               )
+          inputLower.split(/\s+/).some(word =>
+            word.length > 2 && addressLower.includes(word)
+          )
       })
       .slice(0, 8)
       .map((address, index) => ({
@@ -4785,7 +4787,7 @@ export function AddressSearchForm() {
       const postcodeMatches = UK_ADDRESS_PATTERNS
         .filter(address => {
           const addressPostcodes = address.match(/[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}/gi) || []
-          return addressPostcodes.some(addrPostcode => 
+          return addressPostcodes.some(addrPostcode =>
             addrPostcode.replace(/\s+/g, '').toUpperCase().includes(postcode)
           )
         })
@@ -4827,7 +4829,7 @@ export function AddressSearchForm() {
 
     try {
       const apiKey = 'AIzaSyD2RcExrf04EUfYPJedokSIqGHcuNUZHQw';
-      
+
       if (!apiKey) {
         console.log('No API key available, using fallback suggestions')
         return getFallbackSuggestions(input)
@@ -4866,7 +4868,7 @@ export function AddressSearchForm() {
           body: JSON.stringify(requestBody)
         }
       )
-      
+
       if (!response.ok) {
         throw new Error(`Google Places API request failed: ${response.status}`)
       }
@@ -4875,13 +4877,13 @@ export function AddressSearchForm() {
 
       if (data.places && data.places.length > 0) {
         console.log('Google Places Text Search API success:', data.places.length, 'suggestions')
-        
+
         // Filter results to prioritize address-like results
         const addressLikePlaces = data.places.filter(place => {
           // Prioritize results with UK postcodes or specific address types
           const hasPostcode = /[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9]?[A-Z]{2}/i.test(place.formattedAddress);
-          const isAddressType = place.types?.some(type => 
-            type.includes('premise') || 
+          const isAddressType = place.types?.some(type =>
+            type.includes('premise') ||
             type.includes('street_address') ||
             type.includes('subpremise')
           );
@@ -4890,13 +4892,13 @@ export function AddressSearchForm() {
 
         // Use address-like results if available, otherwise use all results
         const resultsToUse = addressLikePlaces.length > 0 ? addressLikePlaces : data.places;
-        
+
         return resultsToUse.map((place: GooglePlace) => {
           // Extract main text and secondary text for structured formatting
           const addressParts = place.formattedAddress.split(', ')
           const mainText = addressParts[0] || place.displayName.text
           const secondaryText = addressParts.slice(1).join(', ')
-          
+
           return {
             description: place.formattedAddress,
             place_id: place.id,
@@ -4941,7 +4943,7 @@ export function AddressSearchForm() {
     }
 
     setIsLoadingSuggestions(true)
-    
+
     // Debounce API calls - 400ms delay
     debounceRef.current = setTimeout(async () => {
       try {
@@ -4985,12 +4987,12 @@ export function AddressSearchForm() {
       name = entity.name
       description += ` Name: ${entity.name}.`
     }
-    
+
     if (entity.reference) {
       reference = entity.reference
       description += ` Reference: ${entity.reference}.`
     }
-    
+
     if (entity.description) {
       description += ` ${entity.description}`
     } else if (entity.notes) {
@@ -5031,12 +5033,12 @@ export function AddressSearchForm() {
     // More robust postcode regex that handles various UK postcode formats
     const postcodeRegex = /[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9]?[A-Z]{2}/gi
     const matches = address.match(postcodeRegex)
-    
+
     if (matches && matches.length > 0) {
       // Take the last postcode found (most likely the main one)
       return matches[matches.length - 1].replace(/\s+/g, '').toUpperCase()
     }
-    
+
     return null
   }
 
@@ -5056,7 +5058,7 @@ export function AddressSearchForm() {
 
       // Use improved postcode extraction
       const postcode = extractPostcode(address)
-      
+
       if (postcode) {
         // Use postcodes.io for geocoding
         const geocodeUrl = `https://api.postcodes.io/postcodes/${postcode}`
@@ -5067,7 +5069,7 @@ export function AddressSearchForm() {
           latitude = geocodeData.result.latitude
           longitude = geocodeData.result.longitude
           localAuthority = geocodeData.result.admin_district || geocodeData.result.primary_care_trust || "Unknown Local Authority"
-          
+
           // Special handling for the specific address with Article 4 restriction
           if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
             console.log("Special handling for Camden Road, Chafford Hundred area")
@@ -5099,16 +5101,16 @@ export function AddressSearchForm() {
 
           const res = await fetch(url)
           if (!res.ok) throw new Error(`API returned ${res.status}`)
-          
+
           const data = await res.json()
           successfulApiCalls++
 
           if (data.entities && data.entities.length > 0) {
             const entities: PlanningEntity[] = data.entities
-            
+
             // Process all entities to get comprehensive information
             const entityInfos = entities.map(entity => extractEntityInfo(entity, ds.name))
-            
+
             // Combine information from all entities
             let combinedDescription = `${ds.name} restriction applies at this address. `
             let documentationUrls: string[] = []
@@ -5135,11 +5137,11 @@ export function AddressSearchForm() {
             if (names.length > 0) {
               combinedDescription += `Affected areas: ${names.join(', ')}. `
             }
-            
+
             if (references.length > 0) {
               combinedDescription += `References: ${references.join(', ')}. `
             }
-            
+
             if (designationDates.length > 0) {
               const formattedDates = designationDates.map(date => new Date(date).toLocaleDateString())
               combinedDescription += `Designation dates: ${formattedDates.join(', ')}. `
@@ -5161,8 +5163,8 @@ export function AddressSearchForm() {
             })
           } else {
             // Special case: if we're in the Camden Road area and checking Article 4, simulate a restriction
-            if (ds.key === "article-4-direction" && 
-                (localAuthority.includes('Thurrock') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred'))) {
+            if (ds.key === "article-4-direction" &&
+              (localAuthority.includes('Thurrock') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred'))) {
               checks.push({
                 type: ds.name,
                 status: "fail",
@@ -5232,8 +5234,8 @@ export function AddressSearchForm() {
         summary: hasRestrictions
           ? "One or more planning restrictions were detected. You may need full planning permission."
           : hasWarnings
-          ? "No restrictions detected, but some checks were inconclusive. Permitted Development Rights likely apply."
-          : "No restrictions detected. Permitted Development Rights likely still apply.",
+            ? "No restrictions detected, but some checks were inconclusive. Permitted Development Rights likely apply."
+            : "No restrictions detected. Permitted Development Rights likely still apply.",
       }
 
       setResult(planningResult)
@@ -5253,11 +5255,11 @@ export function AddressSearchForm() {
 
   const handleDownloadReport = async () => {
     if (!result) return
-    
+
     // Dynamically import jsPDF to avoid SSR issues
     const { jsPDF } = await import('jspdf');
-    
-    // Create PDF document
+
+    // Create PDF document (A4 size)
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -5266,12 +5268,12 @@ export function AddressSearchForm() {
     // Add header with professional styling
     doc.setFillColor(30, 122, 111); // Dark teal
     doc.rect(0, 0, pageWidth, 40, 'F');
-    
+
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.text('PLANNING CHECK REPORT', pageWidth / 2, 25, { align: 'center' });
-    
+
     doc.setFontSize(10);
     doc.text('Professional Planning Assessment', pageWidth / 2, 32, { align: 'center' });
 
@@ -5288,7 +5290,7 @@ export function AddressSearchForm() {
     yPosition += 15;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    
+
     doc.text(`Address: ${result.address}`, 15, yPosition);
     yPosition += 6;
     doc.text(`Local Authority: ${result.localAuthority}`, 15, yPosition);
@@ -5296,7 +5298,7 @@ export function AddressSearchForm() {
     doc.text(`Report Date: ${new Date().toLocaleDateString('en-GB')}`, 15, yPosition);
     yPosition += 6;
     doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, 15, yPosition);
-    
+
     yPosition += 12;
 
     // Overall Result Section
@@ -5308,20 +5310,20 @@ export function AddressSearchForm() {
 
     yPosition += 15;
     doc.setFontSize(11);
-    
+
     if (result.hasPermittedDevelopmentRights) {
       doc.setTextColor(39, 174, 96); // Green
-      doc.text('✓ PERMITTED DEVELOPMENT RIGHTS APPLY', 15, yPosition);
+      doc.text('[PASS] PERMITTED DEVELOPMENT RIGHTS APPLY', 15, yPosition);
     } else {
       doc.setTextColor(231, 76, 60); // Red
-      doc.text('✗ PLANNING PERMISSION LIKELY REQUIRED', 15, yPosition);
+      doc.text('[FAIL] PLANNING PERMISSION LIKELY REQUIRED', 15, yPosition);
     }
-    
+
     yPosition += 7;
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(9);
     doc.text(`Confidence Level: ${result.confidence}%`, 15, yPosition);
-    
+
     yPosition += 12;
 
     // Detailed Checks Section
@@ -5342,24 +5344,24 @@ export function AddressSearchForm() {
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      
+
       // Set color based on status
       if (check.status === 'pass') {
         doc.setTextColor(39, 174, 96); // Green
-        doc.text(`✓ ${check.type}`, 15, yPosition);
+        doc.text(`[PASS] ${check.type}`, 15, yPosition);
       } else if (check.status === 'fail') {
         doc.setTextColor(231, 76, 60); // Red
-        doc.text(`✗ ${check.type}`, 15, yPosition);
+        doc.text(`[FAIL] ${check.type}`, 15, yPosition);
       } else {
         doc.setTextColor(243, 156, 18); // Orange
-        doc.text(`⚠ ${check.type}`, 15, yPosition);
+        doc.text(`[WARNING] ${check.type}`, 15, yPosition);
       }
 
       yPosition += 5;
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      
+
       // Split description into multiple lines if needed
       const descriptionLines = doc.splitTextToSize(check.description, pageWidth - 30);
       doc.text(descriptionLines, 20, yPosition);
@@ -5368,7 +5370,7 @@ export function AddressSearchForm() {
       // Add documentation URL if available
       if (check.documentationUrl) {
         doc.setTextColor(41, 128, 185); // Blue
-        doc.textWithLink('View Official Documentation →', 20, yPosition, { url: check.documentationUrl });
+        doc.textWithLink('View Official Documentation', 20, yPosition, { url: check.documentationUrl });
         doc.setTextColor(0, 0, 0);
         yPosition += 5;
       }
@@ -5414,7 +5416,7 @@ export function AddressSearchForm() {
     yPosition += 15;
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    
+
     const disclaimerText = [
       'This report is generated based on publicly available planning data and is provided for informational purposes only.',
       'The accuracy of this report is estimated at ' + result.confidence + '%.',
@@ -5471,21 +5473,72 @@ export function AddressSearchForm() {
           </p>
 
           {/* Search Form */}
-          <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-2">
+          <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
+            {/* Property Type Selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#1E7A6F] mb-2">
+                Property Type
+              </label>
+              <Select value={propertyType} onValueChange={setPropertyType}>
+                <SelectTrigger className="w-full h-12 border-[#E6E8E6] focus:border-[#1E7A6F] focus:ring-[#1E7A6F] text-[#4C5A63]">
+                  <SelectValue placeholder="Select property type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="house">
+                    <div className="flex items-center gap-2">
+                      <Home className="w-4 h-4 text-[#1E7A6F]" />
+                      <span>House</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="flat">
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-[#1E7A6F]" />
+                      <span>Flat</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="building">
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-[#1E7A6F]" />
+                      <span>Building</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Flat Warning Message */}
+            {propertyType === "flat" && (
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-amber-900 mb-1">
+                      Permitted Development Rights Do Not Apply to Flats
+                    </h4>
+                    <p className="text-sm text-amber-800">
+                      Flats and maisonettes have very limited or no Permitted Development rights.
+                      Most alterations to flats require full planning permission. Please consult with
+                      your local planning authority for specific guidance.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#4C5A63] w-5 h-5" />
                 <Input
                   type="text"
-                  placeholder="Enter property address or postcode"
+                  placeholder={propertyType === "flat" ? "Address search disabled for flats" : "Enter property address or postcode"}
                   value={address}
                   onChange={(e) => handleAddressChange(e.target.value)}
                   className="pl-10 pr-4 py-3 h-14 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#4C5A63] text-lg"
-                  disabled={isLoading}
+                  disabled={isLoading || propertyType === "flat"}
                 />
 
-                {showSuggestions && (
-                  <div 
+                {showSuggestions && propertyType !== "flat" && (
+                  <div
                     ref={suggestionsRef}
                     className="absolute z-10 w-full mt-1 bg-white border border-[#E6E8E6] rounded-lg shadow-lg max-h-60 overflow-y-auto"
                   >
@@ -5517,10 +5570,10 @@ export function AddressSearchForm() {
                 )}
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="py-3 px-8 h-14 font-semibold bg-[#F5A623] hover:bg-[#e69519] text-white whitespace-nowrap text-lg"
-                disabled={isLoading || !address.trim()}
+                disabled={isLoading || !address.trim() || propertyType === "flat"}
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -5607,7 +5660,7 @@ export function AddressSearchForm() {
       <section id="planning-info" className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-center text-[#1E7A6F] mb-12">Understanding Planning & Permitted Development</h2>
-          
+
           <div className="max-w-4xl mx-auto space-y-6">
             {/* What is Planning Permission */}
             <div className="bg-[#F7F8F7] rounded-lg border border-[#E6E8E6] overflow-hidden">
@@ -5626,11 +5679,11 @@ export function AddressSearchForm() {
                 <div className="px-6 pb-4">
                   <div className="space-y-4 text-[#4C5A63]">
                     <p>
-                      <strong>Planning permission</strong> is formal consent from your local council for new buildings, 
+                      <strong>Planning permission</strong> is formal consent from your local council for new buildings,
                       major changes to existing buildings, or changes to the local environment.
                     </p>
                     <p>
-                      Without a planning system, anyone could construct buildings or use land in any way they wanted, 
+                      Without a planning system, anyone could construct buildings or use land in any way they wanted,
                       regardless of the impact on other people in the area.
                     </p>
                     <p>
@@ -5639,7 +5692,7 @@ export function AddressSearchForm() {
                     <div className="bg-blue-50 p-4 rounded border border-blue-200">
                       <h4 className="font-semibold text-blue-800 mb-2">Need planning advice?</h4>
                       <p className="text-blue-700 text-sm">
-                        Unsure if your project needs planning permission? Professional guidance can help determine 
+                        Unsure if your project needs planning permission? Professional guidance can help determine
                         if your project falls under permitted development or requires approval, and advise on the application process.
                       </p>
                     </div>
@@ -5665,14 +5718,14 @@ export function AddressSearchForm() {
                 <div className="px-6 pb-4">
                   <div className="space-y-4 text-[#4C5A63]">
                     <p>
-                      <strong>Permitted Development (PD) rights</strong> allow you to extend or renovate your home 
+                      <strong>Permitted Development (PD) rights</strong> allow you to extend or renovate your home
                       without needing to apply for full planning permission.
                     </p>
                     <p>
-                      These rights are granted by the government through legislation, but they can be removed or 
+                      These rights are granted by the government through legislation, but they can be removed or
                       restricted in certain areas or for specific properties.
                     </p>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                       <div className="bg-green-50 p-4 rounded border border-green-200">
                         <h4 className="font-semibold text-green-800 mb-3 flex items-center">
@@ -5761,14 +5814,14 @@ export function AddressSearchForm() {
                             Local councils can remove specific PD rights in certain areas to protect local character.
                           </p>
                         </div>
-                        
+
                         <div className="border-l-4 border-red-500 pl-4">
                           <h4 className="font-semibold text-[#1E7A6F]">Conservation Areas</h4>
                           <p className="text-sm mt-1">
                             Special protections for areas of architectural or historic interest.
                           </p>
                         </div>
-                        
+
                         <div className="border-l-4 border-red-500 pl-4">
                           <h4 className="font-semibold text-[#1E7A6F]">Listed Buildings</h4>
                           <p className="text-sm mt-1">
@@ -5776,7 +5829,7 @@ export function AddressSearchForm() {
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-4">
                         <div className="border-l-4 border-red-500 pl-4">
                           <h4 className="font-semibold text-[#1E7A6F]">National Parks & AONBs</h4>
@@ -5784,14 +5837,14 @@ export function AddressSearchForm() {
                             Enhanced protections in areas of outstanding natural beauty.
                           </p>
                         </div>
-                        
+
                         <div className="border-l-4 border-red-500 pl-4">
                           <h4 className="font-semibold text-[#1E7A6F]">Flats & Maisonettes</h4>
                           <p className="text-sm mt-1">
                             Most PD rights don't apply to flats - different rules for each dwelling type.
                           </p>
                         </div>
-                        
+
                         <div className="border-l-4 border-red-500 pl-4">
                           <h4 className="font-semibold text-[#1E7A6F]">Commercial Properties</h4>
                           <p className="text-sm mt-1">
@@ -5824,7 +5877,7 @@ export function AddressSearchForm() {
                     <div className="bg-blue-50 p-4 rounded border border-blue-200">
                       <h4 className="font-semibold text-blue-800 mb-2">Always Verify With Your Local Authority</h4>
                       <p className="text-blue-700 text-sm">
-                        This service provides guidance based on publicly available data, but you should always 
+                        This service provides guidance based on publicly available data, but you should always
                         check with your local planning authority before starting any work.
                       </p>
                     </div>
@@ -5836,7 +5889,7 @@ export function AddressSearchForm() {
                           Contact details for planning departments in your area.
                         </p>
                       </div>
-                      
+
                       <div className="bg-white p-4 rounded border border-[#E6E8E6]">
                         <h4 className="font-semibold text-[#1E7A6F] mb-2">Professional Advice</h4>
                         <p className="text-sm text-[#4C5A63]">
@@ -5862,7 +5915,7 @@ export function AddressSearchForm() {
         </div>
       </section>
 
-     
+
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-[#1E7A6F] to-[#2A9D8F] text-white">
@@ -5871,7 +5924,7 @@ export function AddressSearchForm() {
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
             Get instant clarity on your permitted development rights
           </p>
-          <Button 
+          <Button
             onClick={() => document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' })}
             className="py-4 px-12 h-14 font-semibold bg-white text-[#1E7A6F] hover:bg-gray-100 text-lg"
           >
