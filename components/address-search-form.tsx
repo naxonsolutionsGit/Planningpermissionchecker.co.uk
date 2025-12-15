@@ -5636,7 +5636,7 @@ export function AddressSearchForm() {
   if (result) {
     return (
       <div className="space-y-6">
-        <PlanningResultComponent result={result} />
+        <PlanningResultComponent result={result} propertyType={propertyType} />
         <div className="text-center space-y-4">
           <Button onClick={handleDownloadReport} className="px-8 bg-[#1E7A6F] hover:bg-[#19685f] text-white">
             <Download className="w-4 h-4 mr-2" />

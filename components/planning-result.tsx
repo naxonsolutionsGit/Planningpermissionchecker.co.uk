@@ -62,9 +62,10 @@ interface PlanningApplication {
 
 interface PlanningResultProps {
   result: PlanningResult
+  propertyType?: string
 }
 
-export function PlanningResult({ result }: PlanningResultProps) {
+export function PlanningResult({ result, propertyType }: PlanningResultProps) {
   const [planningApplications, setPlanningApplications] = useState<PlanningApplication[]>([])
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
   const [applicationsError, setApplicationsError] = useState<string | null>(null)
@@ -290,6 +291,18 @@ export function PlanningResult({ result }: PlanningResultProps) {
           <CardTitle className="text-lg">Summary</CardTitle>
         </CardHeader>
         <CardContent>
+          {propertyType === "flat" && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-md">
+              <h4 className="font-semibold text-red-600 mb-1">
+                Important Information About Flats
+              </h4>
+              <p className="text-sm text-red-600">
+                Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
+                You can still search to view planning history for this address. For any alterations,
+                please consult with your local planning authority or building management.
+              </p>
+            </div>
+          )}
           <p className="text-foreground">{result.summary}</p>
         </CardContent>
       </Card>
