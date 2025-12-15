@@ -394,7 +394,6 @@ export function PlanningResult({ result }: PlanningResultProps) {
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-xs text-green-800">
                     <strong>Found {planningApplications.length} application(s)!</strong> These are planning applications at or near {result.address}.
-                    Data sourced from UK PlanIt - the national planning database covering 425 UK councils.
                   </p>
                 </div>
 
