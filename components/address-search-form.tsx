@@ -4681,7 +4681,7 @@ export function AddressSearchForm() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
-  const [propertyType, setPropertyType] = useState<string>("house")
+  const [propertyType, setPropertyType] = useState<string>("")
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -5265,6 +5265,59 @@ export function AddressSearchForm() {
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
 
+    // Helper function to check if we need a new page
+    const checkNewPage = (requiredSpace: number = 40) => {
+      if (yPosition > pageHeight - requiredSpace) {
+        doc.addPage();
+        yPosition = 20;
+      }
+    };
+
+    // Fetch planning history for the PDF
+    let planningHistory: any[] = [];
+    try {
+      const postcodeMatch = result.address.match(/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/i);
+      if (postcodeMatch || (result.coordinates && result.coordinates.lat && result.coordinates.lng)) {
+        let appsUrl: string;
+        if (postcodeMatch) {
+          const postcode = postcodeMatch[0].replace(/\s+/g, '+');
+          appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.05&limit=20`;
+        } else {
+          const { lat, lng } = result.coordinates!;
+          appsUrl = `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=0.05&limit=20`;
+        }
+
+        const response = await fetch(appsUrl);
+        if (response.ok) {
+          const data = await response.json();
+          const allApplications = data.records || data || [];
+
+          // Filter and sort applications
+          const addressParts = result.address.split(',')[0].trim();
+          const streetMatch = addressParts.match(/^(\d+[a-zA-Z]?)\s+(.+)$/i);
+          const streetNumber = streetMatch ? streetMatch[1].toLowerCase() : '';
+          const streetName = streetMatch ? streetMatch[2].toLowerCase().replace(/\s+(road|street|avenue|lane|drive|close|way|place|court|gardens|terrace|crescent|grove|hill|square|mews|row)$/i, '') : addressParts.toLowerCase();
+
+          const filteredApps = allApplications.filter((app: any) => {
+            const appAddress = (app.address || app.location || app.name || '').toLowerCase();
+            const hasStreetNumber = !streetNumber || appAddress.includes(streetNumber);
+            const hasStreetName = !streetName || appAddress.includes(streetName.substring(0, Math.min(streetName.length, 6)));
+            return hasStreetNumber && hasStreetName;
+          });
+
+          planningHistory = (filteredApps.length > 0 ? filteredApps : allApplications)
+            .sort((a: any, b: any) => {
+              const dateA = new Date(a.decided_date || a.start_date || a.last_changed || '1970-01-01');
+              const dateB = new Date(b.decided_date || b.start_date || b.last_changed || '1970-01-01');
+              return dateB.getTime() - dateA.getTime();
+            })
+            .slice(0, 10);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching planning history for PDF:', error);
+    }
+
     // Add header with professional styling
     doc.setFillColor(30, 122, 111); // Dark teal
     doc.rect(0, 0, pageWidth, 40, 'F');
@@ -5293,6 +5346,8 @@ export function AddressSearchForm() {
 
     doc.text(`Address: ${result.address}`, 15, yPosition);
     yPosition += 6;
+    doc.text(`Property Type: ${propertyType === 'flat' ? 'Flat/Apartment' : propertyType === 'house' ? 'House' : 'Not specified'}`, 15, yPosition);
+    yPosition += 6;
     doc.text(`Local Authority: ${result.localAuthority}`, 15, yPosition);
     yPosition += 6;
     doc.text(`Report Date: ${new Date().toLocaleDateString('en-GB')}`, 15, yPosition);
@@ -5301,17 +5356,62 @@ export function AddressSearchForm() {
 
     yPosition += 12;
 
+    // Flat-Specific Notice Section
+    if (propertyType === 'flat') {
+      checkNewPage(50);
+
+      doc.setFillColor(219, 234, 254); // Light blue background
+      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 58, 138); // Dark blue text
+      doc.text('IMPORTANT: FLAT PROPERTY NOTICE', 15, yPosition);
+
+      yPosition += 12;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 64, 175); // Blue text
+
+      const flatNoticeText = [
+        'This property has been identified as a flat or maisonette. Under UK planning regulations, flats and maisonettes',
+        'are generally exempt from standard Permitted Development (PD) restrictions that apply to houses.',
+        '',
+        'Key points for flat owners:',
+        '• Permitted Development rights typically do not apply to individual flats',
+        '• External alterations usually require planning permission and freeholder/management consent',
+        '• Internal alterations may still be permissible under certain conditions',
+        '• Building regulations approval may be required for structural changes',
+        '',
+        'We recommend consulting with your local planning authority and building management for specific guidance',
+        'on any proposed alterations to your property.'
+      ];
+
+      flatNoticeText.forEach(line => {
+        const lines = doc.splitTextToSize(line, pageWidth - 30);
+        doc.text(lines, 15, yPosition);
+        yPosition += lines.length * 4 + 1;
+      });
+
+      yPosition += 8;
+      doc.setTextColor(0, 0, 0);
+    }
+
     // Overall Result Section
+    checkNewPage(40);
     doc.setFillColor(245, 245, 245);
     doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
     doc.text('OVERALL ASSESSMENT', 15, yPosition);
 
     yPosition += 15;
     doc.setFontSize(11);
 
-    if (result.hasPermittedDevelopmentRights) {
+    if (propertyType === 'flat') {
+      doc.setTextColor(41, 128, 185); // Blue
+      doc.text('[INFO] FLAT - PD RESTRICTIONS NOT APPLICABLE', 15, yPosition);
+    } else if (result.hasPermittedDevelopmentRights) {
       doc.setTextColor(39, 174, 96); // Green
       doc.text('[PASS] PERMITTED DEVELOPMENT RIGHTS APPLY', 15, yPosition);
     } else {
@@ -5326,65 +5426,154 @@ export function AddressSearchForm() {
 
     yPosition += 12;
 
-    // Detailed Checks Section
-    doc.setFillColor(245, 245, 245);
-    doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DETAILED PLANNING CHECKS', 15, yPosition);
-
-    yPosition += 15;
-
-    result.checks.forEach((check, index) => {
-      // Check if we need a new page
-      if (yPosition > pageHeight - 40) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      doc.setFontSize(10);
+    // Detailed Checks Section (only for houses)
+    if (propertyType !== 'flat') {
+      checkNewPage(40);
+      doc.setFillColor(245, 245, 245);
+      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
+      doc.text('DETAILED PLANNING CHECKS', 15, yPosition);
 
-      // Set color based on status
-      if (check.status === 'pass') {
-        doc.setTextColor(39, 174, 96); // Green
-        doc.text(`[PASS] ${check.type}`, 15, yPosition);
-      } else if (check.status === 'fail') {
-        doc.setTextColor(231, 76, 60); // Red
-        doc.text(`[FAIL] ${check.type}`, 15, yPosition);
-      } else {
-        doc.setTextColor(243, 156, 18); // Orange
-        doc.text(`[WARNING] ${check.type}`, 15, yPosition);
-      }
+      yPosition += 15;
 
-      yPosition += 5;
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
+      result.checks.forEach((check, index) => {
+        checkNewPage(40);
 
-      // Split description into multiple lines if needed
-      const descriptionLines = doc.splitTextToSize(check.description, pageWidth - 30);
-      doc.text(descriptionLines, 20, yPosition);
-      yPosition += descriptionLines.length * 4 + 4;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
 
-      // Add documentation URL if available
-      if (check.documentationUrl) {
-        doc.setTextColor(41, 128, 185); // Blue
-        doc.textWithLink('View Official Documentation', 20, yPosition, { url: check.documentationUrl });
-        doc.setTextColor(0, 0, 0);
+        if (check.status === 'pass') {
+          doc.setTextColor(39, 174, 96); // Green
+          doc.text(`[PASS] ${check.type}`, 15, yPosition);
+        } else if (check.status === 'fail') {
+          doc.setTextColor(231, 76, 60); // Red
+          doc.text(`[FAIL] ${check.type}`, 15, yPosition);
+        } else {
+          doc.setTextColor(243, 156, 18); // Orange
+          doc.text(`[WARNING] ${check.type}`, 15, yPosition);
+        }
+
         yPosition += 5;
-      }
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
 
-      yPosition += 4; // Space between checks
-    });
+        const descriptionLines = doc.splitTextToSize(check.description, pageWidth - 30);
+        doc.text(descriptionLines, 20, yPosition);
+        yPosition += descriptionLines.length * 4 + 4;
 
-    yPosition += 8;
+        if (check.documentationUrl) {
+          doc.setTextColor(41, 128, 185); // Blue
+          doc.textWithLink('View Official Documentation', 20, yPosition, { url: check.documentationUrl });
+          doc.setTextColor(0, 0, 0);
+          yPosition += 5;
+        }
+
+        yPosition += 4;
+      });
+
+      yPosition += 8;
+    }
+
+    // Planning History Section
+    if (planningHistory.length > 0) {
+      checkNewPage(60);
+
+      doc.setFillColor(245, 245, 245);
+      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('PLANNING APPLICATION HISTORY', 15, yPosition);
+
+      yPosition += 12;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`The following planning applications were found for this address and surrounding area:`, 15, yPosition);
+      yPosition += 10;
+
+      planningHistory.forEach((app: any, index: number) => {
+        checkNewPage(35);
+
+        // Application header
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 122, 111); // Teal
+
+        const reference = app.reference || app.altid || 'Unknown Reference';
+        const status = app.status || app.decision || 'Status Unknown';
+        doc.text(`${index + 1}. Reference: ${reference}`, 15, yPosition);
+
+        yPosition += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+
+        // Status with color coding
+        if (status.toLowerCase().includes('approved') || status.toLowerCase().includes('granted')) {
+          doc.setTextColor(39, 174, 96); // Green
+        } else if (status.toLowerCase().includes('refused') || status.toLowerCase().includes('rejected')) {
+          doc.setTextColor(231, 76, 60); // Red
+        } else {
+          doc.setTextColor(243, 156, 18); // Orange
+        }
+        doc.text(`Status: ${status}`, 20, yPosition);
+        doc.setTextColor(0, 0, 0);
+
+        yPosition += 4;
+
+        // Date
+        const decisionDate = app.decided_date || app.start_date || '';
+        if (decisionDate) {
+          const formattedDate = new Date(decisionDate).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'short', year: 'numeric'
+          });
+          doc.text(`Date: ${formattedDate}`, 20, yPosition);
+          yPosition += 4;
+        }
+
+        // Description
+        const description = app.description || app.name || 'No description available';
+        const descLines = doc.splitTextToSize(`Description: ${description}`, pageWidth - 35);
+        doc.text(descLines, 20, yPosition);
+        yPosition += descLines.length * 3.5 + 2;
+
+        // Address if different
+        if (app.address && app.address !== result.address) {
+          const addrLines = doc.splitTextToSize(`Location: ${app.address}`, pageWidth - 35);
+          doc.setTextColor(100, 100, 100);
+          doc.text(addrLines, 20, yPosition);
+          doc.setTextColor(0, 0, 0);
+          yPosition += addrLines.length * 3.5 + 2;
+        }
+
+        yPosition += 4;
+      });
+
+      yPosition += 6;
+    } else {
+      // No planning history found
+      checkNewPage(30);
+
+      doc.setFillColor(245, 245, 245);
+      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('PLANNING APPLICATION HISTORY', 15, yPosition);
+
+      yPosition += 12;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('No planning applications were found on record for this address.', 15, yPosition);
+      doc.setFontSize(8);
+      yPosition += 5;
+      doc.text('This may indicate that no applications have been submitted, or records are not available in the public database.', 15, yPosition);
+      yPosition += 12;
+    }
 
     // Summary Section
-    if (yPosition > pageHeight - 60) {
-      doc.addPage();
-      yPosition = 20;
-    }
+    checkNewPage(60);
 
     doc.setFillColor(245, 245, 245);
     doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
@@ -5396,15 +5585,17 @@ export function AddressSearchForm() {
     yPosition += 15;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    const summaryLines = doc.splitTextToSize(result.summary, pageWidth - 30);
+
+    const summaryText = propertyType === 'flat'
+      ? 'This property is a flat/maisonette and is therefore generally exempt from standard Permitted Development restrictions. Any proposed alterations should be discussed with your local planning authority and building management. The planning history above provides context for development activity in this area.'
+      : result.summary;
+
+    const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 30);
     doc.text(summaryLines, 15, yPosition);
     yPosition += summaryLines.length * 4 + 12;
 
     // Legal Disclaimer
-    if (yPosition > pageHeight - 80) {
-      doc.addPage();
-      yPosition = 20;
-    }
+    checkNewPage(80);
 
     doc.setFillColor(252, 243, 207); // Light yellow background
     doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
@@ -5481,7 +5672,7 @@ export function AddressSearchForm() {
               </label>
               <Select value={propertyType} onValueChange={setPropertyType}>
                 <SelectTrigger className="w-full h-12 border-[#E6E8E6] focus:border-[#1E7A6F] focus:ring-[#1E7A6F] text-[#4C5A63]">
-                  <SelectValue placeholder="Select property type" />
+                  <SelectValue placeholder="Please select a property type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="house">
@@ -5496,29 +5687,23 @@ export function AddressSearchForm() {
                       <span>Flat</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="building">
-                    <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-[#1E7A6F]" />
-                      <span>Building</span>
-                    </div>
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Flat Warning Message */}
+            {/* Flat Information Message */}
             {propertyType === "flat" && (
-              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-amber-900 mb-1">
-                      Permitted Development Rights Do Not Apply to Flats
+                    <h4 className="font-semibold text-blue-900 mb-1">
+                      Important Information About Flats
                     </h4>
-                    <p className="text-sm text-amber-800">
-                      Flats and maisonettes have very limited or no Permitted Development rights.
-                      Most alterations to flats require full planning permission. Please consult with
-                      your local planning authority for specific guidance.
+                    <p className="text-sm text-blue-800">
+                      Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
+                      You can still search to view planning history for this address. For any alterations,
+                      please consult with your local planning authority or building management.
                     </p>
                   </div>
                 </div>
@@ -5530,14 +5715,14 @@ export function AddressSearchForm() {
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#4C5A63] w-5 h-5" />
                 <Input
                   type="text"
-                  placeholder={propertyType === "flat" ? "Address search disabled for flats" : "Enter property address or postcode"}
+                  placeholder="Enter property address or postcode"
                   value={address}
                   onChange={(e) => handleAddressChange(e.target.value)}
                   className="pl-10 pr-4 py-3 h-14 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#4C5A63] text-lg"
-                  disabled={isLoading || propertyType === "flat"}
+                  disabled={isLoading || !propertyType}
                 />
 
-                {showSuggestions && propertyType !== "flat" && (
+                {showSuggestions && propertyType && (
                   <div
                     ref={suggestionsRef}
                     className="absolute z-10 w-full mt-1 bg-white border border-[#E6E8E6] rounded-lg shadow-lg max-h-60 overflow-y-auto"
@@ -5573,7 +5758,7 @@ export function AddressSearchForm() {
               <Button
                 type="submit"
                 className="py-3 px-8 h-14 font-semibold bg-[#F5A623] hover:bg-[#e69519] text-white whitespace-nowrap text-lg"
-                disabled={isLoading || !address.trim() || propertyType === "flat"}
+                disabled={isLoading || !address.trim() || !propertyType}
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">

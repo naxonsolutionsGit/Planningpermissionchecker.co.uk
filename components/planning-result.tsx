@@ -67,7 +67,7 @@ export function PlanningResult({ result }: PlanningResultProps) {
   const [planningApplications, setPlanningApplications] = useState<PlanningApplication[]>([])
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
   const [applicationsError, setApplicationsError] = useState<string | null>(null)
-  const [showPlanningHistory, setShowPlanningHistory] = useState(false)
+  const [showPlanningHistory, setShowPlanningHistory] = useState(true)
   const prevAddressRef = useRef<string>("")
 
   const getStatusIcon = (hasRights: boolean) => {
