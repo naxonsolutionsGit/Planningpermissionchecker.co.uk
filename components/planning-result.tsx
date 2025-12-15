@@ -68,7 +68,7 @@ export function PlanningResult({ result }: PlanningResultProps) {
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
   const [applicationsError, setApplicationsError] = useState<string | null>(null)
   const [showPlanningHistory, setShowPlanningHistory] = useState(false)
-  const prevLocalAuthorityRef = useRef<string>("")
+  const prevAddressRef = useRef<string>("")
 
   const getStatusIcon = (hasRights: boolean) => {
     return hasRights ? <CheckCircle className="w-8 h-8 text-green-600" /> : <XCircle className="w-8 h-8 text-red-600" />
@@ -89,16 +89,16 @@ export function PlanningResult({ result }: PlanningResultProps) {
     }
   }
 
-  // Fetch planning applications when showPlanningHistory is toggled or local authority changes
+  // Fetch planning applications when showPlanningHistory is toggled or address changes
   useEffect(() => {
-    // Check if local authority has changed
-    const localAuthorityChanged = prevLocalAuthorityRef.current !== result.localAuthority
+    // Check if address has changed
+    const addressChanged = prevAddressRef.current !== result.address
 
-    if (localAuthorityChanged) {
-      // Reset data when local authority changes
+    if (addressChanged) {
+      // Reset data when address changes
       setPlanningApplications([])
       setApplicationsError(null)
-      prevLocalAuthorityRef.current = result.localAuthority
+      prevAddressRef.current = result.address
 
       // Fetch new data if section is expanded
       if (showPlanningHistory && !isLoadingApplications) {
@@ -108,110 +108,86 @@ export function PlanningResult({ result }: PlanningResultProps) {
       // Only fetch if we don't have data and section is expanded
       fetchPlanningApplications()
     }
-  }, [showPlanningHistory, result.localAuthority])
+  }, [showPlanningHistory, result.address])
 
-  // Function to fetch planning applications from planning.data.gov.uk
+  // Function to fetch planning applications using UK PlanIt API (much better coverage)
   const fetchPlanningApplications = async () => {
     setIsLoadingApplications(true)
     setApplicationsError(null)
 
     try {
-      // First, try to get the local authority entity from the API
-      // We'll search for local authorities with a name matching the result
-      const localAuthorityName = result.localAuthority
-      console.log('🔍 Fetching planning history for local authority:', localAuthorityName)
+      // Extract postcode from the address
+      const postcodeMatch = result.address.match(/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/i)
 
-      // Fetch all local authorities and find matching one
-      const laResponse = await fetch(
-        `https://www.planning.data.gov.uk/entity.json?dataset=local-authority&limit=400`
-      )
-
-      if (!laResponse.ok) throw new Error('Failed to fetch local authorities')
-
-      const laData = await laResponse.json()
-
-      // Improved matching: Try exact match first, then partial match
-      console.log('🔍 Searching through', laData.entities.length, 'local authorities')
-
-      // Try exact match first (case-insensitive)
-      let matchingLA = laData.entities.find((la: any) =>
-        la.name.toLowerCase() === localAuthorityName.toLowerCase()
-      )
-
-      // If no exact match, try partial match with better scoring
-      if (!matchingLA) {
-        // Find all potential matches
-        const potentialMatches = laData.entities.filter((la: any) => {
-          const laNameLower = la.name.toLowerCase()
-          const searchNameLower = localAuthorityName.toLowerCase()
-
-          // Both directions of partial matching
-          return laNameLower.includes(searchNameLower) || searchNameLower.includes(laNameLower)
-        })
-
-        console.log('💡 Found', potentialMatches.length, 'potential matches')
-
-        if (potentialMatches.length > 0) {
-          // Score matches - prefer longer matching strings
-          const scoredMatches = potentialMatches.map((la: any) => {
-            const laNameLower = la.name.toLowerCase()
-            const searchNameLower = localAuthorityName.toLowerCase()
-
-            // Calculate similarity score
-            let score = 0
-            if (laNameLower === searchNameLower) score = 1000 // Exact match
-            else if (laNameLower.includes(searchNameLower)) score = searchNameLower.length * 10
-            else if (searchNameLower.includes(laNameLower)) score = laNameLower.length * 10
-
-            return { la, score }
-          })
-
-          // Sort by score descending and pick best match
-          scoredMatches.sort((a: any, b: any) => b.score - a.score)
-          matchingLA = scoredMatches[0].la
-
-          console.log('🎯 Best match:', matchingLA.name, '(score:', scoredMatches[0].score, ')')
-        }
-      } else {
-        console.log('🎯 Exact match found:', matchingLA.name)
-      }
-
-      if (!matchingLA) {
-        console.log('❌ No matching local authority found for:', localAuthorityName)
-        setApplicationsError('No planning data available for this local authority yet.')
+      if (!postcodeMatch && (!result.coordinates || !result.coordinates.lat || !result.coordinates.lng)) {
+        console.log('❌ No postcode or coordinates available')
+        setApplicationsError('Unable to search planning history - no postcode or coordinates found.')
         setIsLoadingApplications(false)
         return
       }
 
-      console.log('✅ Matched local authority:', matchingLA.name, '(Entity:', matchingLA['organisation-entity'], ')')
+      let appsUrl: string
 
-      // Fetch planning applications for this authority
-      const appsUrl = `https://www.planning.data.gov.uk/entity.json?dataset=planning-application&organisation-entity=${matchingLA['organisation-entity']}&limit=10`
-      console.log('📡 Fetching applications from:', appsUrl)
+      if (postcodeMatch) {
+        // Use postcode search (more accurate for specific address)
+        const postcode = postcodeMatch[0].replace(/\s+/g, '+')
+        console.log('🔍 Fetching planning history for postcode:', postcode)
+        console.log('📍 Address:', result.address)
 
-      const appsResponse = await fetch(appsUrl)
+        // UK PlanIt API - search within 0.1km radius of postcode
+        appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.1&recent=365&limit=15`
+      } else {
+        // Fallback to coordinate search
+        const { lat, lng } = result.coordinates!
+        console.log('🔍 Fetching planning history for coordinates:', lat, lng)
 
-      if (!appsResponse.ok) throw new Error('Failed to fetch planning applications')
+        // UK PlanIt API - search within 0.1km radius of coordinates
+        appsUrl = `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=0.1&recent=365&limit=15`
+      }
 
-      const appsData = await appsResponse.json()
+      console.log('📡 Fetching from UK PlanIt:', appsUrl)
 
-      if (appsData.entities && appsData.entities.length > 0) {
-        console.log('📋 Found', appsData.entities.length, 'planning applications')
+      const response = await fetch(appsUrl)
 
-        // Sort by decision date (most recent first)
-        const sortedApps = appsData.entities
-          .filter((app: PlanningApplication) => app['decision-date']) // Only show apps with decision dates
-          .sort((a: PlanningApplication, b: PlanningApplication) => {
-            const dateA = new Date(a['decision-date'])
-            const dateB = new Date(b['decision-date'])
+      if (!response.ok) {
+        console.log('❌ UK PlanIt API returned error:', response.status)
+        throw new Error('Failed to fetch planning applications')
+      }
+
+      const data = await response.json()
+
+      // UK PlanIt returns data in a 'records' array
+      const applications = data.records || data || []
+
+      if (applications && applications.length > 0) {
+        console.log('📋 Found', applications.length, 'planning applications for this address')
+
+        // Sort by start_date or decided_date (most recent first)
+        const sortedApps = applications
+          .sort((a: any, b: any) => {
+            const dateA = new Date(a.decided_date || a.start_date || a.last_changed || '1970-01-01')
+            const dateB = new Date(b.decided_date || b.start_date || b.last_changed || '1970-01-01')
             return dateB.getTime() - dateA.getTime()
           })
-          .slice(0, 5) // Show only 5 most recent
+          .slice(0, 10) // Show up to 10 most recent
 
-        console.log('✅ Displaying', sortedApps.length, 'most recent applications')
-        setPlanningApplications(sortedApps)
+        // Map UK PlanIt fields to our interface
+        const mappedApps = sortedApps.map((app: any) => ({
+          entity: app.uid || app.id,
+          reference: app.reference || app.altid || 'Unknown',
+          description: app.description || app.name || 'No description available',
+          'decision-date': app.decided_date || app.start_date || '',
+          'entry-date': app.start_date || app.last_changed || '',
+          'organisation-entity': app.area_name || result.localAuthority,
+          status: app.status || app.decision || '',
+          address: app.address || ''
+        }))
+
+        console.log('✅ Displaying', mappedApps.length, 'planning applications')
+        setPlanningApplications(mappedApps)
       } else {
-        setApplicationsError('No planning applications found for this area.')
+        console.log('ℹ️ No planning applications found for this address')
+        setApplicationsError('No planning applications found for this address. This may mean no applications have been submitted here recently.')
       }
     } catch (error) {
       console.error('Error fetching planning applications:', error)
@@ -347,7 +323,7 @@ export function PlanningResult({ result }: PlanningResultProps) {
           >
             <div className="flex items-center gap-2">
               <History className="w-5 h-5 text-[#1E7A6F]" />
-              <CardTitle className="text-lg">Planning History - Recent Applications in Your Area</CardTitle>
+              <CardTitle className="text-lg">Planning History - Applications at This Address</CardTitle>
             </div>
             {showPlanningHistory ? (
               <ChevronUp className="w-5 h-5 text-muted-foreground" />
@@ -370,17 +346,17 @@ export function PlanningResult({ result }: PlanningResultProps) {
               </div>
             ) : planningApplications.length > 0 ? (
               <>
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-blue-800">
-                    <strong>Note:</strong> These are recent planning applications from {result.localAuthority}, not necessarily for this specific address.
-                    This gives you an idea of planning activity in your area.
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-xs text-green-800">
+                    <strong>Found {planningApplications.length} application(s)!</strong> These are planning applications at or near {result.address}.
+                    Data sourced from UK PlanIt - the national planning database covering 425 UK councils.
                   </p>
                 </div>
 
-                <div className="space-y-3" key={`planning-apps-${result.localAuthority}`}>
-                  {planningApplications.map((app, index) => (
+                <div className="space-y-3" key={`planning-apps-${result.address}`}>
+                  {planningApplications.map((app: any, index) => (
                     <div
-                      key={`${result.localAuthority}-${app.entity || app.reference || index}`}
+                      key={`${result.address}-${app.entity || app.reference || index}`}
                       className="p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-3 mb-2">
@@ -389,14 +365,29 @@ export function PlanningResult({ result }: PlanningResultProps) {
                             <Badge variant="secondary" className="text-xs font-mono">
                               {app.reference}
                             </Badge>
-                            <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-800">
-                              {result.localAuthority}
-                            </Badge>
+                            {app.status && (
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted')
+                                    ? 'bg-green-50 border-green-300 text-green-800'
+                                    : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected')
+                                      ? 'bg-red-50 border-red-300 text-red-800'
+                                      : 'bg-yellow-50 border-yellow-300 text-yellow-800'
+                                  }`}
+                              >
+                                {app.status}
+                              </Badge>
+                            )}
                             <span className="text-xs text-muted-foreground">
-                              Decided: {formatDate(app['decision-date'])}
+                              {app['decision-date'] ? `Decided: ${formatDate(app['decision-date'])}` : `Submitted: ${formatDate(app['entry-date'])}`}
                             </span>
                           </div>
-                          <p className="text-sm text-foreground">{app.description || 'No description available'}</p>
+                          <p className="text-sm text-foreground mb-1">{app.description || 'No description available'}</p>
+                          {app.address && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <MapPin className="w-3 h-3" /> {app.address}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
