@@ -119,6 +119,15 @@ export function PlanningResult({ result }: PlanningResultProps) {
       // Extract postcode from the address
       const postcodeMatch = result.address.match(/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/i)
 
+      // Extract street number and name for filtering
+      const addressParts = result.address.split(',')[0].trim() // Get first part before comma
+      const streetMatch = addressParts.match(/^(\d+[a-zA-Z]?)\s+(.+)$/i) // e.g., "12 Baker Street"
+      const streetNumber = streetMatch ? streetMatch[1].toLowerCase() : ''
+      const streetName = streetMatch ? streetMatch[2].toLowerCase().replace(/\s+(road|street|avenue|lane|drive|close|way|place|court|gardens|terrace|crescent|grove|hill|square|mews|row)$/i, '') : addressParts.toLowerCase()
+
+      console.log('🏠 Searching for address:', result.address)
+      console.log('🔢 Street number:', streetNumber, '| Street name:', streetName)
+
       if (!postcodeMatch && (!result.coordinates || !result.coordinates.lat || !result.coordinates.lng)) {
         console.log('❌ No postcode or coordinates available')
         setApplicationsError('Unable to search planning history - no postcode or coordinates found.')
@@ -129,20 +138,19 @@ export function PlanningResult({ result }: PlanningResultProps) {
       let appsUrl: string
 
       if (postcodeMatch) {
-        // Use postcode search (more accurate for specific address)
+        // Use postcode search with address text filter
         const postcode = postcodeMatch[0].replace(/\s+/g, '+')
         console.log('🔍 Fetching planning history for postcode:', postcode)
-        console.log('📍 Address:', result.address)
 
-        // UK PlanIt API - search within 0.1km radius of postcode
-        appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.1&recent=365&limit=15`
+        // UK PlanIt API - search within 0.05km (50m) radius of postcode for more precision
+        appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.05&limit=50`
       } else {
         // Fallback to coordinate search
         const { lat, lng } = result.coordinates!
         console.log('🔍 Fetching planning history for coordinates:', lat, lng)
 
-        // UK PlanIt API - search within 0.1km radius of coordinates
-        appsUrl = `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=0.1&recent=365&limit=15`
+        // UK PlanIt API - search within 0.05km radius of coordinates
+        appsUrl = `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=0.05&limit=50`
       }
 
       console.log('📡 Fetching from UK PlanIt:', appsUrl)
@@ -157,13 +165,26 @@ export function PlanningResult({ result }: PlanningResultProps) {
       const data = await response.json()
 
       // UK PlanIt returns data in a 'records' array
-      const applications = data.records || data || []
+      const allApplications = data.records || data || []
 
-      if (applications && applications.length > 0) {
-        console.log('📋 Found', applications.length, 'planning applications for this address')
+      console.log('📋 Total applications near postcode:', allApplications.length)
 
+      // Filter applications to match specific address
+      const filteredApps = allApplications.filter((app: any) => {
+        const appAddress = (app.address || app.location || app.name || '').toLowerCase()
+
+        // Check if the application address contains our street number and/or street name
+        const hasStreetNumber = !streetNumber || appAddress.includes(streetNumber)
+        const hasStreetName = !streetName || appAddress.includes(streetName.substring(0, Math.min(streetName.length, 6))) // Match first 6 chars of street name
+
+        return hasStreetNumber && hasStreetName
+      })
+
+      console.log('🎯 Filtered to address-specific applications:', filteredApps.length)
+
+      if (filteredApps && filteredApps.length > 0) {
         // Sort by start_date or decided_date (most recent first)
-        const sortedApps = applications
+        const sortedApps = filteredApps
           .sort((a: any, b: any) => {
             const dateA = new Date(a.decided_date || a.start_date || a.last_changed || '1970-01-01')
             const dateB = new Date(b.decided_date || b.start_date || b.last_changed || '1970-01-01')
@@ -183,11 +204,35 @@ export function PlanningResult({ result }: PlanningResultProps) {
           address: app.address || ''
         }))
 
-        console.log('✅ Displaying', mappedApps.length, 'planning applications')
+        console.log('✅ Displaying', mappedApps.length, 'planning applications for this specific address')
         setPlanningApplications(mappedApps)
+      } else if (allApplications.length > 0) {
+        // Show nearby applications if no exact match found
+        console.log('ℹ️ No exact address match, showing nearby applications')
+        const sortedApps = allApplications
+          .sort((a: any, b: any) => {
+            const dateA = new Date(a.decided_date || a.start_date || a.last_changed || '1970-01-01')
+            const dateB = new Date(b.decided_date || b.start_date || b.last_changed || '1970-01-01')
+            return dateB.getTime() - dateA.getTime()
+          })
+          .slice(0, 5)
+
+        const mappedApps = sortedApps.map((app: any) => ({
+          entity: app.uid || app.id,
+          reference: app.reference || app.altid || 'Unknown',
+          description: app.description || app.name || 'No description available',
+          'decision-date': app.decided_date || app.start_date || '',
+          'entry-date': app.start_date || app.last_changed || '',
+          'organisation-entity': app.area_name || result.localAuthority,
+          status: app.status || app.decision || '',
+          address: app.address || ''
+        }))
+
+        setPlanningApplications(mappedApps)
+        // Note: We'll update the UI to indicate these are nearby, not exact matches
       } else {
         console.log('ℹ️ No planning applications found for this address')
-        setApplicationsError('No planning applications found for this address. This may mean no applications have been submitted here recently.')
+        setApplicationsError('No planning applications found for this address. This may mean no applications have been submitted here.')
       }
     } catch (error) {
       console.error('Error fetching planning applications:', error)
@@ -369,10 +414,10 @@ export function PlanningResult({ result }: PlanningResultProps) {
                               <Badge
                                 variant="outline"
                                 className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted')
-                                    ? 'bg-green-50 border-green-300 text-green-800'
-                                    : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected')
-                                      ? 'bg-red-50 border-red-300 text-red-800'
-                                      : 'bg-yellow-50 border-yellow-300 text-yellow-800'
+                                  ? 'bg-green-50 border-green-300 text-green-800'
+                                  : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected')
+                                    ? 'bg-red-50 border-red-300 text-red-800'
+                                    : 'bg-yellow-50 border-yellow-300 text-yellow-800'
                                   }`}
                               >
                                 {app.status}
