@@ -5501,9 +5501,10 @@ export function AddressSearchForm() {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(30, 122, 111); // Teal
 
-        const reference = app.reference || app.altid || 'Unknown Reference';
+        const reference = app.reference || app.altid || '';
         const status = app.status || app.decision || 'Status Unknown';
-        doc.text(`${index + 1}. Reference: ${reference}`, 15, yPosition);
+        const titleText = reference ? `${index + 1}. Reference: ${reference}` : `${index + 1}. Planning Application`;
+        doc.text(titleText, 15, yPosition);
 
         yPosition += 5;
         doc.setFont('helvetica', 'normal');
@@ -5692,7 +5693,7 @@ export function AddressSearchForm() {
             </div>
 
             {/* Flat Information Message */}
-            {propertyType === "flat" && (
+            {/* {propertyType === "flat" && (
               <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -5708,7 +5709,7 @@ export function AddressSearchForm() {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">

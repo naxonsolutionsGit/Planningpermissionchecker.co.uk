@@ -42,6 +42,7 @@ interface PlanningApplication {
   "decision-date": string
   "organisation-entity": string
   "entry-date": string
+  url?: string
 }
 
 // export interface PlanningCheck {
@@ -195,13 +196,14 @@ export function PlanningResult({ result }: PlanningResultProps) {
         // Map UK PlanIt fields to our interface
         const mappedApps = sortedApps.map((app: any) => ({
           entity: app.uid || app.id,
-          reference: app.reference || app.altid || 'Unknown',
+          reference: app.reference || app.altid || '',
           description: app.description || app.name || 'No description available',
           'decision-date': app.decided_date || app.start_date || '',
           'entry-date': app.start_date || app.last_changed || '',
           'organisation-entity': app.area_name || result.localAuthority,
           status: app.status || app.decision || '',
-          address: app.address || ''
+          address: app.address || '',
+          url: app.link || (app.uid ? `https://www.planit.org.uk/planapplic/${app.uid}` : '')
         }))
 
         console.log('✅ Displaying', mappedApps.length, 'planning applications for this specific address')
@@ -406,9 +408,11 @@ export function PlanningResult({ result }: PlanningResultProps) {
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <Badge variant="secondary" className="text-xs font-mono">
-                              {app.reference}
-                            </Badge>
+                            {app.reference && (
+                              <Badge variant="secondary" className="text-xs font-mono">
+                                {app.reference}
+                              </Badge>
+                            )}
                             {app.status && (
                               <Badge
                                 variant="outline"
@@ -431,6 +435,17 @@ export function PlanningResult({ result }: PlanningResultProps) {
                             <p className="text-xs text-muted-foreground flex items-center gap-1">
                               <MapPin className="w-3 h-3" /> {app.address}
                             </p>
+                          )}
+                          {app.url && (
+                            <a
+                              href={app.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-[#1E7A6F] hover:underline mt-2"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              View Application
+                            </a>
                           )}
                         </div>
                       </div>
