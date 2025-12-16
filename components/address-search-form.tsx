@@ -5501,7 +5501,7 @@ export function AddressSearchForm() {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(30, 122, 111); // Teal
 
-        const reference = app.reference || app.altid || '';
+        const reference = app.reference || app.altid || app.uid || '';
         const status = app.status || app.decision || 'Status Unknown';
         const titleText = reference ? `${index + 1}. Reference: ${reference}` : `${index + 1}. Planning Application`;
         doc.text(titleText, 15, yPosition);

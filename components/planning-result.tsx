@@ -197,14 +197,14 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
         // Map UK PlanIt fields to our interface
         const mappedApps = sortedApps.map((app: any) => ({
           entity: app.uid || app.id,
-          reference: app.reference || app.altid || '',
+          reference: app.reference || app.altid || app.uid || '',
           description: app.description || app.name || 'No description available',
           'decision-date': app.decided_date || app.start_date || '',
           'entry-date': app.start_date || app.last_changed || '',
           'organisation-entity': app.area_name || result.localAuthority,
           status: app.status || app.decision || '',
           address: app.address || '',
-          url: app.link || (app.uid ? `https://www.planit.org.uk/planapplic/${app.uid}` : '')
+          url: app.link || app.url || (app.uid ? `https://www.planit.org.uk/planapplic/${app.uid}` : '')
         }))
 
         console.log('✅ Displaying', mappedApps.length, 'planning applications for this specific address')
@@ -222,13 +222,14 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
 
         const mappedApps = sortedApps.map((app: any) => ({
           entity: app.uid || app.id,
-          reference: app.reference || app.altid || 'Unknown',
+          reference: app.reference || app.altid || app.uid || '',
           description: app.description || app.name || 'No description available',
           'decision-date': app.decided_date || app.start_date || '',
           'entry-date': app.start_date || app.last_changed || '',
           'organisation-entity': app.area_name || result.localAuthority,
           status: app.status || app.decision || '',
-          address: app.address || ''
+          address: app.address || '',
+          url: app.link || app.url || (app.uid ? `https://www.planit.org.uk/planapplic/${app.uid}` : '')
         }))
 
         setPlanningApplications(mappedApps)
