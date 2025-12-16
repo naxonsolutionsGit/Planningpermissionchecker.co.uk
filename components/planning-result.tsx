@@ -286,24 +286,32 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
         </CardContent>
       </Card>
 
+      {/* Flat Information Card */}
+      {propertyType === "flat" && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <CardTitle className="text-lg text-red-700">Important Information About Flats</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-red-700">
+              Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
+              You can still search to view planning history for this address. For any alterations,
+              please consult with your local planning authority or building management.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          {propertyType === "flat" && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-md">
-              <h4 className="font-semibold text-red-600 mb-1">
-                Important Information About Flats
-              </h4>
-              <p className="text-sm text-red-600">
-                Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
-                You can still search to view planning history for this address. For any alterations,
-                please consult with your local planning authority or building management.
-              </p>
-            </div>
-          )}
+
           <p className="text-foreground">{result.summary}</p>
         </CardContent>
       </Card>
@@ -409,7 +417,7 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
               <>
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-xs text-green-800">
-                    <strong>Found {planningApplications.length} application(s)!</strong> These are planning applications at or near {result.address}.
+                    <strong>Found {planningApplications.length} application(s)!</strong> These are planning applications at  {result.address}.
                   </p>
                 </div>
 
