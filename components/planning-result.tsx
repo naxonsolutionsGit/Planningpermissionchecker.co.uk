@@ -261,24 +261,7 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
         </CardContent>
       </Card>
 
-      {/* Flat Information Card */}
-      {propertyType === "flat" && (
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <CardTitle className="text-lg text-red-700">Important Information About Flats</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-red-700">
-              Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
-              You can still search to view planning history for this address. For any alterations,
-              please consult with your local planning authority or building management.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Summary Card */}
       <Card>
@@ -331,6 +314,26 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
                 </div>
               </div>
             ))}
+
+            {/* Flat Information - Displayed as a Check Item */}
+            {propertyType === "flat" && (
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-foreground">Important Information About Flats</span>
+                    <Badge variant="secondary" className="text-xs">
+                      Info
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
+                    You can still search to view planning history for this address. For any alterations,
+                    please consult with your local planning authority or building management.
+                  </p>
+                </div>
+              </div>
+            )}
             {/* {result.checks.map((check, index) => (
               <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                 {getCheckIcon(check.status)}
