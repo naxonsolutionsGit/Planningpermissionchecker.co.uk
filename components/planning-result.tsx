@@ -209,34 +209,9 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
 
         console.log('✅ Displaying', mappedApps.length, 'planning applications for this specific address')
         setPlanningApplications(mappedApps)
-      } else if (allApplications.length > 0) {
-        // Show nearby applications if no exact match found
-        console.log('ℹ️ No exact address match, showing nearby applications')
-        const sortedApps = allApplications
-          .sort((a: any, b: any) => {
-            const dateA = new Date(a.decided_date || a.start_date || a.last_changed || '1970-01-01')
-            const dateB = new Date(b.decided_date || b.start_date || b.last_changed || '1970-01-01')
-            return dateB.getTime() - dateA.getTime()
-          })
-          .slice(0, 5)
-
-        const mappedApps = sortedApps.map((app: any) => ({
-          entity: app.uid || app.id,
-          reference: app.reference || app.altid || app.uid || '',
-          description: app.description || app.name || 'No description available',
-          'decision-date': app.decided_date || app.start_date || '',
-          'entry-date': app.start_date || app.last_changed || '',
-          'organisation-entity': app.area_name || result.localAuthority,
-          status: app.status || app.decision || '',
-          address: app.address || '',
-          url: app.link || app.url || (app.uid ? `https://www.planit.org.uk/planapplic/${app.uid}` : '')
-        }))
-
-        setPlanningApplications(mappedApps)
-        // Note: We'll update the UI to indicate these are nearby, not exact matches
       } else {
-        console.log('ℹ️ No planning applications found for this address')
-        setApplicationsError('No planning applications found for this address. This may mean no applications have been submitted here.')
+        console.log('ℹ️ No planning applications found for this specific address')
+        setApplicationsError('No planning applications found for this specific address.')
       }
     } catch (error) {
       console.error('Error fetching planning applications:', error)
