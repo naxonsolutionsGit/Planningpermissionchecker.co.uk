@@ -144,15 +144,15 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
         const postcode = postcodeMatch[0].replace(/\s+/g, '+')
         console.log('🔍 Fetching planning history for postcode:', postcode)
 
-        // UK PlanIt API - search within 0.05km (50m) radius of postcode for more precision
-        appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.05&limit=50`
+        // UK PlanIt API - search within 0.2km (200m) radius of postcode for more coverage
+        appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.2&limit=100`
       } else {
         // Fallback to coordinate search
         const { lat, lng } = result.coordinates!
         console.log('🔍 Fetching planning history for coordinates:', lat, lng)
 
-        // UK PlanIt API - search within 0.05km radius of coordinates
-        appsUrl = `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=0.05&limit=50`
+        // UK PlanIt API - search within 0.2km radius of coordinates
+        appsUrl = `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=0.2&limit=100`
       }
 
       console.log('📡 Fetching from UK PlanIt:', appsUrl)
@@ -455,7 +455,34 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
 
 
               </>
-            ) : null}
+            ) : (
+              <div className="text-center py-8 px-4 border border-dashed border-border rounded-lg">
+                <p className="text-sm text-muted-foreground mb-4">
+                  No planning applications were automatically found for this specific address.
+                </p>
+
+                <div className="space-y-4">
+                  <div className="p-3 bg-muted/50 rounded-md text-xs text-muted-foreground">
+                    <p className="font-semibold mb-1">Why am I seeing this?</p>
+                    <p>Some historical or very recent applications might not be indexed in our automated search yet. You can check the official council portal directly for the most up-to-date information.</p>
+                  </div>
+
+                  <a
+                    href="https://regs.thurrock.gov.uk/online-applications/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#1E7A6F] text-white rounded-lg hover:bg-[#155a52] transition-colors text-sm font-semibold shadow-sm"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Search Official Thurrock Portal
+                  </a>
+
+                  <p className="text-[10px] text-muted-foreground">
+                    Link: https://regs.thurrock.gov.uk/online-applications/
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         )}
       </Card>
