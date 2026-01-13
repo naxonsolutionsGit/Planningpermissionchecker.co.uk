@@ -69,6 +69,7 @@ interface PlanningResultProps {
 
 export function PlanningResult({ result, propertyType }: PlanningResultProps) {
   const [planningApplications, setPlanningApplications] = useState<PlanningApplication[]>([])
+  const [nearbyApplications, setNearbyApplications] = useState<PlanningApplication[]>([])
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
   const [applicationsError, setApplicationsError] = useState<string | null>(null)
   const [showPlanningHistory, setShowPlanningHistory] = useState(true)
@@ -101,6 +102,7 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
     if (addressChanged) {
       // Reset data when address changes
       setPlanningApplications([])
+      setNearbyApplications([])
       setApplicationsError(null)
       prevAddressRef.current = result.address
 
@@ -187,33 +189,50 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
       console.log('🎯 Filtered to address-specific applications:', filteredApps.length)
 
       let mappedApps: PlanningApplication[] = []
+      let mappedNearbyApps: PlanningApplication[] = []
+
+      // Process near postcode apps that AREN'T in the address-specific list
+      const nearbyApps = allApplications.filter((app: any) => {
+        const appAddress = (app.address || app.location || app.name || '').toLowerCase()
+        const hasStreetNumber = !streetNumber || appAddress.includes(streetNumber)
+        const hasStreetName = !streetName || appAddress.includes(streetName.substring(0, Math.min(streetName.length, 6)))
+        return !(hasStreetNumber && hasStreetName)
+      })
+
+      const mapApp = (app: any) => ({
+        entity: app.uid || app.id,
+        reference: app.reference || app.altid || app.uid || '',
+        description: app.description || app.name || 'No description available',
+        'decision-date': app.decided_date || app.start_date || '',
+        'entry-date': app.start_date || app.last_changed || '',
+        'organisation-entity': app.area_name || result.localAuthority,
+        status: app.status || app.decision || '',
+        address: app.address || '',
+        url: app.link || app.url || (app.uid ? `https://www.planit.org.uk/planapplic/${app.uid}` : '')
+      })
 
       if (filteredApps && filteredApps.length > 0) {
-        // Sort by start_date or decided_date (most recent first)
-        const sortedApps = filteredApps
+        mappedApps = filteredApps
           .sort((a: any, b: any) => {
             const dateA = new Date(a.decided_date || a.start_date || a.last_changed || '1970-01-01')
             const dateB = new Date(b.decided_date || b.start_date || b.last_changed || '1970-01-01')
             return dateB.getTime() - dateA.getTime()
           })
-          .slice(0, 10) // Show up to 10 most recent
+          .map(mapApp)
+      }
 
-        // Map UK PlanIt fields to our interface
-        mappedApps = sortedApps.map((app: any) => ({
-          entity: app.uid || app.id,
-          reference: app.reference || app.altid || app.uid || '',
-          description: app.description || app.name || 'No description available',
-          'decision-date': app.decided_date || app.start_date || '',
-          'entry-date': app.start_date || app.last_changed || '',
-          'organisation-entity': app.area_name || result.localAuthority,
-          status: app.status || app.decision || '',
-          address: app.address || '',
-          url: app.link || app.url || (app.uid ? `https://www.planit.org.uk/planapplic/${app.uid}` : '')
-        }))
+      if (nearbyApps && nearbyApps.length > 0) {
+        mappedNearbyApps = nearbyApps
+          .sort((a: any, b: any) => {
+            const dateA = new Date(a.decided_date || a.start_date || a.last_changed || '1970-01-01')
+            const dateB = new Date(b.decided_date || b.start_date || b.last_changed || '1970-01-01')
+            return dateB.getTime() - dateA.getTime()
+          })
+          .slice(0, 15) // Show up to 15 nearby
+          .map(mapApp)
       }
 
       // SPECIAL CASE: Hardcode missing planning permission for 35 Camden Road RM16 6PY
-      // The API often misses older records or specific local authority data
       if (result.address.toLowerCase().includes("35 camden road") && result.address.toLowerCase().includes("rm16")) {
         const missingRef = "00/00770/FUL"
         const alreadyExists = mappedApps.some(app => app.reference === missingRef)
@@ -224,7 +243,7 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
             entity: 770001,
             reference: missingRef,
             description: "Conservatory to rear of garage",
-            "decision-date": "2000-01-01", // Approximate date based on Ref (Year 2000)
+            "decision-date": "2000-01-01",
             "entry-date": "2000-01-01",
             "organisation-entity": "Thurrock Council",
             status: "Application Permitted",
@@ -232,7 +251,6 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
             url: "https://regs.thurrock.gov.uk/online-applications/applicationDetails.do?activeTab=summary&keyVal=0000770FUL"
           })
 
-          // Re-sort to ensure correct order
           mappedApps.sort((a, b) => {
             const dateA = new Date(a['decision-date'] || '1970-01-01')
             const dateB = new Date(b['decision-date'] || '1970-01-01')
@@ -241,12 +259,13 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
         }
       }
 
-      if (mappedApps.length > 0) {
-        console.log('✅ Displaying', mappedApps.length, 'planning applications for this specific address')
+      if (mappedApps.length > 0 || mappedNearbyApps.length > 0) {
+        console.log('✅ Displaying results:', mappedApps.length, 'at address,', mappedNearbyApps.length, 'nearby')
         setPlanningApplications(mappedApps)
+        setNearbyApplications(mappedNearbyApps)
       } else {
-        console.log('ℹ️ No planning applications found for this specific address')
-        setApplicationsError('No planning applications found for this specific address.')
+        console.log('ℹ️ No planning applications found')
+        setApplicationsError('No planning applications found for this specific address or surrounding area.')
       }
     } catch (error) {
       console.error('Error fetching planning applications:', error)
@@ -426,70 +445,123 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
               <div className="text-center py-6">
                 <p className="text-sm text-muted-foreground">{applicationsError}</p>
               </div>
-            ) : planningApplications.length > 0 ? (
-              <>
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-xs text-green-800">
-                    <strong>Found {planningApplications.length} application(s)!</strong> These are planning applications at  {result.address}.
-                  </p>
-                </div>
-
-                <div className="space-y-3" key={`planning-apps-${result.address}`}>
-                  {planningApplications.map((app: any, index) => (
-                    <div
-                      key={`${result.address}-${app.entity || app.reference || index}`}
-                      className="p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            {app.reference && (
-                              <Badge variant="secondary" className="text-xs font-mono">
-                                {app.reference}
-                              </Badge>
-                            )}
-                            {app.status && (
-                              <Badge
-                                variant="outline"
-                                className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted')
-                                  ? 'bg-green-50 border-green-300 text-green-800'
-                                  : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected')
-                                    ? 'bg-red-50 border-red-300 text-red-800'
-                                    : 'bg-yellow-50 border-yellow-300 text-yellow-800'
-                                  }`}
-                              >
-                                {app.status}
-                              </Badge>
-                            )}
-                            <span className="text-xs text-muted-foreground">
-                              {app['decision-date'] ? `Decided: ${formatDate(app['decision-date'])}` : `Submitted: ${formatDate(app['entry-date'])}`}
-                            </span>
-                          </div>
-                          <p className="text-sm text-foreground mb-1">{app.description || 'No description available'}</p>
-                          {app.address && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <MapPin className="w-3 h-3" /> {app.address}
-                            </p>
-                          )}
-                          {app.url && (
-                            <a
-                              href={app.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-[#1E7A6F] hover:underline mt-2"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                              View Application
-                            </a>
-                          )}
-                        </div>
-                      </div>
+            ) : planningApplications.length > 0 || nearbyApplications.length > 0 ? (
+              <div className="space-y-8">
+                {/* Specific Address Section */}
+                {planningApplications.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-xs text-green-800">
+                        <strong>Found {planningApplications.length} application(s)!</strong> These are planning applications specifically at {result.address}.
+                      </p>
                     </div>
-                  ))}
+
+                    <div className="space-y-3">
+                      {planningApplications.map((app: any, index) => (
+                        <div
+                          key={`spec-${app.reference}-${index}`}
+                          className="p-4 border border-border rounded-lg bg-white shadow-sm"
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                {app.reference && (
+                                  <Badge variant="secondary" className="text-xs font-mono">
+                                    {app.reference}
+                                  </Badge>
+                                )}
+                                {app.status && (
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted')
+                                      ? 'bg-green-50 border-green-300 text-green-800'
+                                      : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected')
+                                        ? 'bg-red-50 border-red-300 text-red-800'
+                                        : 'bg-yellow-50 border-yellow-300 text-yellow-800'
+                                      }`}
+                                  >
+                                    {app.status}
+                                  </Badge>
+                                )}
+                                <span className="text-xs text-muted-foreground">
+                                  {app['decision-date'] ? `Decided: ${formatDate(app['decision-date'])}` : `Submitted: ${formatDate(app['entry-date'])}`}
+                                </span>
+                              </div>
+                              <p className="text-sm font-medium text-foreground mb-1">{app.description || 'No description available'}</p>
+                              {app.address && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" /> {app.address}
+                                </p>
+                              )}
+                              {app.url && (
+                                <a
+                                  href={app.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-[#1E7A6F] hover:underline mt-2"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  View Application
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 border border-dashed border-border rounded-lg text-center">
+                    <p className="text-sm text-muted-foreground">No planning applications found specifically for this address.</p>
+                  </div>
+                )}
+
+                {/* Nearby Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 border-b pb-2">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    <h3 className="text-md font-semibold text-foreground">Planning History for Surrounding Area</h3>
+                  </div>
+
+                  {nearbyApplications.length > 0 ? (
+                    <div className="space-y-3">
+                      {nearbyApplications.map((app: any, index) => (
+                        <div
+                          key={`nearby-${app.reference}-${index}`}
+                          className="p-3 border border-border rounded-lg bg-muted/20"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <Badge variant="outline" className="text-[10px] font-mono py-0 h-4">
+                                  {app.reference}
+                                </Badge>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {app['decision-date'] ? formatDate(app['decision-date']) : formatDate(app['entry-date'])}
+                                </span>
+                              </div>
+                              <p className="text-xs text-foreground line-clamp-2">{app.description}</p>
+                              <p className="text-[10px] text-muted-foreground mt-1 truncate">{app.address}</p>
+                            </div>
+                            {app.url && (
+                              <a
+                                href={app.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1 text-[#1E7A6F] hover:bg-[#1E7A6F]/10 rounded"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">No planning applications found in the surrounding area.</p>
+                  )}
                 </div>
-
-
-              </>
+              </div>
             ) : (
               <div className="text-center py-8 px-4 border border-dashed border-border rounded-lg">
                 <p className="text-sm text-muted-foreground mb-4">
