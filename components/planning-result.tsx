@@ -498,10 +498,9 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
                                   href={app.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs text-[#1E7A6F] hover:underline mt-2"
+                                  className="text-xs text-blue-600 hover:text-blue-800 underline mt-2 inline-block"
                                 >
-                                  <ExternalLink className="w-3 h-3" />
-                                  View Application
+                                  View history details
                                 </a>
                               )}
                             </div>
@@ -548,9 +547,9 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
                                 href={app.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-1 text-[#1E7A6F] hover:bg-[#1E7A6F]/10 rounded"
+                                className="text-[10px] text-blue-600 hover:text-blue-800 underline mt-1 inline-block"
                               >
-                                <ExternalLink className="w-3 h-3" />
+                                View history details
                               </a>
                             )}
                           </div>
