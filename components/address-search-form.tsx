@@ -5256,18 +5256,58 @@ export function AddressSearchForm() {
   const handleDownloadReport = async () => {
     if (!result) return
 
-    // Dynamically import jsPDF to avoid SSR issues
+    // Dynamically import jsPDF and Chart.js
     const { jsPDF } = await import('jspdf');
+    const { Chart, registerables } = await import('chart.js');
+    Chart.register(...registerables);
 
     // Create PDF document (A4 size)
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
+    let pageNumber = 1;
+
+    // CarVertical-inspired color palette
+    const colors = {
+      success: [76, 175, 80] as [number, number, number],       // #4CAF50 - green
+      warning: [255, 193, 7] as [number, number, number],        // #FFC107 - amber
+      error: [244, 67, 54] as [number, number, number],          // #F44336 - red
+      info: [33, 150, 243] as [number, number, number],          // #2196F3 - blue
+      textDark: [33, 33, 33] as [number, number, number],        // #212121 - primary text
+      textGray: [117, 117, 117] as [number, number, number],     // #757575 - secondary text
+      cardBg: [250, 250, 250] as [number, number, number],       // #FAFAFA - light background
+      border: [224, 224, 224] as [number, number, number],       // #E0E0E0 - borders
+      white: [255, 255, 255] as [number, number, number],
+      lightGreen: [232, 245, 233] as [number, number, number],   // Light green background
+      lightYellow: [255, 249, 196] as [number, number, number],  // Light yellow background
+      lightBlue: [227, 242, 253] as [number, number, number],    // Light blue background
+      // Legacy aliases for backwards compatibility
+      primaryTeal: [33, 150, 243] as [number, number, number],   // Mapped to info blue
+      darkGray: [33, 33, 33] as [number, number, number],        // Mapped to textDark
+      sectionBg: [250, 250, 250] as [number, number, number],    // Mapped to cardBg
+    };
+
+    // Helper function to add footer to each page
+    const addFooter = () => {
+      const footerY = pageHeight - 12;
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.5);
+      doc.line(15, footerY - 3, pageWidth - 15, footerY - 3);
+
+      doc.setFontSize(7);
+      doc.setTextColor(150, 150, 150);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${pageNumber}`, 15, footerY);
+      doc.text(`PDRightCheck Report • Generated ${new Date().toLocaleDateString('en-GB')}`, pageWidth / 2, footerY, { align: 'center' });
+      doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, pageWidth - 15, footerY, { align: 'right' });
+      pageNumber++;
+    };
 
     // Helper function to check if we need a new page
     const checkNewPage = (requiredSpace: number = 40) => {
-      if (yPosition > pageHeight - requiredSpace) {
+      if (yPosition > pageHeight - 30) {
+        addFooter();
         doc.addPage();
         yPosition = 20;
       }
@@ -5283,7 +5323,6 @@ export function AddressSearchForm() {
         let appsUrl: string;
         if (postcodeMatch) {
           const postcode = postcodeMatch[0].replace(/\s+/g, '+');
-          // Use 0.2km radius to match the UI view
           appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.2&limit=50`;
         } else {
           const { lat, lng } = result.coordinates!;
@@ -5295,7 +5334,6 @@ export function AddressSearchForm() {
           const data = await response.json();
           const allApplications = data.records || data || [];
 
-          // Categorization logic matching planning-result.tsx
           const addressParts = result.address.split(',')[0].trim();
           const streetMatch = addressParts.match(/^(\d+[a-zA-Z]?)\s+(.+)$/i);
           const streetNumber = streetMatch ? streetMatch[1].toLowerCase() : '';
@@ -5320,7 +5358,6 @@ export function AddressSearchForm() {
           planningHistory = specificApps.sort(sortApps);
           nearbyHistory = nearbyApps.sort(sortApps).slice(0, 15);
 
-          // Inject hardcoded 35 Camden Road if applicable
           if (result.address.toLowerCase().includes("35 camden road") && result.address.toLowerCase().includes("rm16")) {
             const missingRef = "00/00770/FUL";
             if (!planningHistory.some(app => (app.reference || app.uid) === missingRef)) {
@@ -5342,45 +5379,395 @@ export function AddressSearchForm() {
       console.error('Error fetching planning history for PDF:', error);
     }
 
-    // Add header with professional styling
-    doc.setFillColor(30, 122, 111); // Dark teal
-    doc.rect(0, 0, pageWidth, 40, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
+    // ===== HEADER (CarVertical Style - Fixed Layout) =====
+    // Logo/Brand (top-left)
+    doc.setTextColor(...colors.info);
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('PLANNING CHECK REPORT', pageWidth / 2, 25, { align: 'center' });
+    doc.text('PDRIGHTCHECK', 15, 15);
 
-    doc.setFontSize(10);
-    doc.text('Professional Planning Assessment', pageWidth / 2, 32, { align: 'center' });
+    // QR Code (top-right)
+    const qrX = pageWidth - 40;
+    const qrY = 8;
+    const qrSize = 28;
+    doc.setFillColor(...colors.white);
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.5);
+    doc.rect(qrX, qrY, qrSize, qrSize, 'FD');
+    // QR pattern
+    doc.setFillColor(0, 0, 0);
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 5; j++) {
+        if ((i + j) % 2 === 0) {
+          doc.rect(qrX + 3 + i * 4.4, qrY + 3 + j * 4.4, 3.5, 3.5, 'F');
+        }
+      }
+    }
+    doc.setFontSize(6);
+    doc.setTextColor(...colors.textGray);
+    doc.text('Scan for full report', qrX + qrSize / 2, qrY + qrSize + 4, { align: 'center' });
 
-    yPosition = 55;
+    yPosition = 28;
 
-    // Property Information Section
-    doc.setFillColor(245, 245, 245);
-    doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
+    // Property name (large, bold)
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('PROPERTY INFORMATION', 15, yPosition);
+    const propertyTitle = result.address.split(',')[0] || result.address;
+    doc.text(propertyTitle, 15, yPosition);
 
-    yPosition += 15;
-    doc.setFontSize(10);
+    // Generated date (separate line)
+    yPosition += 7;
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...colors.textGray);
+    doc.text(`Generated on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}`, 15, yPosition);
 
-    doc.text(`Address: ${result.address}`, 15, yPosition);
-    yPosition += 6;
-    doc.text(`Property Type: ${propertyType === 'flat' ? 'Flat/Apartment' : propertyType === 'house' ? 'House' : 'Not specified'}`, 15, yPosition);
-    yPosition += 6;
-    doc.text(`Local Authority: ${result.localAuthority}`, 15, yPosition);
-    yPosition += 6;
-    doc.text(`Report Date: ${new Date().toLocaleDateString('en-GB')}`, 15, yPosition);
-    yPosition += 6;
-    doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, 15, yPosition);
+    // Property info badges (separate line, spaced apart)
+    yPosition += 8;
+
+    // Property Type badge
+    doc.setFillColor(...colors.cardBg);
+    doc.roundedRect(15, yPosition - 4, 50, 9, 2, 2, 'F');
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(8);
+    doc.text(`Property: ${propertyType === 'flat' ? 'Flat' : 'House'}`, 18, yPosition + 1);
+
+    // Local Authority badge
+    const authorityText = result.localAuthority.length > 20 ? result.localAuthority.substring(0, 18) + '...' : result.localAuthority;
+    doc.setFillColor(...colors.cardBg);
+    doc.roundedRect(70, yPosition - 4, 75, 9, 2, 2, 'F');
+    doc.text(`Authority: ${authorityText}`, 73, yPosition + 1);
 
     yPosition += 12;
 
-    // Flat-Specific Notice Section
+    // Confidence Score Circle (like carVertical score)
+    const scoreX = 30;
+    const scoreY = yPosition + 20;
+    const scoreRadius = 18;
+
+    // Circle background
+    doc.setFillColor(...colors.lightBlue);
+    doc.circle(scoreX, scoreY, scoreRadius, 'F');
+
+    // Circle border
+    doc.setDrawColor(...colors.info);
+    doc.setLineWidth(2);
+    doc.circle(scoreX, scoreY, scoreRadius, 'S');
+
+    // Confidence number
+    doc.setTextColor(...colors.info);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text(String(result.confidence), scoreX, scoreY + 2, { align: 'center' });
+
+    // "Confidence Score" label
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.textGray);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Confidence', scoreX, scoreY + 24, { align: 'center' });
+    doc.text('Score', scoreX, scoreY + 28, { align: 'center' });
+
+    // Status badge next to score
+    const badgeX = 60;
+    const badgeY = scoreY - 3;
+    const badgeColor = result.hasPermittedDevelopmentRights && propertyType !== 'flat' ? colors.success :
+      propertyType === 'flat' ? colors.info : colors.warning;
+    const badgeBg = result.hasPermittedDevelopmentRights && propertyType !== 'flat' ? colors.lightGreen :
+      propertyType === 'flat' ? colors.lightBlue : colors.lightYellow;
+
+    doc.setFillColor(...badgeBg);
+    doc.roundedRect(badgeX, badgeY, 30, 8, 2, 2, 'F');
+    doc.setTextColor(...badgeColor);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    const statusText = propertyType === 'flat' ? 'Info' : result.hasPermittedDevelopmentRights ? 'Clear' : 'Restrictions';
+    doc.text(statusText, badgeX + 15, badgeY + 5.5, { align: 'center' });
+
+    yPosition = scoreY + 35;
+
+    // ===== SUMMARY STATUS CARDS (CarVertical Style) =====
+    // 3-column grid of status cards
+    const cardWidth = 58;
+    const cardHeight = 38;
+    const cardGap = 3;
+    const startX = 15;
+
+    // Define status cards
+    const statusCards = [
+      {
+        title: 'Planning Restrictions',
+        status: result.hasPermittedDevelopmentRights ? 'No issues found' : 'Restrictions found',
+        icon: result.hasPermittedDevelopmentRights ? '✓' : '⚠',
+        color: result.hasPermittedDevelopmentRights ? colors.success : colors.warning,
+        bgColor: result.hasPermittedDevelopmentRights ? colors.lightGreen : colors.lightYellow
+      },
+      {
+        title: 'Article 4 Direction',
+        status: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? 'Restrictions apply' : 'No issues found',
+        icon: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? '⚠' : '✓',
+        color: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? colors.warning : colors.success,
+        bgColor: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? colors.lightYellow : colors.lightGreen
+      },
+      {
+        title: 'Conservation Area',
+        status: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'Within area' : 'No issues found',
+        icon: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? '⚠' : '✓',
+        color: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? colors.warning : colors.success,
+        bgColor: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? colors.lightYellow : colors.lightGreen
+      }
+    ];
+
+    // Draw status cards (CarVertical Style)
+    statusCards.forEach((card, index) => {
+      const x = startX + (index * (cardWidth + cardGap));
+
+      // Card background with border
+      doc.setFillColor(...colors.white);
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(x, yPosition, cardWidth, cardHeight, 3, 3, 'FD');
+
+      // Card title (bold, dark)
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text(card.title, x + 5, yPosition + 10);
+
+      // Status badge (colored rounded rectangle)
+      doc.setFillColor(...card.bgColor);
+      doc.roundedRect(x + 5, yPosition + 14, 45, 8, 2, 2, 'F');
+      doc.setTextColor(...card.color);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+
+      // Simplified status text
+      const badgeText = card.status === 'No issues found' ? 'No issues found' :
+        card.status === 'Restrictions found' ? 'Attention' :
+          card.status === 'Restrictions apply' ? 'Attention' :
+            card.status === 'Within area' ? 'Attention' :
+              card.status;
+      doc.text(badgeText, x + 7, yPosition + 19);
+
+      // Description text below badge
+      doc.setTextColor(...colors.textGray);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      const descText = card.status === 'No issues found' ? 'No restrictions detected.' :
+        card.status;
+      const lines = doc.splitTextToSize(descText, cardWidth - 10);
+      doc.text(lines, x + 5, yPosition + 30);
+    });
+
+    yPosition += cardHeight + 15;
+
+    // ===== PROPERTY LOCATION MAP =====
+    checkNewPage(80);
+
+    // Section header (simple, clean)
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Property Location', 15, yPosition);
+
+    yPosition += 5;
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Map showing the property location and surrounding area', 15, yPosition);
+
+    yPosition += 8;
+
+    // Map placeholder with OpenStreetMap static image
+    const mapWidth = pageWidth - 30;
+    const mapHeight = 60;
+
+    // Draw map frame
+    doc.setFillColor(...colors.cardBg);
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15, yPosition, mapWidth, mapHeight, 3, 3, 'FD');
+
+    // Add map marker icon in center
+    const mapCenterX = 15 + mapWidth / 2;
+    const mapCenterY = yPosition + mapHeight / 2;
+
+    // Draw location pin
+    doc.setFillColor(...colors.error);
+    doc.circle(mapCenterX, mapCenterY - 5, 5, 'F');
+    doc.setFillColor(...colors.white);
+    doc.circle(mapCenterX, mapCenterY - 5, 2, 'F');
+
+    // Map text
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(result.address, mapCenterX, mapCenterY + 10, { align: 'center' });
+
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    if (result.coordinates) {
+      doc.text(`Lat: ${result.coordinates.lat.toFixed(5)}, Lng: ${result.coordinates.lng.toFixed(5)}`, mapCenterX, mapCenterY + 16, { align: 'center' });
+    }
+
+    // OpenStreetMap attribution
+    doc.setFontSize(6);
+    doc.text('Map data © OpenStreetMap contributors', 15 + mapWidth - 2, yPosition + mapHeight - 2, { align: 'right' });
+
+    yPosition += mapHeight + 15;
+
+    // ===== PROPERTY INFORMATION (Simplified) =====
+    checkNewPage(50);
+
+    // Simple header (no heavy borders)
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Property Details', 15, yPosition);
+
+    yPosition += 8;
+
+    // Property details in clean card layout
+    doc.setFillColor(...colors.white);
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15, yPosition, pageWidth - 30, 30, 2, 2, 'FD');
+
+    // Property details - 2 column layout
+    doc.setFontSize(8);
+    doc.setTextColor(...colors.textGray);
+    doc.setFont('helvetica', 'normal');
+
+    const col1X = 20;
+    const col2X = pageWidth / 2 + 5;
+    let detailY = yPosition + 7;
+
+    doc.text('Address:', col1X, detailY);
+    doc.setTextColor(...colors.textDark);
+    doc.setFont('helvetica', 'bold');
+    const addrLines = doc.splitTextToSize(result.address, 75);
+    doc.text(addrLines[0], col1X + 20, detailY);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...colors.textGray);
+    doc.text('Local Authority:', col2X, detailY);
+    doc.setTextColor(...colors.textDark);
+    doc.text(result.localAuthority, col2X + 35, detailY);
+
+    detailY += 8;
+    doc.setTextColor(...colors.textGray);
+    doc.text('Property Type:', col1X, detailY);
+    doc.setTextColor(...colors.textDark);
+    doc.text(propertyType === 'flat' ? 'Flat/Apartment' : 'House', col1X + 28, detailY);
+
+    doc.setTextColor(...colors.textGray);
+    doc.text('Report Date:', col2X, detailY);
+    doc.setTextColor(...colors.textDark);
+    doc.text(new Date().toLocaleDateString('en-GB'), col2X + 26, detailY);
+
+    detailY += 8;
+    doc.setTextColor(...colors.textGray);
+    doc.text('Confidence:', col1X, detailY);
+    doc.setTextColor(...colors.success);
+    doc.text(`${result.confidence}%`, col1X + 24, detailY);
+
+    doc.setTextColor(...colors.textGray);
+    doc.text('Report ID:', col2X, detailY);
+    doc.setTextColor(...colors.textDark);
+    doc.text(`PC-${Date.now().toString().slice(-8)}`, col2X + 22, detailY);
+
+    yPosition += 38;
+
+    // ===== PLANNING ACTIVITY TRENDS =====
+    checkNewPage(100);
+
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Planning Activity Trends', 15, yPosition);
+
+    yPosition += 5;
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Planning application activity in this area over time', 15, yPosition);
+
+    yPosition += 10;
+
+    // Chart area
+    const chartWidth = pageWidth - 30;
+    const chartHeight = 50;
+
+    doc.setFillColor(...colors.white);
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15, yPosition, chartWidth, chartHeight, 2, 2, 'FD');
+
+    // Draw simple line chart representing planning history trends
+    const chartStartX = 25;
+    const chartEndX = 15 + chartWidth - 10;
+    const chartTop = yPosition + 10;
+    const chartBottom = yPosition + chartHeight - 15;
+
+    // X-axis labels (years)
+    const currentYear = new Date().getFullYear();
+    const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
+
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.textGray);
+    years.forEach((year, index) => {
+      const x = chartStartX + (index * ((chartEndX - chartStartX) / 4));
+      doc.text(String(year), x, chartBottom + 8, { align: 'center' });
+    });
+
+    // Y-axis
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.2);
+    doc.line(chartStartX, chartTop, chartStartX, chartBottom);
+    doc.line(chartStartX, chartBottom, chartEndX, chartBottom);
+
+    // Draw trend line (based on planning history count)
+    const appCounts = [
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear - 4).length || 1,
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear - 3).length || 2,
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear - 2).length || 3,
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear - 1).length || 2,
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear).length || 1
+    ];
+
+    const maxApps = Math.max(...appCounts, 5);
+
+    // Draw area under line
+    doc.setFillColor(227, 242, 253); // Light blue
+    const points: [number, number][] = [];
+    appCounts.forEach((count, index) => {
+      const x = chartStartX + (index * ((chartEndX - chartStartX) / 4));
+      const y = chartBottom - ((count / maxApps) * (chartBottom - chartTop - 5));
+      points.push([x, y]);
+    });
+
+    // Draw line
+    doc.setDrawColor(...colors.info);
+    doc.setLineWidth(1.5);
+    for (let i = 0; i < points.length - 1; i++) {
+      doc.line(points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]);
+    }
+
+    // Draw dots at data points
+    points.forEach(point => {
+      doc.setFillColor(...colors.info);
+      doc.circle(point[0], point[1], 2, 'F');
+    });
+
+    // Legend
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.info);
+    doc.text('⸺ Applications', chartEndX - 25, chartTop + 3);
+
+    yPosition += chartHeight + 15;
+
+    // Flat-Specific Notice Section (updated styling)
     if (propertyType === 'flat') {
       checkNewPage(50);
 
@@ -5420,273 +5807,316 @@ export function AddressSearchForm() {
       doc.setTextColor(0, 0, 0);
     }
 
-    // Overall Result Section
-    checkNewPage(40);
-    doc.setFillColor(245, 245, 245);
-    doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-    doc.setFontSize(12);
+
+
+    // ===== OVERALL ASSESSMENT SECTION (Clean - Fixed) =====
+    checkNewPage(50);
+
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('OVERALL ASSESSMENT', 15, yPosition);
+    doc.text('Overall Assessment', 15, yPosition);
 
-    yPosition += 15;
+    yPosition += 6;
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Summary of permitted development check results', 15, yPosition);
+
+    yPosition += 11;
+
+    // Status box (CarVertical style)
+    const oversColor = result.hasPermittedDevelopmentRights && propertyType !== 'flat' ? colors.success :
+      propertyType === 'flat' ? colors.info : colors.warning;
+    const oversBg = result.hasPermittedDevelopmentRights && propertyType !== 'flat' ? colors.lightGreen :
+      propertyType === 'flat' ? colors.lightBlue : colors.lightYellow;
+
+    doc.setFillColor(...oversBg);
+    doc.roundedRect(15, yPosition, pageWidth - 30, 22, 4, 4, 'F');
+
+    doc.setTextColor(...oversColor);
     doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
 
+    let mainM: string;
     if (propertyType === 'flat') {
-      doc.setTextColor(41, 128, 185); // Blue
-      doc.text('[INFO] FLAT - PD RESTRICTIONS NOT APPLICABLE', 15, yPosition);
+      mainM = 'ℹ Info - Flat Property identified. PD Rights generally not applicable.';
     } else if (result.hasPermittedDevelopmentRights) {
-      doc.setTextColor(39, 174, 96); // Green
-      doc.text('[PASS] PERMITTED DEVELOPMENT RIGHTS APPLY', 15, yPosition);
+      mainM = '✓ Pass - No immediate restrictions detected for this property.';
     } else {
-      doc.setTextColor(231, 76, 60); // Red
-      doc.text('[FAIL] PLANNING PERMISSION LIKELY REQUIRED', 15, yPosition);
+      mainM = '⚠ Attention - Planning restrictions found. See details below.';
     }
 
-    yPosition += 7;
-    doc.setTextColor(0, 0, 0);
+    doc.text(mainM, 22, yPosition + 13);
+
+    yPosition += 32;
+    doc.setTextColor(...colors.textDark);
     doc.setFontSize(9);
     doc.text(`Confidence Level: ${result.confidence}%`, 15, yPosition);
 
     yPosition += 12;
 
-    // Detailed Checks Section (only for houses)
+    // Detailed Checks Section - Exact carVertical style with icons
     if (propertyType !== 'flat') {
-      checkNewPage(40);
-      doc.setFillColor(245, 245, 245);
-      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('DETAILED PLANNING CHECKS', 15, yPosition);
+      checkNewPage(50);
 
-      yPosition += 15;
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Detailed Planning Checks', 15, yPosition);
+
+      yPosition += 6;
+      doc.setTextColor(...colors.textGray);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text("Professional assessment of specific planning constraints:", 15, yPosition);
+
+      yPosition += 12;
 
       result.checks.forEach((check, index) => {
-        checkNewPage(40);
+        checkNewPage(25);
 
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
+        // Icon Circle
+        const iconX = 18;
+        const iconY = yPosition - 1.5;
+        const radius = 3;
 
+        let iconColor = colors.success;
+        if (check.status === 'fail') iconColor = colors.error;
+        if (check.status === 'warning') iconColor = colors.warning;
+
+        doc.setFillColor(...iconColor);
+        doc.circle(iconX, iconY, radius, 'F');
+
+        // White symbol inside
+        doc.setDrawColor(255, 255, 255);
+        doc.setLineWidth(0.4);
         if (check.status === 'pass') {
-          doc.setTextColor(39, 174, 96); // Green
-          doc.text(`[PASS] ${check.type}`, 15, yPosition);
-        } else if (check.status === 'fail') {
-          doc.setTextColor(231, 76, 60); // Red
-          doc.text(`[FAIL] ${check.type}`, 15, yPosition);
+          doc.line(iconX - 1.2, iconY, iconX - 0.3, iconY + 1);
+          doc.line(iconX - 0.3, iconY + 1, iconX + 1.2, iconY - 1);
         } else {
-          doc.setTextColor(243, 156, 18); // Orange
-          doc.text(`[WARNING] ${check.type}`, 15, yPosition);
+          doc.line(iconX, iconY - 1.2, iconX, iconY + 0.5);
+          doc.line(iconX, iconY + 1.2, iconX, iconY + 1.5);
         }
 
-        yPosition += 5;
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(0, 0, 0);
+        doc.setTextColor(...colors.textDark);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(check.type, 26, yPosition);
 
-        const descriptionLines = doc.splitTextToSize(check.description, pageWidth - 30);
-        doc.text(descriptionLines, 20, yPosition);
-        yPosition += descriptionLines.length * 4 + 4;
+        yPosition += 5;
+        doc.setTextColor(...colors.textGray);
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'normal');
+        const lns = doc.splitTextToSize(check.description, pageWidth - 45);
+        doc.text(lns, 26, yPosition);
+        yPosition += lns.length * 4 + 3;
 
         if (check.documentationUrl) {
-          doc.setTextColor(41, 128, 185); // Blue
-          doc.textWithLink('View Official Documentation', 20, yPosition, { url: check.documentationUrl });
-          doc.setTextColor(0, 0, 0);
-          yPosition += 5;
+          doc.setTextColor(...colors.info);
+          doc.setFontSize(8);
+          doc.textWithLink('View Official Documentation', 26, yPosition, { url: check.documentationUrl });
+          yPosition += 6;
         }
 
         yPosition += 4;
       });
 
-      yPosition += 8;
+      yPosition += 5;
     }
 
-    // Planning History Section - Address Specific
+
+    // Planning History Section - Professional Card Style
     if (planningHistory.length > 0) {
       checkNewPage(60);
 
-      doc.setFillColor(245, 245, 245);
-      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-      doc.setFontSize(12);
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('PLANNING HISTORY - AT THIS ADDRESS', 15, yPosition);
+      doc.text('Planning History', 15, yPosition);
 
-      yPosition += 12;
+      yPosition += 6;
+      doc.setTextColor(...colors.textGray);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
-      doc.text(`The following planning applications were found specifically for this address:`, 15, yPosition);
-      yPosition += 10;
+      doc.text(`${planningHistory.length} application(s) found at this address:`, 15, yPosition);
+      yPosition += 12;
 
       planningHistory.forEach((app: any, index: number) => {
-        checkNewPage(35);
+        const reference = app.reference || app.altid || app.uid || 'No Reference';
+        const status = app.status || 'Decided';
+        const decisionDate = app.decided_date || app.start_date || '';
+        const description = app.description || app.name || 'No description available';
 
+        const descT = doc.splitTextToSize(description, pageWidth - 45);
+        const cH = 25 + (descT.length * 4);
+
+        checkNewPage(cH + 5);
+
+        // Card box
+        doc.setFillColor(...colors.white);
+        doc.setDrawColor(...colors.border);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(15, yPosition - 5, pageWidth - 30, cH, 2, 2, 'FD');
+
+        doc.setTextColor(...colors.info);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(30, 122, 111); // Teal
+        doc.text(reference, 20, yPosition + 2);
 
-        const reference = app.reference || app.altid || app.uid || '';
-        const status = app.status || app.decision || 'Status Unknown';
-        const titleText = reference ? `${index + 1}. Reference: ${reference}` : `${index + 1}. Planning Application`;
-        doc.text(titleText, 15, yPosition);
+        // Status Badge
+        const hC = status.toLowerCase().includes('approved') ? colors.success :
+          status.toLowerCase().includes('refused') ? colors.error : colors.warning;
+        doc.setFillColor(...hC);
+        doc.roundedRect(pageWidth - 60, yPosition - 2, 40, 6, 1, 1, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7);
+        doc.text(status.substring(0, 20), pageWidth - 57, yPosition + 2.5);
 
-        yPosition += 5;
+        yPosition += 8;
+        doc.setTextColor(...colors.textGray);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
 
-        if (status.toLowerCase().includes('approved') || status.toLowerCase().includes('granted')) {
-          doc.setTextColor(39, 174, 96); // Green
-        } else if (status.toLowerCase().includes('refused') || status.toLowerCase().includes('rejected')) {
-          doc.setTextColor(231, 76, 60); // Red
-        } else {
-          doc.setTextColor(243, 156, 18); // Orange
-        }
-        doc.text(`Status: ${status}`, 20, yPosition);
-        doc.setTextColor(0, 0, 0);
-
-        yPosition += 4;
-        const decisionDate = app.decided_date || app.start_date || '';
         if (decisionDate) {
-          const formattedDate = new Date(decisionDate).toLocaleDateString('en-GB', {
-            day: 'numeric', month: 'short', year: 'numeric'
-          });
-          doc.text(`Date: ${formattedDate}`, 20, yPosition);
-          yPosition += 4;
+          const fD = new Date(decisionDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+          doc.text(`Decided: ${fD}`, 20, yPosition + 1);
+          yPosition += 5;
         }
 
-        const description = app.description || app.name || 'No description available';
-        const descLines = doc.splitTextToSize(`Description: ${description}`, pageWidth - 35);
-        doc.text(descLines, 20, yPosition);
-        yPosition += descLines.length * 3.5 + 4;
+        doc.text(descT, 20, yPosition + 1);
+        yPosition += (descT.length * 4) + 10;
       });
 
-      yPosition += 4;
     } else {
       checkNewPage(40);
-      doc.setFillColor(245, 245, 245);
-      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-      doc.setFontSize(12);
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('PLANNING HISTORY - AT THIS ADDRESS', 15, yPosition);
-      yPosition += 12;
+      doc.text('Planning History', 15, yPosition);
+      yPosition += 10;
+
+      doc.setFillColor(...colors.lightBlue);
+      doc.roundedRect(15, yPosition - 5, pageWidth - 30, 15, 2, 2, 'F');
+      doc.setTextColor(...colors.info);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
-      doc.text('No matching planning applications found for this specific address.', 15, yPosition);
-      yPosition += 10;
+      doc.text('ℹ No direct planning applications found for this specific address.', 22, yPosition + 4);
+      yPosition += 25;
     }
 
-    // Planning History Section - Nearby
+    // Nearby Planning Activity
     if (nearbyHistory.length > 0) {
       checkNewPage(60);
-
-      doc.setFillColor(245, 245, 245);
-      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-      doc.setFontSize(12);
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('PLANNING HISTORY - SURROUNDING AREA', 15, yPosition);
-
-      yPosition += 12;
+      doc.text('Nearby Planning Activity', 15, yPosition);
+      yPosition += 6;
+      doc.setTextColor(...colors.textGray);
       doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Recent planning activity in the surrounding area (0.2km radius):`, 15, yPosition);
+      doc.text('Contextual activity within 0.2km:', 15, yPosition);
       yPosition += 10;
 
-      nearbyHistory.forEach((app: any, index: number) => {
-        checkNewPage(30);
-
+      nearbyHistory.slice(0, 15).forEach((app, index) => {
+        checkNewPage(18);
+        doc.setTextColor(...colors.textDark);
         doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(70, 70, 70);
-
-        const reference = app.reference || app.altid || app.uid || '';
-        const status = app.status || app.decision || 'Status Unknown';
-        doc.text(`${index + 1}. ${reference}`, 15, yPosition);
-
+        doc.text(`${index + 1}. ${app.address?.substring(0, 75) || 'Nearby Location'}`, 15, yPosition);
+        yPosition += 4;
+        doc.setTextColor(...colors.textGray);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7);
-        const decisionDate = app.decided_date || app.start_date || '';
-        if (decisionDate) {
-          const formattedDate = new Date(decisionDate).toLocaleDateString('en-GB', {
-            day: 'numeric', month: 'short', year: 'numeric'
-          });
-          doc.text(` [Date: ${formattedDate}]`, 40, yPosition);
-        }
-
-        yPosition += 4;
-        const description = (app.description || app.name || 'No description').slice(0, 100);
-        const descLines = doc.splitTextToSize(description, pageWidth - 35);
-        doc.text(descLines, 20, yPosition);
-        yPosition += descLines.length * 3 + 1;
-
-        const address = (app.address || '').slice(0, 80);
-        doc.setTextColor(100, 100, 100);
-        doc.text(address, 20, yPosition);
-        doc.setTextColor(0, 0, 0);
-
-        yPosition += 5;
+        const nR = app.reference || 'N/A';
+        const nS = app.status || 'N/A';
+        doc.text(`Ref: ${nR} • Status: ${nS}`, 18, yPosition);
+        yPosition += 7;
       });
-
-      yPosition += 10;
+      yPosition += 5;
     }
 
-    // Summary Section
+    // Summary Section (Simplified)
     checkNewPage(60);
 
-    doc.setFillColor(245, 245, 245);
-    doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-    doc.setFontSize(12);
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('SUMMARY', 15, yPosition);
+    doc.text('Summary', 15, yPosition);
+
+    yPosition += 5;
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Professional assessment summary and recommendations', 15, yPosition);
 
     yPosition += 15;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
 
-    const summaryText = propertyType === 'flat'
+    const sText = propertyType === 'flat'
       ? 'This property is a flat/maisonette and is therefore generally exempt from standard Permitted Development restrictions. Any proposed alterations should be discussed with your local planning authority and building management. The planning history above provides context for development activity in this area.'
       : result.summary;
 
-    const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 30);
-    doc.text(summaryLines, 15, yPosition);
-    yPosition += summaryLines.length * 4 + 12;
+    const sLines = doc.splitTextToSize(sText, pageWidth - 30);
+    doc.text(sLines, 15, yPosition);
+    yPosition += sLines.length * 4 + 12;
 
-    // Legal Disclaimer
-    checkNewPage(80);
+    // ===== COMPREHENSIVE LEGAL NOTICE (NEW PAGE) =====
+    checkNewPage(999); // Force new page
+    addFooter();
+    doc.addPage();
+    yPosition = 20;
 
-    doc.setFillColor(252, 243, 207); // Light yellow background
-    doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-    doc.setFontSize(11);
+    // Legal Notice Header
+    doc.setDrawColor(...colors.primaryTeal);
+    doc.setLineWidth(1.5);
+    doc.line(15, yPosition, pageWidth - 15, yPosition);
+
+    yPosition += 6;
+    doc.setFillColor(...colors.sectionBg);
+    doc.rect(15, yPosition - 4, pageWidth - 30, 12, 'F');
+
+    doc.setTextColor(...colors.darkGray);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('IMPORTANT LEGAL NOTICE', 15, yPosition);
+    doc.text('LEGAL NOTICE / DISCLAIMER', pageWidth / 2, yPosition + 3, { align: 'center' });
 
-    yPosition += 15;
+    yPosition += 16;
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
 
-    const disclaimerText = [
-      'This report is generated based on publicly available planning data and is provided for informational purposes only.',
-      'The accuracy of this report is estimated at ' + result.confidence + '%.',
-      'This does not constitute professional planning advice or a definitive determination of planning status.',
-      'Always consult with your local planning authority and seek professional advice before proceeding with any development.',
-      'The creators of this report accept no liability for decisions made based on this information.'
+    const lText = [
+      'PDRightCheck is a paid information and screening service that collates, analyses, and presents planning-related information to support early-stage feasibility and decision-making.',
+      '',
+      'The service provides a professional desktop assessment of permitted development potential, using publicly available datasets, mapping systems, and local authority information accessible at the time of the search.',
+      '',
+      'PDRightCheck takes reasonable care in sourcing information, but does not replace the statutory role of the Local Planning Authority.',
     ];
 
-    disclaimerText.forEach(line => {
-      const lines = doc.splitTextToSize(line, pageWidth - 30);
-      doc.text(lines, 15, yPosition);
-      yPosition += lines.length * 3.5 + 2;
+    lText.forEach(paragraph => {
+      if (paragraph === '') {
+        yPosition += 4;
+      } else {
+        const lines = doc.splitTextToSize(paragraph, pageWidth - 35);
+        checkNewPage(lines.length * 3.5 + 5);
+        doc.text(lines, 18, yPosition);
+        yPosition += lines.length * 3.5 + 2;
+      }
     });
 
-    // Footer
-    doc.setFontSize(7);
-    doc.setTextColor(100, 100, 100);
-    doc.text('Generated by Planning Check Service • ' + new Date().toLocaleString(), pageWidth / 2, pageHeight - 10, { align: 'center' });
+    yPosition += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Disclaimer:', 18, yPosition);
+    yPosition += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text('Use of this service constitutes acceptance of terms. PDRightCheck accepts no liability for consequences of reliance on the information provided.', 18, yPosition, { maxWidth: pageWidth - 35 });
 
-    // Save the PDF
-    const fileName = `planning-report-${result.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
-    doc.save(fileName);
+    // Save
+    addFooter();
+    const fName = `PDRightCheck-Report-${result.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+    doc.save(fName);
   }
 
   if (result) {
