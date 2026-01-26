@@ -306,7 +306,7 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* <ConfidenceIndicator confidence={result.confidence} showDetails={true} /> */}
+          {/* <ConfidenceIndicator confidence={result.confidence || 0} showDetails={true} size="md" /> */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
               Located in <span className="font-semibold">{result.localAuthority}</span>
