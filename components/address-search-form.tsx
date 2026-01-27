@@ -5689,39 +5689,140 @@ export function AddressSearchForm() {
 
     yPosition = chBottom + 20;
 
-    // Flat-Specific Notice Section (restored with standard styling)
-    if (propertyType === 'flat') {
-      checkNewPage(50);
+    // Force Page Break for New Page (Property Details & Map)
+    addFooter();
+    doc.addPage();
+    yPosition = 25;
 
-      doc.setFillColor(...colors.lightBlue);
-      doc.roundedRect(15, yPosition - 5, pageWidth - 30, 28, 2, 2, 'F');
+    // ===== PROPERTY DETAILS & MAP PAGE =====
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Property Details & Location', 15, yPosition);
+    yPosition += 10;
+
+    // 1. Property Details Card
+    doc.setFillColor(...colors.white);
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15, yPosition, pageWidth - 30, 45, 2, 2, 'FD');
+
+    let detailY = yPosition + 10;
+    const drawDetail = (label: string, value: string, x: number, y: number) => {
+      doc.setFontSize(7.5);
+      doc.setTextColor(...colors.textGray);
+      doc.setFont('helvetica', 'normal');
+      doc.text(label.toUpperCase(), x, y);
 
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colors.primary);
-      doc.text('IMPORTANT: FLAT PROPERTY NOTICE', 20, yPosition + 1);
-
-      yPosition += 8;
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
       doc.setTextColor(...colors.textDark);
+      doc.setFont('helvetica', 'bold');
+      doc.text(value || 'N/A', x, y + 5);
+    };
 
-      const flatNoticeText = [
-        'Identified as a flat/maisonette. These properties are generally exempt from standard PD rights.',
-        '• External alterations usually require full planning permission.',
-        '• Building regulations approval is required for structural changes.',
-        'Consult with your local authority or building management for specific guidance.'
-      ];
+    const halfW = (pageWidth - 30) / 2;
+    drawDetail('Physical Address', result.address.split(',')[0], 25, detailY);
+    drawDetail('Local Authority', result.localAuthority, 25 + halfW, detailY);
 
-      flatNoticeText.forEach(line => {
-        doc.text(line, 20, yPosition);
-        yPosition += 4.5;
+    detailY += 15;
+    drawDetail('Property Type', propertyType === 'flat' ? 'Apartment / Flat' : 'Residential House', 25, detailY);
+    drawDetail('Coordinates', `${result.coordinates?.lat.toFixed(6)}, ${result.coordinates?.lng.toFixed(6)}`, 25 + halfW, detailY);
+
+    yPosition += 55;
+
+    // 2. Property Map Section
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Property Map', 15, yPosition);
+    yPosition += 6;
+
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Satellite and topographical location overview', 15, yPosition);
+    yPosition += 10;
+
+    // Fetch and draw map image
+    try {
+      const lat = result.coordinates?.lat || 51.5074;
+      const lng = result.coordinates?.lng || -0.1278;
+      // Using Yandex Static Maps as it's reliable without a key for basic usage
+      const mapUrl = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=17&l=map&size=600,400&pt=${lng},${lat},pm2rdm`;
+
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+
+      const mapImageData = await new Promise<string | null>((resolve) => {
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } else {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = mapUrl;
       });
 
-      yPosition += 10;
+      if (mapImageData) {
+        const mapW = pageWidth - 30;
+        const mapH = (mapW * 400) / 600;
+        doc.roundedRect(15, yPosition, mapW, mapH, 2, 2, 'S');
+        doc.addImage(mapImageData, 'PNG', 15.2, yPosition + 0.2, mapW - 0.4, mapH - 0.4);
+        yPosition += mapH + 15;
+      } else {
+        // Fallback if map fails
+        doc.setFillColor(245, 245, 245);
+        doc.roundedRect(15, yPosition, pageWidth - 30, 80, 2, 2, 'F');
+        doc.setTextColor(...colors.textGray);
+        doc.text('Map preview unavailable', pageWidth / 2, yPosition + 40, { align: 'center' });
+        yPosition += 95;
+      }
+
+      // Flat-Specific Notice (Moved to Property Details page)
+      if (propertyType === 'flat') {
+        checkNewPage(40);
+        doc.setFillColor(...colors.lightBlue);
+        doc.roundedRect(15, yPosition - 5, pageWidth - 30, 28, 2, 2, 'F');
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
+        doc.text('IMPORTANT: FLAT PROPERTY NOTICE', 20, yPosition + 1);
+
+        yPosition += 8;
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.textDark);
+
+        const flatNoticeText = [
+          'Identified as a flat/maisonette. These properties are generally exempt from standard PD rights.',
+          '• External alterations usually require full planning permission.',
+          '• Building regulations approval is required for structural changes.',
+          'Consult with your local authority or building management for specific guidance.'
+        ];
+
+        flatNoticeText.forEach(line => {
+          doc.text(line, 20, yPosition);
+          yPosition += 4.5;
+        });
+        yPosition += 10;
+      }
+    } catch (err) {
+      console.error('Error adding map to PDF:', err);
+      yPosition += 20;
     }
 
-
+    // Force Page Break before Assessment
+    addFooter();
+    doc.addPage();
+    yPosition = 25;
 
     // ===== OVERALL ASSESSMENT SECTION (Clean - Fixed) =====
     checkNewPage(50);
