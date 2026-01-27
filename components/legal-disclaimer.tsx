@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Shield, AlertTriangle, Info, Scale } from "lucide-react"
+import Link from "next/link"
 
 interface LegalDisclaimerProps {
   confidence: number
@@ -13,7 +14,10 @@ export function LegalDisclaimer({ confidence, variant = "compact" }: LegalDiscla
       <Alert className="bg-muted/30 border-muted">
         <Shield className="h-4 w-4" />
         <AlertDescription className="text-sm">
-          <span className="font-medium">Legal Notice:</span> This tool is {confidence}% accurate based on publicly
+          <span className="font-medium">
+            <Link href="/legal-notice" className="hover:text-white transition-colors underline underline-offset-4">
+              Legal Notice:</Link>
+          </span> This tool is {confidence}% accurate based on publicly
           available records. For 100% certainty and official confirmation, seek pre-planning advice from your local
           planning authority before proceeding with any development.
         </AlertDescription>
