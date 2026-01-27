@@ -4602,6 +4602,7 @@
 //       </section>
 "use client"
 
+import Link from "next/link"
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
@@ -5633,7 +5634,7 @@ export function AddressSearchForm() {
       currentX += cardWidth + cardGap;
     });
 
-    yPosition = currentY + cardHeight + 15;
+    yPosition = currentY + cardHeight + 10; // Slightly tighter spacing
 
     // ===== PLANNING ACTIVITY TRENDS =====
     checkNewPage(100);
@@ -5648,7 +5649,7 @@ export function AddressSearchForm() {
     yPosition += 10;
 
     const chartW = pageWidth - 60;
-    const chartH = 35;
+    const chartH = 30; // Slightly shorter chart to prevent spill
     const chStartX = 30;
     const chEndX = chStartX + chartW;
     const chTop = yPosition;
@@ -5660,7 +5661,7 @@ export function AddressSearchForm() {
     doc.setTextColor(...colors.textGray);
     yrs.forEach((year, i) => {
       const px = chStartX + (i * (chartW / 4));
-      doc.text(String(year), px, chBottom + 8, { align: 'center' });
+      doc.text(String(year), px, chBottom + 6, { align: 'center' }); // Tighter label spacing
     });
 
     doc.setDrawColor(...colors.border);
@@ -5687,14 +5688,13 @@ export function AddressSearchForm() {
     for (let i = 0; i < pts.length - 1; i++) doc.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
     pts.forEach(p => { doc.setFillColor(...colors.primary); doc.circle(p[0], p[1], 1.5, 'F'); });
 
-    yPosition = chBottom + 20;
+    yPosition = chBottom + 15;
 
-    // Force Page Break for New Page (Property Details & Map)
-    addFooter();
-    doc.addPage();
-    yPosition = 25;
+    // ===== PROPERTY DETAILS & MAP SECTION =====
+    // Ensure this major section starts on a fresh page if we are low on space
+    // Trend + Details + Map usually fits Page 2 if spilled from Page 1
+    checkNewPage(150);
 
-    // ===== PROPERTY DETAILS & MAP PAGE =====
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
@@ -5705,10 +5705,10 @@ export function AddressSearchForm() {
     doc.setFillColor(...colors.white);
     doc.setDrawColor(...colors.border);
     doc.setLineWidth(0.3);
-    doc.roundedRect(15, yPosition, pageWidth - 30, 45, 2, 2, 'FD');
+    doc.roundedRect(15, yPosition, pageWidth - 30, 48, 2, 2, 'FD'); // Slightly taller for wrapped address
 
     let detailY = yPosition + 10;
-    const drawDetail = (label: string, value: string, x: number, y: number) => {
+    const drawDetail = (label: string, value: any, x: number, y: number) => {
       doc.setFontSize(7.5);
       doc.setTextColor(...colors.textGray);
       doc.setFont('helvetica', 'normal');
@@ -5721,16 +5721,20 @@ export function AddressSearchForm() {
     };
 
     const halfW = (pageWidth - 30) / 2;
-    drawDetail('Physical Address', result.address.split(',')[0], 25, detailY);
+    const firstLineAddress = result.address.split(',')[0].trim();
+    const wrappedAddress = doc.splitTextToSize(firstLineAddress, halfW - 20);
+
+    drawDetail('Physical Address', wrappedAddress, 25, detailY);
     drawDetail('Local Authority', result.localAuthority, 25 + halfW, detailY);
 
-    detailY += 15;
+    detailY += 18;
     drawDetail('Property Type', propertyType === 'flat' ? 'Apartment / Flat' : 'Residential House', 25, detailY);
     drawDetail('Coordinates', `${result.coordinates?.lat.toFixed(6)}, ${result.coordinates?.lng.toFixed(6)}`, 25 + halfW, detailY);
 
-    yPosition += 55;
+    yPosition += 58;
 
     // 2. Property Map Section
+    checkNewPage(130); // Ensure map fits or moves to next page
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -5808,24 +5812,17 @@ export function AddressSearchForm() {
           'Consult with your local authority or building management for specific guidance.'
         ];
 
-        flatNoticeText.forEach(line => {
-          doc.text(line, 20, yPosition);
-          yPosition += 4.5;
-        });
-        yPosition += 10;
+        doc.text(flatNoticeText, 20, yPosition); // Using array directly for wrapping
+        yPosition += (flatNoticeText.length * 4.5) + 5;
       }
     } catch (err) {
       console.error('Error adding map to PDF:', err);
-      yPosition += 20;
+      yPosition += 10;
     }
 
-    // Force Page Break before Assessment
-    addFooter();
-    doc.addPage();
-    yPosition = 25;
-
-    // ===== OVERALL ASSESSMENT SECTION (Clean - Fixed) =====
-    checkNewPage(50);
+    // ===== OVERALL ASSESSMENT SECTION =====
+    // Push assessment to a new page to keep "Property Details" page focused
+    checkNewPage(200);
 
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(14);
@@ -6635,11 +6632,18 @@ export function AddressSearchForm() {
       {/* Simple Footer */}
       <footer className="bg-[#2D3748] text-white py-12">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-white/70">
+          <p className="text-white/70 mb-4">
             This service helps identify common planning restrictions. Always verify with your local planning authority before starting work.
           </p>
-          <p className="text-white/50 text-sm mt-4">
-            Information based on publicly available planning data from gov.uk
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-white/50">
+            <Link href="/legal-notice" className="hover:text-white transition-colors underline underline-offset-4">
+              Legal Notice / Disclaimer
+            </Link>
+            <span className="hidden sm:inline opacity-30">•</span>
+            <p>Information based on publicly available planning data from gov.uk</p>
+          </div>
+          <p className="text-white/30 text-[10px] mt-8">
+            © {new Date().getFullYear()} PDRightCheck.co.uk. All rights reserved.
           </p>
         </div>
       </footer>
