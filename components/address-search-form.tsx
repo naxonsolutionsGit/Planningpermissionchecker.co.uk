@@ -5513,15 +5513,6 @@ export function AddressSearchForm() {
     doc.setFont('helvetica', 'bold');
     doc.text('Confidence Score', infoX, infoY);
 
-    // Badge
-    const badgeText = "VERIFIED";
-    const badgeW = doc.getTextWidth(badgeText) + 4;
-    doc.setFillColor(220, 252, 231); // #DCFCE7
-    doc.roundedRect(infoX + doc.getTextWidth('Confidence Score') + 5, infoY - 4.5, badgeW, 6, 1, 1, 'F');
-    doc.setTextColor(22, 163, 74); // #16A34A
-    doc.setFontSize(7);
-    doc.text(badgeText, infoX + doc.getTextWidth('Confidence Score') + 7, infoY);
-
     // Description text
     infoY += 8;
     doc.setTextColor(...colors.textGray);
@@ -5733,91 +5724,31 @@ export function AddressSearchForm() {
 
     yPosition += 58;
 
-    // 2. Property Map Section
-    checkNewPage(130); // Ensure map fits or moves to next page
-    doc.setTextColor(...colors.textDark);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Property Map', 15, yPosition);
-    yPosition += 6;
+    // Flat-Specific Notice (Moved to Property Details page)
+    if (propertyType === 'flat') {
+      checkNewPage(40);
+      doc.setFillColor(...colors.lightBlue);
+      doc.roundedRect(15, yPosition - 5, pageWidth - 30, 28, 2, 2, 'F');
 
-    doc.setTextColor(...colors.textGray);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Satellite and topographical location overview', 15, yPosition);
-    yPosition += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.primary);
+      doc.text('IMPORTANT: FLAT PROPERTY NOTICE', 20, yPosition + 1);
 
-    // Fetch and draw map image
-    try {
-      const lat = result.coordinates?.lat || 51.5074;
-      const lng = result.coordinates?.lng || -0.1278;
-      // Using Yandex Static Maps as it's reliable without a key for basic usage
-      const mapUrl = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=17&l=map&size=600,400&pt=${lng},${lat},pm2rdm`;
+      yPosition += 8;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.textDark);
 
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
+      const flatNoticeText = [
+        'Identified as a flat/maisonette. These properties are generally exempt from standard PD rights.',
+        '• External alterations usually require full planning permission.',
+        '• Building regulations approval is required for structural changes.',
+        'Consult with your local authority or building management for specific guidance.'
+      ];
 
-      const mapImageData = await new Promise<string | null>((resolve) => {
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-          } else {
-            resolve(null);
-          }
-        };
-        img.onerror = () => resolve(null);
-        img.src = mapUrl;
-      });
-
-      if (mapImageData) {
-        const mapW = pageWidth - 30;
-        const mapH = (mapW * 400) / 600;
-        doc.roundedRect(15, yPosition, mapW, mapH, 2, 2, 'S');
-        doc.addImage(mapImageData, 'PNG', 15.2, yPosition + 0.2, mapW - 0.4, mapH - 0.4);
-        yPosition += mapH + 15;
-      } else {
-        // Fallback if map fails
-        doc.setFillColor(245, 245, 245);
-        doc.roundedRect(15, yPosition, pageWidth - 30, 80, 2, 2, 'F');
-        doc.setTextColor(...colors.textGray);
-        doc.text('Map preview unavailable', pageWidth / 2, yPosition + 40, { align: 'center' });
-        yPosition += 95;
-      }
-
-      // Flat-Specific Notice (Moved to Property Details page)
-      if (propertyType === 'flat') {
-        checkNewPage(40);
-        doc.setFillColor(...colors.lightBlue);
-        doc.roundedRect(15, yPosition - 5, pageWidth - 30, 28, 2, 2, 'F');
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colors.primary);
-        doc.text('IMPORTANT: FLAT PROPERTY NOTICE', 20, yPosition + 1);
-
-        yPosition += 8;
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colors.textDark);
-
-        const flatNoticeText = [
-          'Identified as a flat/maisonette. These properties are generally exempt from standard PD rights.',
-          '• External alterations usually require full planning permission.',
-          '• Building regulations approval is required for structural changes.',
-          'Consult with your local authority or building management for specific guidance.'
-        ];
-
-        doc.text(flatNoticeText, 20, yPosition); // Using array directly for wrapping
-        yPosition += (flatNoticeText.length * 4.5) + 5;
-      }
-    } catch (err) {
-      console.error('Error adding map to PDF:', err);
-      yPosition += 10;
+      doc.text(flatNoticeText, 20, yPosition); // Using array directly for wrapping
+      yPosition += (flatNoticeText.length * 4.5) + 5;
     }
 
     // ===== OVERALL ASSESSMENT SECTION =====
@@ -5914,7 +5845,7 @@ export function AddressSearchForm() {
         doc.setTextColor(...colors.textGray);
         doc.setFontSize(8.5);
         doc.setFont('helvetica', 'normal');
-        const lns = doc.splitTextToSize(check.description, pageWidth - 45);
+        const lns = doc.splitTextToSize(check.description, pageWidth - 65);
         doc.text(lns, 26, yPosition);
         yPosition += lns.length * 4;
 
@@ -5955,8 +5886,13 @@ export function AddressSearchForm() {
         const decisionDate = app.decided_date || app.start_date || '';
         const description = app.description || app.name || 'No description available';
 
-        const descT = doc.splitTextToSize(description, pageWidth - 45);
-        const cH = 25 + (descT.length * 4);
+        // Fix: Use even narrower wrapping width (pageWidth - 85) to ensure description stays in box
+        const descT = doc.splitTextToSize(description, pageWidth - 85);
+
+        // Fix: Wrap reference to avoid badge overlap (max width ~80)
+        const refLines = doc.splitTextToSize(reference, 80);
+
+        const cH = 25 + (descT.length * 4) + (refLines.length > 1 ? (refLines.length - 1) * 4 : 0);
 
         checkNewPage(cH + 5);
 
@@ -5970,13 +5906,15 @@ export function AddressSearchForm() {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
 
-        // Add clickable link for application reference
+        // Fix: Draw wrapped reference
         const appLink = app.link || app.url || '';
-        if (appLink) {
-          doc.textWithLink(reference, 20, yPosition + 2, { url: appLink });
-        } else {
-          doc.text(reference, 20, yPosition + 2);
-        }
+        refLines.forEach((line: string, i: number) => {
+          if (appLink) {
+            doc.textWithLink(line, 20, yPosition + 2 + (i * 4), { url: appLink });
+          } else {
+            doc.text(line, 20, yPosition + 2 + (i * 4));
+          }
+        });
 
         // Status Badge
         const hC = status.toLowerCase().includes('approved') ? colors.success :
@@ -5987,7 +5925,7 @@ export function AddressSearchForm() {
         doc.setFontSize(7);
         doc.text(status.substring(0, 20), pageWidth - 57, yPosition + 2.5);
 
-        yPosition += 8;
+        yPosition += 8 + (refLines.length > 1 ? (refLines.length - 1) * 4 : 0);
         doc.setTextColor(...colors.textGray);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
@@ -6031,6 +5969,7 @@ export function AddressSearchForm() {
 
     // Nearby Planning Activity
     if (nearbyHistory.length > 0) {
+      yPosition += 15; // Margin top to prevent overlap
       checkNewPage(60);
       doc.setTextColor(...colors.textDark);
       doc.setFontSize(14);
@@ -6047,8 +5986,10 @@ export function AddressSearchForm() {
         doc.setTextColor(...colors.textDark);
         doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${index + 1}. ${app.address?.substring(0, 75) || 'Nearby Location'}`, 15, yPosition);
-        yPosition += 4;
+        const nearbyAddr = app.address || 'Nearby Location';
+        const wrappedNearby = doc.splitTextToSize(nearbyAddr, pageWidth - 65); // Even narrower wrapping
+        doc.text(wrappedNearby, 15, yPosition);
+        yPosition += (wrappedNearby.length * 4);
         doc.setTextColor(...colors.textGray);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7);
