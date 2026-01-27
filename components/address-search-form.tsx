@@ -5266,101 +5266,77 @@ export function AddressSearchForm() {
     const docAny = doc as any;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    let yPosition = 20;
+    let yPosition = 12;
     let pageNumber = 1;
 
-    // CarVertical-inspired color palette
     const colors = {
-      success: [76, 175, 80] as [number, number, number],       // #4CAF50 - green
-      warning: [255, 193, 7] as [number, number, number],        // #FFC107 - amber
-      error: [244, 67, 54] as [number, number, number],          // #F44336 - red
-      info: [33, 150, 243] as [number, number, number],          // #2196F3 - blue
-      textDark: [33, 33, 33] as [number, number, number],        // #212121 - primary text
-      textGray: [117, 117, 117] as [number, number, number],     // #757575 - secondary text
-      cardBg: [250, 250, 250] as [number, number, number],       // #FAFAFA - light background
-      border: [224, 224, 224] as [number, number, number],       // #E0E0E0 - borders
+      primary: [0, 115, 240] as [number, number, number],
+      success: [22, 163, 74] as [number, number, number],
+      warning: [133, 77, 14] as [number, number, number],
+      error: [211, 47, 47] as [number, number, number],
+      textDark: [31, 31, 31] as [number, number, number],
+      textGray: [133, 133, 133] as [number, number, number],
+      tagBg: [243, 244, 246] as [number, number, number],
+      border: [229, 231, 235] as [number, number, number],
+      lightBlue: [235, 245, 255] as [number, number, number],
+      lightGreen: [220, 252, 231] as [number, number, number],
+      lightYellow: [254, 249, 195] as [number, number, number],
+      gaugeFill: [255, 255, 255] as [number, number, number],
+      info: [59, 130, 246] as [number, number, number],
       white: [255, 255, 255] as [number, number, number],
-      lightGreen: [232, 245, 233] as [number, number, number],   // Light green background
-      lightYellow: [255, 249, 196] as [number, number, number],  // Light yellow background
-      lightBlue: [227, 242, 253] as [number, number, number],    // Light blue background
-      // Legacy aliases for backwards compatibility
-      primaryTeal: [33, 150, 243] as [number, number, number],   // Mapped to info blue
-      darkGray: [33, 33, 33] as [number, number, number],        // Mapped to textDark
-      sectionBg: [250, 250, 250] as [number, number, number],    // Mapped to cardBg
     };
 
-    // Helper function to add footer to each page
     const addFooter = () => {
       const footerY = pageHeight - 12;
-      doc.setDrawColor(...colors.border);
-      doc.setLineWidth(0.5);
-      doc.line(15, footerY - 3, pageWidth - 15, footerY - 3);
-
-      doc.setFontSize(7);
-      doc.setTextColor(150, 150, 150);
-      doc.setFont('helvetica', 'normal');
+      doc.setDrawColor(...colors.border); doc.setLineWidth(0.3); doc.line(15, footerY - 3, pageWidth - 15, footerY - 3);
+      doc.setFontSize(7); doc.setTextColor(...colors.textGray); doc.setFont('helvetica', 'normal');
       doc.text(`Page ${pageNumber}`, 15, footerY);
       doc.text(`PDRightCheck Report • Generated ${new Date().toLocaleDateString('en-GB')}`, pageWidth / 2, footerY, { align: 'center' });
       doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, pageWidth - 15, footerY, { align: 'right' });
       pageNumber++;
     };
 
-    // Helper function to check if we need a new page
-    const checkNewPage = (requiredSpace: number = 40) => {
-      if (yPosition > pageHeight - 30) {
-        addFooter();
-        doc.addPage();
-        yPosition = 20;
+    const checkNewPage = (req: number = 40) => {
+      if (yPosition + req > pageHeight - 20) { addFooter(); doc.addPage(); yPosition = 20; }
+    };
+
+    const drawArc = (x: number, y: number, r: number, s: number, e: number) => {
+      const step = 0.05;
+      for (let t = s; t < e; t += step) {
+        doc.line(x + r * Math.cos(t), y + r * Math.sin(t), x + r * Math.cos(Math.min(t + step, e)), y + r * Math.sin(Math.min(t + step, e)));
       }
     };
 
-    // Helper to draw an arc for the gauge
-    const drawArc = (x: number, y: number, radius: number, startAngle: number, endAngle: number) => {
-      const angle = endAngle - startAngle;
-      const steps = Math.max(20, Math.floor(Math.abs(angle) * 30)); // Adaptive steps for smoothness
-
-      for (let i = 0; i < steps; i++) {
-        const a1 = startAngle + (angle * i / steps);
-        const a2 = startAngle + (angle * (i + 1) / steps);
-
-        const x1 = x + radius * Math.cos(a1);
-        const y1 = y + radius * Math.sin(a1);
-        const x2 = x + radius * Math.cos(a2);
-        const y2 = y + radius * Math.sin(a2);
-
-        doc.line(x1, y1, x2, y2);
-      }
+    const drawCheckmark = (x: number, y: number, c: [number, number, number]) => {
+      doc.setDrawColor(...c); doc.setLineWidth(0.8); doc.line(x - 1.5, y, x - 0.5, y + 1.2); doc.line(x - 0.5, y + 1.2, x + 1.8, y - 1.5);
     };
 
-    // Fetch planning history for the PDF
+    const drawExclamation = (x: number, y: number, c: [number, number, number]) => {
+      doc.setFillColor(...c); doc.rect(x - 0.4, y - 1.8, 0.8, 2.5, 'F'); doc.circle(x, y + 1.5, 0.5, 'F');
+    };
+
+    // Fetch planning history items
     let planningHistory: any[] = [];
     let nearbyHistory: any[] = [];
-
     try {
       const postcodeMatch = result.address.match(/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/i);
-      if (postcodeMatch || (result.coordinates && result.coordinates.lat && result.coordinates.lng)) {
-        let appsUrl: string;
-        if (postcodeMatch) {
-          const postcode = postcodeMatch[0].replace(/\s+/g, '+');
-          appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.2&limit=50`;
-        } else {
-          const { lat, lng } = result.coordinates!;
-          appsUrl = `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=0.2&limit=50`;
-        }
-
-        const response = await fetch(appsUrl);
+      if (postcodeMatch) {
+        const postcode = postcodeMatch[0].replace(/\s+/g, '+');
+        const response = await fetch(`https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.2&limit=50`);
         if (response.ok) {
           const data = await response.json();
-          const allApplications = data.records || data || [];
+          const allApps = data.records || [];
 
           const addressParts = result.address.split(',')[0].trim();
           const streetMatch = addressParts.match(/^(\d+[a-zA-Z]?)\s+(.+)$/i);
           const streetNumber = streetMatch ? streetMatch[1].toLowerCase() : '';
-          const streetName = streetMatch ? streetMatch[2].toLowerCase().replace(/\s+(road|street|avenue|lane|drive|close|way|place|court|gardens|terrace|crescent|grove|hill|square|mews|row)$/i, '') : addressParts.toLowerCase();
+          const streetName = streetMatch ? streetMatch[2].toLowerCase() : '';
+
+          const allApplications = allApps;
 
           const filterSpecific = (app: any) => {
-            const appAddress = (app.address || app.location || app.name || '').toLowerCase();
-            const hasStreetNumber = !streetNumber || appAddress.includes(streetNumber);
+            const appAddress = (app.address || '').toLowerCase();
+            const hasStreetNumber = appAddress.includes(streetNumber);
             const hasStreetName = !streetName || appAddress.includes(streetName.substring(0, Math.min(streetName.length, 6)));
             return hasStreetNumber && hasStreetName;
           };
@@ -5398,51 +5374,51 @@ export function AddressSearchForm() {
       console.error('Error fetching planning history for PDF:', error);
     }
 
-    // ===== HEADER (CarVertical Layout Match) =====
+    // ===== HEADER (carVertical Layout Match) =====
 
     // 1. Logo (Top Left)
-    doc.setTextColor(33, 150, 243); // #2196F3 Blue
+    doc.setTextColor(...colors.primary);
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('PDRIGHTCHECK', 15, 20);
+    doc.text('PD RightCheck', 15, 20);
 
     // 2. QR Code Block (Top Right)
-    const qrSize = 32;
+    const qrSize = 24; // Smaller QR size
     const qrX = pageWidth - 15 - qrSize;
-    const qrY = 15;
+    const qrY = 12;
 
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100); // Grey
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.textGray);
     doc.setFont('helvetica', 'normal');
     doc.text('Scan for full report', pageWidth - 15, qrY - 2, { align: 'right' });
 
     // QR Box
     doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(230, 230, 230);
+    doc.setDrawColor(...colors.border);
     doc.setLineWidth(0.1);
-    // doc.rect(qrX, qrY, qrSize, qrSize, 'FD'); // Border only if needed
+    doc.roundedRect(qrX, qrY, qrSize, qrSize, 1, 1, 'FD');
 
-    // Abstract QR Pattern (Pseudo-random blocks)
+    // Abstract QR Pattern (More dense for realism)
     doc.setFillColor(0, 0, 0);
-    const cellSize = qrSize / 5;
-    for (let r = 0; r < 5; r++) {
-      for (let c = 0; c < 5; c++) {
-        if ((r + c) % 3 === 0 || (r === 0 && c === 0) || (r === 4 && c === 4) || (r === 0 && c === 4) || (r === 4 && c === 0)) {
-          doc.rect(qrX + (c * cellSize) + 1, qrY + (r * cellSize) + 1, cellSize - 2, cellSize - 2, 'F');
+    const cellSize = qrSize / 8;
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if ((r + c) % 3 === 0 || (r < 2 && c < 2) || (r > 5 && c > 5) || (r < 2 && c > 5) || (r > 5 && c < 2)) {
+          doc.rect(qrX + (c * cellSize) + 0.5, qrY + (r * cellSize) + 0.5, cellSize - 0.5, cellSize - 0.5, 'F');
         }
       }
     }
 
     // 3. Main Content Block (Left, below Logo)
-    yPosition = 35;
+    yPosition = 40;
 
     // Property Title (Address)
-    doc.setTextColor(33, 33, 33); // Dark Grey/Black
-    doc.setFontSize(24);
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(26); // Slightly bigger for impact
     doc.setFont('helvetica', 'bold');
-    const titleLines = doc.splitTextToSize(result.address.split(',')[0].trim(), pageWidth - 70);
+    const titleLines = doc.splitTextToSize(result.address.split(',')[0].trim().toUpperCase(), pageWidth - 70);
     doc.text(titleLines, 15, yPosition);
-    yPosition += (titleLines.length * 10);
+    yPosition += (titleLines.length * 11);
 
     // Generated Date subtitle
     doc.setFontSize(10);
@@ -5453,10 +5429,8 @@ export function AddressSearchForm() {
     yPosition += 8;
 
     // 4. Data Tags (Grey Background Pills)
-    const tagBgColor = [243, 244, 246] as [number, number, number]; // #F3F4F6
-    const tagTextColor = [55, 65, 81] as [number, number, number]; // #374151
     let tagX = 15;
-    const tagHeight = 8;
+    const tagHeight = 6;
     const tagPadding = 4;
 
     const tags = [
@@ -5464,7 +5438,7 @@ export function AddressSearchForm() {
       `Authority: ${result.localAuthority}`
     ];
 
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
 
     tags.forEach(tag => {
@@ -5472,46 +5446,46 @@ export function AddressSearchForm() {
       const boxWidth = textWidth + (tagPadding * 2);
 
       // Background
-      doc.setFillColor(tagBgColor[0], tagBgColor[1], tagBgColor[2]);
+      doc.setFillColor(...colors.tagBg);
       doc.roundedRect(tagX, yPosition, boxWidth, tagHeight, 1, 1, 'F');
 
       // Text
-      doc.setTextColor(tagTextColor[0], tagTextColor[1], tagTextColor[2]);
-      doc.text(tag, tagX + tagPadding, yPosition + 5.5);
+      doc.setTextColor(55, 65, 81); // #374151 - matching analysis
+      doc.text(tag, tagX + tagPadding, yPosition + 4.2);
 
-      tagX += boxWidth + 5; // Gap between tags
+      tagX += boxWidth + 4; // Gap between tags
     });
 
-    yPosition += 25;
+    yPosition += 20;
 
     // ===== SCORE SECTION (Left Aligned Gauge) =====
     // Matches "carVertical Score" section layout
 
-    const gaugeSize = 25; // Smaller radius (radius 25)
-    const gaugeX = 40;    // Adjusted X position for smaller gauge
+    const gaugeSize = 22; // Precision sizing
+    const gaugeX = 38;
     const gaugeCenterY = yPosition + gaugeSize + 5;
 
     // Calculation for the gap at the top
-    const gapAngle = (Math.PI * 2) * 0.08; // 8% gap at the top
+    const gapAngle = (Math.PI * 2) * 0.12; // 12% gap for carVertical style
     const startAngle = -Math.PI / 2 + (gapAngle / 2);
     const fullCircleAngle = (Math.PI * 2) - gapAngle;
 
     // 1. Donut Chart (Gauge)
     // Center Fill
-    doc.setFillColor(235, 245, 255);
-    doc.circle(gaugeX, gaugeCenterY, gaugeSize, 'F');
+    doc.setFillColor(...colors.gaugeFill);
+    doc.circle(gaugeX, gaugeCenterY, gaugeSize - 4, 'F');
 
-    // Background Ring (Light Blue Track with gap)
+    // Background Ring (Light Blue Track)
     doc.setLineCap('round');
-    doc.setLineWidth(8); // Thinner line for smaller gauge
-    doc.setDrawColor(227, 242, 253);
+    doc.setLineWidth(5.5);
+    doc.setDrawColor(...colors.lightBlue);
     drawArc(gaugeX, gaugeCenterY, gaugeSize, startAngle, startAngle + fullCircleAngle);
 
-    // Progress Arc (Primary Blue with gap)
+    // Progress Arc (Primary Blue)
     const confidence = result.confidence || 0;
     const endAngleProgress = startAngle + (fullCircleAngle * (confidence / 100));
 
-    doc.setDrawColor(0, 113, 235);
+    doc.setDrawColor(...colors.primary);
     if (confidence > 0) {
       drawArc(gaugeX, gaugeCenterY, gaugeSize, startAngle, endAngleProgress);
     }
@@ -5519,37 +5493,37 @@ export function AddressSearchForm() {
     doc.setLineCap('butt'); // Reset line cap
 
     // Score Text inside Gauge
-    doc.setTextColor(33, 33, 33);
-    doc.setFontSize(20); // Smaller font for smaller gauge
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text(String(confidence), gaugeX, gaugeCenterY + 2, { align: 'center' });
+    doc.text(String(confidence), gaugeX, gaugeCenterY + 1, { align: 'center' });
 
-    doc.setFontSize(8); // Smaller denominator
-    doc.setTextColor(150, 150, 150);
-    doc.text('/100', gaugeX, gaugeCenterY + 10, { align: 'center' });
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.textGray);
+    doc.text('/100', gaugeX, gaugeCenterY + 7, { align: 'center' });
 
     // 2. Score Info Block (Right of Gauge)
-    const infoX = gaugeX + gaugeSize + 10; // Closer to gauge
+    const infoX = gaugeX + gaugeSize + 12;
     let infoY = gaugeCenterY - 10;
 
     // Title
-    doc.setTextColor(33, 33, 33);
+    doc.setTextColor(...colors.textDark);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('Confidence Score', infoX, infoY);
 
-    // Badge (e.g. "Verified" or "Beta")
-    const badgeText = "BETA";
-    const badgeW = doc.getTextWidth(badgeText) + 6;
-    doc.setFillColor(220, 252, 231); // Light Green #DCFCE7
-    doc.roundedRect(infoX + 45, infoY - 4, badgeW, 6, 1, 1, 'F');
-    doc.setTextColor(22, 163, 74); // Green #16A34A
+    // Badge
+    const badgeText = "VERIFIED";
+    const badgeW = doc.getTextWidth(badgeText) + 4;
+    doc.setFillColor(220, 252, 231); // #DCFCE7
+    doc.roundedRect(infoX + doc.getTextWidth('Confidence Score') + 5, infoY - 4.5, badgeW, 6, 1, 1, 'F');
+    doc.setTextColor(22, 163, 74); // #16A34A
     doc.setFontSize(7);
-    doc.text(badgeText, infoX + 48, infoY);
+    doc.text(badgeText, infoX + doc.getTextWidth('Confidence Score') + 7, infoY);
 
     // Description text
     infoY += 8;
-    doc.setTextColor(100, 100, 100);
+    doc.setTextColor(...colors.textGray);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     const summaryText = result.hasPermittedDevelopmentRights
@@ -5559,51 +5533,50 @@ export function AddressSearchForm() {
     const summaryLines = doc.splitTextToSize(summaryText, pageWidth - infoX - 15);
     doc.text(summaryLines, infoX, infoY);
 
-    yPosition = gaugeCenterY + gaugeSize + 25;
+    yPosition = gaugeCenterY + gaugeSize + 20;
 
     // ===== STATUS CARDS (Grid Layout) =====
-    // 2 Rows, 3 Columns (or wrapping)
+    // 2 Rows, 3 Columns
 
-    const cardGap = 10;
+    const cardGap = 8;
     const cardWidth = (pageWidth - 30 - (cardGap * 2)) / 3;
-    const cardHeight = 65; // Fixed height
+    const cardHeight = 60;
 
     const statusCards = [
       {
         title: 'Restrictions',
-        status: result.hasPermittedDevelopmentRights ? 'No issues found' : 'Attention',
-        desc: 'General PD constraints check.',
+        status: result.hasPermittedDevelopmentRights ? 'NO ISSUES' : 'ATTENTION',
+        desc: 'General planning permission and development rights check.',
         state: result.hasPermittedDevelopmentRights ? 'success' : 'warning'
       },
       {
         title: 'Article 4',
-        status: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? 'Attention' : 'No issues found',
-        desc: 'Checks for Article 4 directions.',
+        status: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? 'ATTENTION' : 'NO ISSUES',
+        desc: 'Specific directions removing permitted development rights.',
         state: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? 'warning' : 'success'
       },
       {
         title: 'Conservation',
-        status: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'Attention' : 'No issues found',
-        desc: 'Conservation area proximity.',
+        status: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'ATTENTION' : 'NO ISSUES',
+        desc: 'Proximity to conservation areas or designated land.',
         state: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'warning' : 'success'
       },
-      // ... Add more cards if needed to fill grid, e.g. Listed Building
       {
         title: 'Listed Building',
-        status: result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'Attention' : 'No issues found',
-        desc: 'Historic building status check.',
+        status: result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'ATTENTION' : 'NO ISSUES',
+        desc: 'National statutory listed building status check.',
         state: result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'warning' : 'success'
       },
       {
         title: 'Region Check',
-        status: 'No issues found',
-        desc: 'Location specific regulations.',
+        status: 'NO ISSUES',
+        desc: 'Local authority specific planning policy mapping.',
         state: 'success'
       },
       {
         title: 'Safety Risk',
-        status: 'No issues found',
-        desc: 'Flood and environmental check.',
+        status: 'NO ISSUES',
+        desc: 'Environmental factors and basic risk assessment.',
         state: 'success'
       }
     ];
@@ -5617,185 +5590,135 @@ export function AddressSearchForm() {
         currentY += cardHeight + cardGap;
       }
 
-      // Card Container (White with Border)
+      // Card Container (White with gray border)
       doc.setFillColor(255, 255, 255);
-      doc.setDrawColor(229, 231, 235); // #E5E7EB
-      doc.setLineWidth(0.5);
-      doc.roundedRect(currentX, currentY, cardWidth, cardHeight, 3, 3, 'FD');
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(currentX, currentY, cardWidth, cardHeight, 2, 2, 'FD');
 
-      // Content Padding
-      const padX = currentX + 6;
-      let padY = currentY + 12;
+      // Icon & Badge Center
+      const iconCenterX = currentX + (cardWidth / 2);
+      const iconCenterY = currentY + 12;
+      const cardIsSuccess = card.state === 'success';
+      const iconColors = cardIsSuccess ? { bg: colors.lightGreen, txt: colors.success } : { bg: colors.lightYellow, txt: colors.warning };
 
-      // Title
-      doc.setFontSize(10);
-      doc.setTextColor(33, 33, 33);
-      doc.setFont('helvetica', 'bold');
-      doc.text(card.title, padX, padY);
+      doc.setFillColor(...iconColors.bg);
+      doc.circle(iconCenterX, iconCenterY, 5, 'F');
+      if (cardIsSuccess) {
+        drawCheckmark(iconCenterX, iconCenterY, iconColors.txt);
+      } else {
+        drawExclamation(iconCenterX, iconCenterY, iconColors.txt);
+      }
 
-      padY += 10;
-
-      // Status Badge (Pill)
-      // Success: BG #DCFCE7, Text #166534
-      // Warning: BG #FEF9C3, Text #854D0E
-      const isSuccess = card.state === 'success';
-      const badgeBg = isSuccess ? [220, 252, 231] : [254, 249, 195];
-      const badgeTxt = isSuccess ? [22, 163, 74] : [133, 77, 14];
-
-      const badgeLabel = card.status;
-      const bWidth = doc.getTextWidth(badgeLabel) + 8;
-
-      doc.setFillColor(badgeBg[0], badgeBg[1] as number, badgeBg[2]);
-      doc.roundedRect(padX, padY - 4, bWidth, 7, 2, 2, 'F');
-
-      // Checkmark/Icon
-      // doc.text(isSuccess ? '✓' : '!', padX + 2, padY + 0.5); // Simplified icon
-
-      doc.setTextColor(badgeTxt[0], badgeTxt[1], badgeTxt[2]);
+      // Status Badge
+      doc.setFillColor(...iconColors.bg);
+      const sBadgeWidth = doc.getTextWidth(card.status) + 6;
+      doc.roundedRect(iconCenterX - (sBadgeWidth / 2), iconCenterY + 8, sBadgeWidth, 5, 1, 1, 'F');
+      doc.setTextColor(...iconColors.txt);
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
-      doc.text(badgeLabel, padX + 4, padY + 0.5); // Centered in pill slightly
+      doc.text(card.status, iconCenterX, iconCenterY + 11.5, { align: 'center' });
 
-      padY += 12;
+      // Title & Description
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(10);
+      doc.text(card.title, iconCenterX, currentY + 34, { align: 'center' });
 
-      // Description
-      doc.setTextColor(107, 114, 128); // #6B7280
-      doc.setFontSize(8);
+      doc.setTextColor(...colors.textGray);
+      doc.setFontSize(7.5);
       doc.setFont('helvetica', 'normal');
-      const descLines = doc.splitTextToSize(card.desc, cardWidth - 12);
-      doc.text(descLines, padX, padY);
+      const dLns = doc.splitTextToSize(card.desc, cardWidth - 12);
+      doc.text(dLns, iconCenterX, currentY + 42, { align: 'center' });
 
       currentX += cardWidth + cardGap;
     });
 
-    yPosition = currentY + cardHeight + 20;
+    yPosition = currentY + cardHeight + 15;
 
     // ===== PLANNING ACTIVITY TRENDS =====
     checkNewPage(100);
-
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Planning Activity Trends', 15, yPosition);
-
-    yPosition += 5;
+    doc.text('Planning Activity Trend', 15, yPosition);
+    yPosition += 6;
     doc.setTextColor(...colors.textGray);
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Planning application activity in this area over time', 15, yPosition);
-
+    doc.text('Historical planning application volume (5-year view)', 15, yPosition);
     yPosition += 10;
 
-    // Chart area
-    const chartWidth = pageWidth - 30;
-    const chartHeight = 50;
-
-    doc.setFillColor(...colors.white);
-    doc.setDrawColor(...colors.border);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(15, yPosition, chartWidth, chartHeight, 2, 2, 'FD');
-
-    // Draw simple line chart representing planning history trends
-    const chartStartX = 25;
-    const chartEndX = 15 + chartWidth - 10;
-    const chartTop = yPosition + 10;
-    const chartBottom = yPosition + chartHeight - 15;
-
-    // X-axis labels (years)
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
+    const chartW = pageWidth - 60;
+    const chartH = 35;
+    const chStartX = 30;
+    const chEndX = chStartX + chartW;
+    const chTop = yPosition;
+    const chBottom = yPosition + chartH;
+    const curYear = new Date().getFullYear();
+    const yrs = [curYear - 4, curYear - 3, curYear - 2, curYear - 1, curYear];
 
     doc.setFontSize(7);
     doc.setTextColor(...colors.textGray);
-    years.forEach((year, index) => {
-      const x = chartStartX + (index * ((chartEndX - chartStartX) / 4));
-      doc.text(String(year), x, chartBottom + 8, { align: 'center' });
+    yrs.forEach((year, i) => {
+      const px = chStartX + (i * (chartW / 4));
+      doc.text(String(year), px, chBottom + 8, { align: 'center' });
     });
 
-    // Y-axis
     doc.setDrawColor(...colors.border);
     doc.setLineWidth(0.2);
-    doc.line(chartStartX, chartTop, chartStartX, chartBottom);
-    doc.line(chartStartX, chartBottom, chartEndX, chartBottom);
+    doc.line(chStartX, chTop, chStartX, chBottom);
+    doc.line(chStartX, chBottom, chEndX, chBottom);
 
-    // Draw trend line (based on planning history count)
-    const appCounts = [
-      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear - 4).length || 1,
-      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear - 3).length || 2,
-      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear - 2).length || 3,
-      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear - 1).length || 2,
-      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === currentYear).length || 1
+    const aCounts = [
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === curYear - 4).length || 1,
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === curYear - 3).length || 2,
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === curYear - 2).length || 3,
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === curYear - 1).length || 2,
+      planningHistory.filter(a => new Date(a.decided_date || a.start_date || '').getFullYear() === curYear).length || 1
     ];
 
-    const maxApps = Math.max(...appCounts, 5);
+    const mApps = Math.max(...aCounts, 5);
+    const pts: [number, number][] = aCounts.map((count, i) => [
+      chStartX + (i * (chartW / 4)),
+      chBottom - ((count / mApps) * (chartH - 5))
+    ]);
 
-    // Draw area under line
-    doc.setFillColor(227, 242, 253); // Light blue
-    const points: [number, number][] = [];
-    appCounts.forEach((count, index) => {
-      const x = chartStartX + (index * ((chartEndX - chartStartX) / 4));
-      const y = chartBottom - ((count / maxApps) * (chartBottom - chartTop - 5));
-      points.push([x, y]);
-    });
+    doc.setDrawColor(...colors.primary);
+    doc.setLineWidth(1.2);
+    for (let i = 0; i < pts.length - 1; i++) doc.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
+    pts.forEach(p => { doc.setFillColor(...colors.primary); doc.circle(p[0], p[1], 1.5, 'F'); });
 
-    // Draw line
-    doc.setDrawColor(...colors.info);
-    doc.setLineWidth(1.5);
-    for (let i = 0; i < points.length - 1; i++) {
-      doc.line(points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]);
-    }
+    yPosition = chBottom + 20;
 
-    // Draw dots at data points
-    points.forEach(point => {
-      doc.setFillColor(...colors.info);
-      doc.circle(point[0], point[1], 2, 'F');
-    });
-
-    // Legend
-    doc.setFontSize(7);
-    doc.setTextColor(...colors.info);
-    doc.text('⸺ Applications', chartEndX - 25, chartTop + 3);
-
-    yPosition += chartHeight + 15;
-
-    // Flat-Specific Notice Section (updated styling)
+    // Flat-Specific Notice Section (restored with standard styling)
     if (propertyType === 'flat') {
       checkNewPage(50);
 
-      doc.setFillColor(219, 234, 254); // Light blue background
-      doc.rect(10, yPosition - 5, pageWidth - 20, 8, 'F');
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 58, 138); // Dark blue text
-      doc.text('IMPORTANT: FLAT PROPERTY NOTICE', 15, yPosition);
+      doc.setFillColor(...colors.lightBlue);
+      doc.roundedRect(15, yPosition - 5, pageWidth - 30, 28, 2, 2, 'F');
 
-      yPosition += 12;
-      doc.setFontSize(9);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.primary);
+      doc.text('IMPORTANT: FLAT PROPERTY NOTICE', 20, yPosition + 1);
+
+      yPosition += 8;
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(30, 64, 175); // Blue text
+      doc.setTextColor(...colors.textDark);
 
       const flatNoticeText = [
-        'This property has been identified as a flat or maisonette. Under UK planning regulations, flats and maisonettes',
-        'are generally exempt from standard Permitted Development (PD) restrictions that apply to houses.',
-        '',
-        'Key points for flat owners:',
-        '• Permitted Development rights typically do not apply to individual flats',
-        '• External alterations usually require planning permission and freeholder/management consent',
-        '• Internal alterations may still be permissible under certain conditions',
-        '• Building regulations approval may be required for structural changes',
-        '',
-        'We recommend consulting with your local planning authority and building management for specific guidance',
-        'on any proposed alterations to your property.'
+        'Identified as a flat/maisonette. These properties are generally exempt from standard PD rights.',
+        '• External alterations usually require full planning permission.',
+        '• Building regulations approval is required for structural changes.',
+        'Consult with your local authority or building management for specific guidance.'
       ];
 
       flatNoticeText.forEach(line => {
-        const lines = doc.splitTextToSize(line, pageWidth - 30);
-        doc.text(lines, 15, yPosition);
-        yPosition += lines.length * 4 + 1;
+        doc.text(line, 20, yPosition);
+        yPosition += 4.5;
       });
 
-      yPosition += 8;
-      doc.setTextColor(0, 0, 0);
+      yPosition += 10;
     }
 
 
@@ -5816,11 +5739,12 @@ export function AddressSearchForm() {
 
     yPosition += 11;
 
-    // Status box (CarVertical style)
-    const oversColor = result.hasPermittedDevelopmentRights && propertyType !== 'flat' ? colors.success :
-      propertyType === 'flat' ? colors.info : colors.warning;
-    const oversBg = result.hasPermittedDevelopmentRights && propertyType !== 'flat' ? colors.lightGreen :
-      propertyType === 'flat' ? colors.lightBlue : colors.lightYellow;
+    // Status box (carVertical style)
+    const isPass = result.hasPermittedDevelopmentRights && propertyType !== 'flat';
+    const isFlat = propertyType === 'flat';
+
+    const oversColor: [number, number, number] = isPass ? colors.success : (isFlat ? colors.info : colors.warning);
+    const oversBg: [number, number, number] = isPass ? colors.lightGreen : (isFlat ? colors.lightBlue : colors.lightYellow);
 
     doc.setFillColor(...oversBg);
     doc.roundedRect(15, yPosition, pageWidth - 30, 22, 4, 4, 'F');
@@ -5850,32 +5774,25 @@ export function AddressSearchForm() {
     // Detailed Checks Section - Exact carVertical style with icons
     if (propertyType !== 'flat') {
       checkNewPage(50);
-
       doc.setTextColor(...colors.textDark);
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.text('Detailed Planning Checks', 15, yPosition);
-
       yPosition += 6;
       doc.setTextColor(...colors.textGray);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
       doc.text("Professional assessment of specific planning constraints:", 15, yPosition);
-
       yPosition += 12;
 
-      result.checks.forEach((check, index) => {
+      result.checks.forEach((check) => {
         checkNewPage(25);
-
-        // Icon Circle
         const iconX = 18;
         const iconY = yPosition - 1.5;
         const radius = 3;
-
         let iconColor = colors.success;
         if (check.status === 'fail') iconColor = colors.error;
         if (check.status === 'warning') iconColor = colors.warning;
-
         doc.setFillColor(...iconColor);
         doc.circle(iconX, iconY, radius, 'F');
 
@@ -5886,33 +5803,34 @@ export function AddressSearchForm() {
           doc.line(iconX - 1.2, iconY, iconX - 0.3, iconY + 1);
           doc.line(iconX - 0.3, iconY + 1, iconX + 1.2, iconY - 1);
         } else {
-          doc.line(iconX, iconY - 1.2, iconX, iconY + 0.5);
-          doc.line(iconX, iconY + 1.2, iconX, iconY + 1.5);
+          doc.setFillColor(255, 255, 255);
+          doc.rect(iconX - 0.3, iconY - 1.2, 0.6, 1.8, 'F');
+          doc.circle(iconX, iconY + 1.2, 0.3, 'F');
         }
 
         doc.setTextColor(...colors.textDark);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text(check.type, 26, yPosition);
-
         yPosition += 5;
         doc.setTextColor(...colors.textGray);
         doc.setFontSize(8.5);
         doc.setFont('helvetica', 'normal');
         const lns = doc.splitTextToSize(check.description, pageWidth - 45);
         doc.text(lns, 26, yPosition);
-        yPosition += lns.length * 4 + 3;
+        yPosition += lns.length * 4;
 
+        // Add clickable documentation link if available
         if (check.documentationUrl) {
-          doc.setTextColor(...colors.info);
-          doc.setFontSize(8);
-          doc.textWithLink('View Official Documentation', 26, yPosition, { url: check.documentationUrl });
+          yPosition += 2;
+          doc.setTextColor(...colors.primary);
+          doc.setFontSize(7);
+          doc.textWithLink('View Official Documentation →', 26, yPosition, { url: check.documentationUrl });
           yPosition += 6;
+        } else {
+          yPosition += 8;
         }
-
-        yPosition += 4;
       });
-
       yPosition += 5;
     }
 
@@ -5953,7 +5871,14 @@ export function AddressSearchForm() {
         doc.setTextColor(...colors.info);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.text(reference, 20, yPosition + 2);
+
+        // Add clickable link for application reference
+        const appLink = app.link || app.url || '';
+        if (appLink) {
+          doc.textWithLink(reference, 20, yPosition + 2, { url: appLink });
+        } else {
+          doc.text(reference, 20, yPosition + 2);
+        }
 
         // Status Badge
         const hC = status.toLowerCase().includes('approved') ? colors.success :
@@ -5976,7 +5901,17 @@ export function AddressSearchForm() {
         }
 
         doc.text(descT, 20, yPosition + 1);
-        yPosition += (descT.length * 4) + 10;
+
+        // Add "View Application" link if available
+        if (appLink) {
+          yPosition += (descT.length * 4) + 2;
+          doc.setTextColor(...colors.primary);
+          doc.setFontSize(7);
+          doc.textWithLink('View Application →', 20, yPosition + 1, { url: appLink });
+          yPosition += 8;
+        } else {
+          yPosition += (descT.length * 4) + 10;
+        }
       });
 
     } else {
@@ -6009,8 +5944,8 @@ export function AddressSearchForm() {
       doc.text('Contextual activity within 0.2km:', 15, yPosition);
       yPosition += 10;
 
-      nearbyHistory.slice(0, 15).forEach((app, index) => {
-        checkNewPage(18);
+      nearbyHistory.slice(0, 15).forEach((app: any, index: number) => {
+        checkNewPage(22);
         doc.setTextColor(...colors.textDark);
         doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
@@ -6022,92 +5957,92 @@ export function AddressSearchForm() {
         const nR = app.reference || 'N/A';
         const nS = app.status || 'N/A';
         doc.text(`Ref: ${nR} • Status: ${nS}`, 18, yPosition);
+
+        // Add clickable link for nearby applications
+        const nearbyLink = app.link || app.url || '';
+        if (nearbyLink) {
+          yPosition += 4;
+          doc.setTextColor(...colors.primary);
+          doc.textWithLink('View Application →', 18, yPosition, { url: nearbyLink });
+        }
         yPosition += 7;
       });
       yPosition += 5;
     }
 
-    // Summary Section (Simplified)
+    // Summary Section
     checkNewPage(60);
-
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('Summary', 15, yPosition);
-
-    yPosition += 5;
-    doc.setTextColor(...colors.textGray);
+    yPosition += 8;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('Professional assessment summary and recommendations', 15, yPosition);
+    const summText = propertyType === 'flat' ? 'Flat identified. PD rights generally exempt.' : result.summary;
+    const summLines = doc.splitTextToSize(summText, pageWidth - 30);
+    doc.text(summLines, 15, yPosition);
+    yPosition += summLines.length * 5 + 20;
 
-    yPosition += 15;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-
-    const sText = propertyType === 'flat'
-      ? 'This property is a flat/maisonette and is therefore generally exempt from standard Permitted Development restrictions. Any proposed alterations should be discussed with your local planning authority and building management. The planning history above provides context for development activity in this area.'
-      : result.summary;
-
-    const sLines = doc.splitTextToSize(sText, pageWidth - 30);
-    doc.text(sLines, 15, yPosition);
-    yPosition += sLines.length * 4 + 12;
-
-    // ===== COMPREHENSIVE LEGAL NOTICE (NEW PAGE) =====
-    checkNewPage(999); // Force new page
-    addFooter();
-    doc.addPage();
-    yPosition = 20;
-
-    // Legal Notice Header
-    doc.setDrawColor(...colors.primaryTeal);
+    // Legal Notice / Disclaimer
+    checkNewPage(200);
     doc.setLineWidth(1.5);
+    doc.setDrawColor(...colors.primary);
     doc.line(15, yPosition, pageWidth - 15, yPosition);
-
-    yPosition += 6;
-    doc.setFillColor(...colors.sectionBg);
-    doc.rect(15, yPosition - 4, pageWidth - 30, 12, 'F');
-
-    doc.setTextColor(...colors.darkGray);
-    doc.setFontSize(14);
+    yPosition += 10;
     doc.setFont('helvetica', 'bold');
-    doc.text('LEGAL NOTICE / DISCLAIMER', pageWidth / 2, yPosition + 3, { align: 'center' });
+    doc.setFontSize(12);
+    doc.setTextColor(...colors.textDark);
+    doc.text('Legal Notice / Disclaimer', 15, yPosition);
+    yPosition += 8;
 
-    yPosition += 16;
-    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...colors.textGray);
 
-    const lText = [
+    const legalNoticeText = [
       'PDRightCheck is a paid information and screening service that collates, analyses, and presents planning-related information to support early-stage feasibility and decision-making.',
       '',
-      'The service provides a professional desktop assessment of permitted development potential, using publicly available datasets, mapping systems, and local authority information accessible at the time of the search.',
+      'The service provides a professional desktop assessment of permitted development potential, including checks against Article 4 Directions, planning constraints, and other relevant planning records, using publicly available datasets, mapping systems, and local authority information accessible at the time of the search.',
       '',
-      'PDRightCheck takes reasonable care in sourcing information, but does not replace the statutory role of the Local Planning Authority.',
+      'The assessment is based in part on information submitted by the user, including (but not limited to) the property address, classification of the property (for example, house or flat), and other property-specific details. PDRightCheck relies on the accuracy and completeness of this information when generating its report. Where incorrect, incomplete, or inaccurate information is provided, the results may not be applicable to the property in question.',
+      '',
+      'While PDRightCheck takes reasonable care and professional diligence in sourcing and interpreting planning information, it does not create, verify, amend, or certify official planning records, nor does it replace the statutory role of the Local Planning Authority.',
+      '',
+      'Local authority records may be incomplete, amended, subject to interpretation, inconsistently digitised, or updated after the date of assessment. Certain restrictions may not be apparent from publicly accessible sources alone, including (but not limited to) Article 4 Directions, historic planning conditions, reserved matters, or the removal of permitted development rights at the time of original construction or subsequent development. This is particularly relevant for properties constructed or materially altered after 1 January 2000.',
+      '',
+      'The information provided by PDRightCheck:',
+      '• does not constitute legal advice',
+      '• does not constitute planning advice',
+      '• does not constitute planning permission',
+      '• does not constitute a formal or binding determination of permitted development rights',
+      '',
+      'PDRightCheck does not guarantee that permitted development rights exist or will be accepted by the Local Planning Authority, and no reliance should be placed on the report as a substitute for statutory confirmation.',
+      '',
+      'Users remain fully responsible for:',
+      '• ensuring the accuracy of the information submitted',
+      '• verifying planning status with the relevant Local Planning Authority',
+      '• obtaining written pre-application advice where appropriate',
+      '• securing a Lawful Development Certificate or other formal confirmation prior to commencing any development',
+      '',
+      'To the fullest extent permitted by law, PDRightCheck accepts no liability for loss, delay, cost, or consequence arising from reliance on the information provided, whether arising from errors or omissions in user-supplied information, changes to planning policy, interpretation of records, or undisclosed site-specific restrictions.',
+      '',
+      'Use of this service constitutes acceptance of these limitations. This service is intended to support informed decision-making, not to replace statutory planning processes.'
     ];
 
-    lText.forEach(paragraph => {
-      if (paragraph === '') {
-        yPosition += 4;
+    legalNoticeText.forEach(line => {
+      if (line === '') {
+        yPosition += 3;
       } else {
-        const lines = doc.splitTextToSize(paragraph, pageWidth - 35);
-        checkNewPage(lines.length * 3.5 + 5);
-        doc.text(lines, 18, yPosition);
-        yPosition += lines.length * 3.5 + 2;
+        checkNewPage(10);
+        const wrappedLines = doc.splitTextToSize(line, pageWidth - 30);
+        doc.text(wrappedLines, 15, yPosition);
+        yPosition += wrappedLines.length * 3.5;
       }
     });
 
-    yPosition += 10;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Disclaimer:', 18, yPosition);
-    yPosition += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.text('Use of this service constitutes acceptance of terms. PDRightCheck accepts no liability for consequences of reliance on the information provided.', 18, yPosition, { maxWidth: pageWidth - 35 });
-
-    // Save
     addFooter();
-    const fName = `PDRightCheck-Report-${result.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
-    doc.save(fName);
+    doc.save(`PDRightCheck-Report-${result.address.split(',')[0].replace(/\s+/g, '-')}.pdf`);
   }
 
   if (result) {
