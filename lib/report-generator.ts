@@ -157,7 +157,7 @@ export class ReportGenerator {
 **PERMITTED DEVELOPMENT STATUS: ${status}**
 
 **Key Findings:**
-- ${this.propertyData.constraints.length} planning constraints identified
+- ${this.propertyData.passedChecks !== undefined && this.propertyData.totalChecks !== undefined ? `Checks Passed: ${this.propertyData.passedChecks}/${this.propertyData.totalChecks}` : `${this.propertyData.constraints.length} planning constraints identified`}
 - ${blockingConstraints.length} blocking issues found
 - ${restrictiveConstraints.length} restrictive conditions apply
 - Overall confidence rating: ${confidence}%

@@ -15,13 +15,13 @@ export interface DataSource {
 export interface PlanningConstraint {
   id: string
   type:
-    | "conservation_area"
-    | "listed_building"
-    | "article_4"
-    | "national_park"
-    | "green_belt"
-    | "flood_zone"
-    | "tree_preservation"
+  | "conservation_area"
+  | "listed_building"
+  | "article_4"
+  | "national_park"
+  | "green_belt"
+  | "flood_zone"
+  | "tree_preservation"
   name: string
   description: string
   severity: "blocking" | "restrictive" | "advisory"
@@ -42,6 +42,8 @@ export interface PropertyData {
   constraints: PlanningConstraint[]
   planningHistory: PlanningApplication[]
   lastUpdated: Date
+  totalChecks?: number
+  passedChecks?: number
 }
 
 export interface PlanningApplication {

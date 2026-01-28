@@ -11,15 +11,13 @@ interface LegalDisclaimerProps {
 export function LegalDisclaimer({ confidence, variant = "compact" }: LegalDisclaimerProps) {
   if (variant === "compact") {
     return (
-      <Alert className="bg-muted/30 border-muted">
+      <Alert className="bg-muted/30 border-muted flex justify-center items-center gap-2 [&>svg]:static [&>svg]:transform-none [&>svg]:left-auto [&>svg]:top-auto [&>svg~*]:pl-0">
         <Shield className="h-4 w-4" />
         <AlertDescription className="text-sm">
           <span className="font-medium">
-            <Link href="/legal-notice" className="hover:text-white transition-colors underline underline-offset-4">
-              Legal Notice:</Link>
-          </span> This tool is {confidence}% accurate based on publicly
-          available records. For 100% certainty and official confirmation, seek pre-planning advice from your local
-          planning authority before proceeding with any development.
+            <Link href="/legal-notice" className="hover:text-foreground transition-colors underline underline-offset-4">
+              Legal Notice / Disclaimer:</Link>
+          </span>
         </AlertDescription>
       </Alert>
     )
