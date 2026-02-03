@@ -669,7 +669,7 @@ export function AddressSearchForm() {
     let pageNumber = 1;
 
     const colors = {
-      primary: [0, 115, 240] as [number, number, number],
+      primary: [30, 122, 111] as [number, number, number], // #1E7A6F (Teal)
       success: [22, 163, 74] as [number, number, number],
       warning: [133, 77, 14] as [number, number, number],
       error: [211, 47, 47] as [number, number, number],
@@ -677,11 +677,11 @@ export function AddressSearchForm() {
       textGray: [133, 133, 133] as [number, number, number],
       tagBg: [243, 244, 246] as [number, number, number],
       border: [229, 231, 235] as [number, number, number],
-      lightBlue: [235, 245, 255] as [number, number, number],
+      lightBlue: [232, 249, 247] as [number, number, number], // Very light teal
       lightGreen: [220, 252, 231] as [number, number, number],
       lightYellow: [254, 249, 195] as [number, number, number],
       gaugeFill: [255, 255, 255] as [number, number, number],
-      info: [59, 130, 246] as [number, number, number],
+      info: [30, 122, 111] as [number, number, number], // Match primary
       white: [255, 255, 255] as [number, number, number],
     };
 
@@ -712,6 +712,20 @@ export function AddressSearchForm() {
 
     const drawExclamation = (x: number, y: number, c: [number, number, number]) => {
       doc.setFillColor(...c); doc.rect(x - 0.4, y - 1.8, 0.8, 2.5, 'F'); doc.circle(x, y + 1.5, 0.5, 'F');
+    };
+
+    const drawLinkIcon = (x: number, y: number, size: number = 2) => {
+      doc.setDrawColor(...colors.primary);
+      doc.setLineWidth(0.2);
+      // Draw small square
+      doc.line(x, y - size, x + size * 0.7, y - size); // Top
+      doc.line(x, y - size, x, y); // Left
+      doc.line(x, y, x + size, y); // Bottom
+      doc.line(x + size, y, x + size, y - size * 0.3); // Right
+      // Draw arrow
+      doc.line(x + size * 0.3, y - size * 0.3, x + size * 1.2, y - size * 1.2); // Diagonal
+      doc.line(x + size * 1.2, y - size * 1.2, x + size * 1.2, y - size * 1.2); // Head horizontal
+      doc.line(x + size * 1.2, y - size * 1.2, x + size * 1.2, y - size * 0.8); // Head vertical
     };
 
     // Fetch planning history items
@@ -775,37 +789,22 @@ export function AddressSearchForm() {
 
     // ===== HEADER (carVertical Layout Match) =====
 
-    // 1. Logo (Top Left)
-    doc.setTextColor(...colors.primary);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PD RightCheck', 15, 20);
+    // 1. Logo & Heading (Top Left)
+    try {
+      // Add Logo (Next to heading)
+      doc.addImage('/Logo1.png', 'PNG', 15, 12, 10, 10);
 
-    // 2. QR Code Block (Top Right)
-    const qrSize = 24; // Smaller QR size
-    const qrX = pageWidth - 15 - qrSize;
-    const qrY = 12;
-
-    doc.setFontSize(7);
-    doc.setTextColor(...colors.textGray);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Scan for full report', pageWidth - 15, qrY - 2, { align: 'right' });
-
-    // QR Box
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(...colors.border);
-    doc.setLineWidth(0.1);
-    doc.roundedRect(qrX, qrY, qrSize, qrSize, 1, 1, 'FD');
-
-    // Abstract QR Pattern (More dense for realism)
-    doc.setFillColor(0, 0, 0);
-    const cellSize = qrSize / 8;
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
-        if ((r + c) % 3 === 0 || (r < 2 && c < 2) || (r > 5 && c > 5) || (r < 2 && c > 5) || (r > 5 && c < 2)) {
-          doc.rect(qrX + (c * cellSize) + 0.5, qrY + (r * cellSize) + 0.5, cellSize - 0.5, cellSize - 0.5, 'F');
-        }
-      }
+      // Heading text shifted to the right of the logo
+      doc.setTextColor(...colors.primary);
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PD RightCheck', 28, 20);
+    } catch (e) {
+      // Fallback if logo fails to load
+      doc.setTextColor(...colors.primary);
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PD RightCheck', 15, 20);
     }
 
     // 3. Main Content Block (Left, below Logo)
@@ -1141,8 +1140,8 @@ export function AddressSearchForm() {
 
       const flatNoticeText = [
         'Identified as a flat/maisonette. These properties are generally exempt from standard PD rights.',
-        'â€¢ External alterations usually require full planning permission.',
-        'â€¢ Building regulations approval is required for structural changes.',
+        '- External alterations usually require full planning permission.',
+        '- Building regulations approval is required for structural changes.',
         'Consult with your local authority or building management for specific guidance.'
       ];
 
@@ -1183,11 +1182,11 @@ export function AddressSearchForm() {
 
     let mainM: string;
     if (propertyType === 'flat') {
-      mainM = 'â„¹ Info - Flat Property identified. PD Rights generally not applicable.';
+      mainM = 'Info - Flat Property identified. PD Rights generally not applicable.';
     } else if (result.hasPermittedDevelopmentRights) {
-      mainM = 'âœ“ Pass - No immediate restrictions detected for this property.';
+      mainM = 'Pass - No immediate restrictions detected for this property.';
     } else {
-      mainM = 'âš  Attention - Planning restrictions found. See details below.';
+      mainM = 'Attention - Planning restrictions found. See details below.';
     }
 
     doc.text(mainM, 22, yPosition + 13);
@@ -1253,7 +1252,9 @@ export function AddressSearchForm() {
           yPosition += 2;
           doc.setTextColor(...colors.primary);
           doc.setFontSize(7);
-          doc.textWithLink('View Official Documentation â†’', 26, yPosition, { url: check.documentationUrl });
+          const label = 'View Official Documentation';
+          doc.textWithLink(label, 26, yPosition, { url: check.documentationUrl });
+          drawLinkIcon(26 + doc.getTextWidth(label) + 2, yPosition - 0.5);
           yPosition += 6;
         } else {
           yPosition += 8;
@@ -1342,7 +1343,9 @@ export function AddressSearchForm() {
           yPosition += (descT.length * 4) + 2;
           doc.setTextColor(...colors.primary);
           doc.setFontSize(7);
-          doc.textWithLink('View Application â†’', 20, yPosition + 1, { url: appLink });
+          const label = 'View Application';
+          doc.textWithLink(label, 20, yPosition + 1, { url: appLink });
+          drawLinkIcon(20 + doc.getTextWidth(label) + 2, yPosition + 0.5);
           yPosition += 8;
         } else {
           yPosition += (descT.length * 4) + 10;
@@ -1362,7 +1365,7 @@ export function AddressSearchForm() {
       doc.setTextColor(...colors.info);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
-      doc.text('â„¹ No direct planning applications found for this specific address.', 22, yPosition + 4);
+      doc.text('Info: No direct planning applications found for this specific address.', 22, yPosition + 4);
       yPosition += 25;
     }
 
@@ -1394,14 +1397,16 @@ export function AddressSearchForm() {
         doc.setFontSize(7);
         const nR = app.reference || 'N/A';
         const nS = app.status || 'N/A';
-        doc.text(`Ref: ${nR} â€¢ Status: ${nS}`, 18, yPosition);
+        doc.text(`Ref: ${nR} - Status: ${nS}`, 18, yPosition);
 
         // Add clickable link for nearby applications
         const nearbyLink = app.link || app.url || '';
         if (nearbyLink) {
           yPosition += 4;
           doc.setTextColor(...colors.primary);
-          doc.textWithLink('View Application â†’', 18, yPosition, { url: nearbyLink });
+          const label = 'View Application';
+          doc.textWithLink(label, 18, yPosition, { url: nearbyLink });
+          drawLinkIcon(18 + doc.getTextWidth(label) + 2, yPosition - 0.5);
         }
         yPosition += 7;
       });

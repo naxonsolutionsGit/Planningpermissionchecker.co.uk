@@ -333,7 +333,7 @@ export function PlanningResult({ result, propertyType }: PlanningResultProps) {
         <CardHeader>
           <CardTitle className="text-lg">
             Planning Checks Performed <span className="text-muted-foreground ml-2 text-base font-normal">
-              ({result.checks.filter(c => c.status === 'pass').length}/{result.checks.length} Passed)
+              {/* ({result.checks.filter(c => c.status === 'pass').length}/{result.checks.length} Passed) */}
             </span>
           </CardTitle>
         </CardHeader>
