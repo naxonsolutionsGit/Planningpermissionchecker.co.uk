@@ -233,24 +233,24 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Type</span>
-                    <div className="text-sm font-medium text-foreground capitalize">{propertySummary.propertyType}</div>
+                    <div className="text-sm font-medium text-foreground capitalize">{String(propertySummary.propertyType || 'Residential Property')}</div>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Tenure</span>
-                    <div className="text-sm font-medium text-foreground">{propertySummary.tenure}</div>
+                    <div className="text-sm font-medium text-foreground">{String(propertySummary.tenure || 'Information Unavailable')}</div>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Bedrooms</span>
                     <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                       <Bed className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{propertySummary.bedrooms}</span>
+                      <span>{String(propertySummary.bedrooms || 'Information Unavailable')}</span>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Bathrooms</span>
                     <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                       <Bath className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{propertySummary.bathrooms}</span>
+                      <span>{String(propertySummary.bathrooms || 'Information Unavailable')}</span>
                     </div>
                   </div>
                 </div>
@@ -259,10 +259,10 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
               <div className="space-y-4 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-6 border-border">
                 <div className="space-y-1">
                   <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Last Sold Transaction</span>
-                  <div className="text-2xl font-bold text-foreground">{propertySummary.lastSoldPrice}</div>
+                  <div className="text-2xl font-bold text-foreground">{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
-                    <span>Sold on <span className="text-foreground">{propertySummary.lastSoldDate}</span></span>
+                    <span>Sold on <span className="text-foreground">{String(propertySummary.lastSoldDate || 'No recent transaction info')}</span></span>
                   </div>
                 </div>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">

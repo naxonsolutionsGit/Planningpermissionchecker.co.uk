@@ -14,39 +14,51 @@ export interface PropertySummary {
 
 const EPC_BASE_URL = "https://epc.opendatacommunities.org/api/v1/domestic/search";
 
+import { determinePropertyType } from "./utils";
+
 /**
  * Fetch property summary from free APIs.
  */
 export async function fetchPropertySummary(address: string, postcode: string): Promise<PropertySummary | null> {
+    console.log(`[PropertyAPI] Fetching summary for: ${address}, ${postcode}`);
     try {
         const [hmlrData, epcData] = await Promise.all([
             fetchHMLRData(postcode, address),
             fetchEPCData(postcode, address),
         ]);
 
-        const isFlat = address.toLowerCase().includes("flat") || address.toLowerCase().includes("apartment");
+        console.log(`[PropertyAPI] Results - HMLR: ${hmlrData ? 'Success' : 'No Data'}, EPC: ${epcData ? 'Success' : 'No Data'}`);
 
         if (!hmlrData && !epcData) {
-            // Fallback mock data to ensure UI is always populated as requested
+            console.log("[PropertyAPI] Both APIs failed. Using address-based intelligent fallback.");
+            const detectedType = determinePropertyType(address);
+
+            // Map internal types to display types
+            let displayType = "Residential Property";
+            if (detectedType === "flat") displayType = "Flat / Apartment";
+            else if (detectedType === "maisonette") displayType = "Maisonette";
+            else if (detectedType === "commercial") displayType = "Commercial Building";
+            else if (detectedType === "house") displayType = "Residential House";
+
             return {
-                propertyType: isFlat ? "Apartment" : "Detached House",
-                bedrooms: isFlat ? "1" : "3",
-                bathrooms: "1",
-                tenure: "Freehold",
-                lastSoldPrice: "£350,000 (Market Estimate)",
-                lastSoldDate: "January 2024",
+                propertyType: displayType,
+                bedrooms: "Information Unavailable",
+                bathrooms: "Information Unavailable",
+                tenure: "Information Unavailable",
+                lastSoldPrice: "Market Estimate Unavailable",
+                lastSoldDate: "No recent transaction info",
             };
         }
 
-        const propertyType = epcData?.isBungalow ? "Bungalow" : (epcData?.propertyType || hmlrData?.propertyType || (isFlat ? "Apartment" : "Residential House"));
+        const propertyType = epcData?.isBungalow ? "Bungalow" : (epcData?.propertyType || hmlrData?.propertyType || (determinePropertyType(address) === "flat" ? "Apartment" : "Residential House"));
 
         return {
             propertyType,
             bedrooms: epcData?.bedrooms || "Contact Local Authority",
             bathrooms: epcData?.bathrooms || "Contact Local Authority",
             tenure: hmlrData?.tenure || "Information Unavailable",
-            lastSoldPrice: hmlrData?.price ? `£${hmlrData.price.toLocaleString()}` : "Market Estimate: £350,000",
-            lastSoldDate: hmlrData?.date ? formatDate(hmlrData.date) : "Recent Transaction",
+            lastSoldPrice: hmlrData?.price ? `£${hmlrData.price.toLocaleString()}` : "Market Estimate Unavailable",
+            lastSoldDate: hmlrData?.date ? formatDate(hmlrData.date) : "No recent transaction info",
         };
     } catch (error) {
         console.error("Error fetching property summary:", error);
@@ -58,7 +70,7 @@ export async function fetchPropertySummary(address: string, postcode: string): P
  * Fetch data from HM Land Registry Price Paid Data (SPARQL).
  */
 async function fetchHMLRData(postcode: string, address: string) {
-    const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
+    const cleanPostcode = formatPostcode(postcode);
 
     // Improved house number extraction: handles "Flat 1, 12 Baker St" -> "12" or "Flat 1"
     const houseNumberMatch = address.match(/(\d+[a-zA-Z]?)/);
@@ -72,7 +84,7 @@ async function fetchHMLRData(postcode: string, address: string) {
         // Broad search by postcode first
         const response = await fetch("https://landregistry.data.gov.uk/data/ppi/transaction-record.json?" + new URLSearchParams({
             "propertyAddress.postcode": cleanPostcode,
-            "_limit": "50",
+            "_pageSize": "50",
         }));
 
         if (!response.ok) return null;
@@ -81,14 +93,34 @@ async function fetchHMLRData(postcode: string, address: string) {
 
         if (items.length === 0) return null;
 
-        // Robust matching logic
-        const match = items.find((item: any) => {
+        // Helper to extract value or label from HMLR objects (JSON-LD)
+        const getVal = (v: any): string => {
+            if (v === null || v === undefined) return "";
+            if (Array.isArray(v)) return getVal(v[0]);
+            if (typeof v === 'object') {
+                if (v._value !== undefined && v._value !== null) return String(v._value);
+                if (v.label) return getVal(v.label);
+                if (v.prefLabel) return getVal(v.prefLabel);
+                return ""; // Don't return the object itself to avoid React crashes
+            }
+            return String(v);
+        };
+
+        // Sort items by date descending to get the latest transaction first
+        const sortedItems = [...items].sort((a: any, b: any) => {
+            const dateA = new Date(getVal(a.transactionDate)).getTime() || 0;
+            const dateB = new Date(getVal(b.transactionDate)).getTime() || 0;
+            return dateB - dateA;
+        });
+
+        // Robust matching logic on sorted items
+        const match = sortedItems.find((item: any) => {
             const addr = item.propertyAddress;
             if (!addr) return false;
 
-            const paon = String(addr.paon || "").toLowerCase();
-            const saon = String(addr.saon || "").toLowerCase();
-            const street = String(addr.street || "").toLowerCase();
+            const paon = getVal(addr.paon).toLowerCase();
+            const saon = getVal(addr.saon).toLowerCase();
+            const street = getVal(addr.street).toLowerCase();
 
             // Try to match house number/name first
             const houseMatch = houseNumber && (
@@ -104,21 +136,24 @@ async function fetchHMLRData(postcode: string, address: string) {
             const streetMatch = simplifiedStreet && apiStreet.includes(simplifiedStreet);
 
             return houseMatch && streetMatch;
-        }) || items.find((item: any) => {
+        }) || sortedItems.find((item: any) => {
             // Looser match if strict fails
-            const paon = String(item.propertyAddress?.paon || "").toLowerCase();
+            const paon = getVal(item.propertyAddress?.paon).toLowerCase();
             return houseNumber && paon === houseNumber;
-        }) || items[0];
+        }) || sortedItems[0];
 
-        console.log(`[HMLR] Match found: ${match.propertyAddress?.paon} ${match.propertyAddress?.street}`);
+        if (match) {
+            console.log(`[HMLR] Match found: ${getVal(match.propertyAddress?.paon)} ${getVal(match.propertyAddress?.street)} (${getVal(match.transactionDate)})`);
+        }
 
         return {
-            price: match.pricePaid,
-            date: match.transactionDate,
-            propertyType: match.propertyType?.label || "Unknown",
-            tenure: match.estateType?.label || "Unknown",
+            price: getVal(match.pricePaid),
+            date: getVal(match.transactionDate),
+            propertyType: getVal(match.propertyType) || "Unknown",
+            tenure: getVal(match.estateType) || "Unknown",
         };
-    } catch {
+    } catch (error) {
+        console.error("[HMLR] Error processing data:", error);
         return null;
     }
 }
@@ -133,7 +168,7 @@ async function fetchEPCData(postcode: string, address: string) {
         return null;
     }
 
-    const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
+    const cleanPostcode = formatPostcode(postcode);
     const houseNumberMatch = address.match(/(\d+[a-zA-Z]?)/);
     const houseNumber = houseNumberMatch ? houseNumberMatch[1].toLowerCase() : "";
     const streetNameMatch = address.split(",")[0].replace(/\d+/, "").trim().toLowerCase();
@@ -213,6 +248,19 @@ async function fetchEPCData(postcode: string, address: string) {
     } catch {
         return null;
     }
+}
+
+/**
+ * Ensures UK postcodes are formatted with a space before the last 3 characters.
+ * Example: W1D1AN -> W1D 1AN
+ */
+function formatPostcode(postcode: string): string {
+    const cleaned = postcode.replace(/\s+/g, "").toUpperCase();
+    if (cleaned.length < 5) return cleaned; // Too short to be a full postcode
+    // UK incode is always the last 3 characters
+    const outcode = cleaned.slice(0, -3);
+    const incode = cleaned.slice(-3);
+    return `${outcode} ${incode}`;
 }
 
 function formatDate(dateStr: string): string {

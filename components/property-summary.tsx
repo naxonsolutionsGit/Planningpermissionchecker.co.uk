@@ -25,24 +25,24 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Type</span>
-                                <div className="text-sm font-medium text-foreground capitalize">{data.propertyType}</div>
+                                <div className="text-sm font-medium text-foreground capitalize">{String(data.propertyType || 'Residential Property')}</div>
                             </div>
                             <div className="space-y-1">
                                 <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Tenure</span>
-                                <div className="text-sm font-medium text-foreground">{data.tenure}</div>
+                                <div className="text-sm font-medium text-foreground">{String(data.tenure || 'Information Unavailable')}</div>
                             </div>
                             <div className="space-y-1">
                                 <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Bedrooms</span>
                                 <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                                     <Bed className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span>{data.bedrooms}</span>
+                                    <span>{String(data.bedrooms || 'Information Unavailable')}</span>
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Bathrooms</span>
                                 <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                                     <Bath className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span>{data.bathrooms}</span>
+                                    <span>{String(data.bathrooms || 'Information Unavailable')}</span>
                                 </div>
                             </div>
                         </div>
@@ -51,15 +51,15 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                     <div className="space-y-4 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-6 border-border">
                         <div className="space-y-1">
                             <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Last Sold Transaction</span>
-                            <div className="text-2xl font-bold text-foreground">{data.lastSoldPrice}</div>
+                            <div className="text-2xl font-bold text-foreground">{String(data.lastSoldPrice || 'Market Estimate Unavailable')}</div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <Calendar className="h-3.5 w-3.5" />
-                                <span>Sold on <span className="text-foreground">{data.lastSoldDate}</span></span>
+                                <span>Sold on <span className="text-foreground">{String(data.lastSoldDate || 'No recent transaction info')}</span></span>
                             </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        {/* <p className="text-[10px] text-muted-foreground leading-relaxed">
                             Data sourced from HM Land Registry Price Paid Data and Energy Performance Certificate (EPC) Open Data.
-                        </p>
+                        </p> */}
                     </div>
                 </div>
             </CardContent>
