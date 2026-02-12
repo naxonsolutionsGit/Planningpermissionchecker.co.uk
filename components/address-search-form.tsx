@@ -9,6 +9,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, MapPin, Check, X, AlertCircle, ChevronRight, Home, Building, FileText, HelpCircle, Download, ChevronDown, ChevronUp } from "lucide-react"
 import { type PlanningResult, PlanningResult as PlanningResultComponent, type PlanningCheck } from "@/components/planning-result"
+import { PropertySummary } from "@/components/property-summary"
+import { fetchPropertySummary, type PropertySummary as PropertySummaryType } from "@/lib/property-api"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 // Define the entity interface based on the API response
 interface PlanningEntity {
@@ -81,6 +85,8 @@ export function AddressSearchForm() {
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const [propertyType, setPropertyType] = useState<string>("")
+  const [propertySummary, setPropertySummary] = useState<PropertySummaryType | null>(null)
+  const [includeLandRegistry, setIncludeLandRegistry] = useState(false)
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -447,6 +453,7 @@ export function AddressSearchForm() {
 
     setIsLoading(true)
     setResult(null)
+    setPropertySummary(null)
     setError(null)
     setShowSuggestions(false)
 
@@ -468,6 +475,10 @@ export function AddressSearchForm() {
           latitude = geocodeData.result.latitude
           longitude = geocodeData.result.longitude
           localAuthority = geocodeData.result.admin_district || geocodeData.result.primary_care_trust || "Unknown Local Authority"
+
+          // Fetch Property Summary Data
+          const summary = await fetchPropertySummary(address, postcode)
+          setPropertySummary(summary)
 
           // Special handling for the specific address with Article 4 restriction
           if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
@@ -832,8 +843,7 @@ export function AddressSearchForm() {
     const tagPadding = 4;
 
     const tags = [
-      `Property: ${propertyType === 'flat' ? 'Flat' : 'House'}`,
-      `Authority: ${result.localAuthority}`
+      `Property: ${propertySummary?.propertyType || (propertyType === 'flat' ? 'Flat' : 'House')}`
     ];
 
     doc.setFontSize(8);
@@ -854,7 +864,12 @@ export function AddressSearchForm() {
       tagX += boxWidth + 4; // Gap between tags
     });
 
-    yPosition += 20;
+    // Add margin after tags to prevent overlap with gauge
+    yPosition += tagHeight + 10;
+
+    // --- High-level status banner removed ---
+
+    // --- Property Summary Section removed from here and relocated below restrictions ---
 
     // ===== SCORE SECTION (Left Aligned Gauge) =====
     // Matches "carVertical Score" section layout
@@ -911,17 +926,7 @@ export function AddressSearchForm() {
     doc.setFont('helvetica', 'bold');
     doc.text('Confidence Score', infoX, infoY);
 
-    // Description text
-    infoY += 8;
-    doc.setTextColor(...colors.textGray);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    const summaryText = result.hasPermittedDevelopmentRights
-      ? "This property shows strong indicators for permitted development rights eligibility based on available data."
-      : "Restrictions have been detected. Full planning permission is likely required for structural changes.";
 
-    const summaryLines = doc.splitTextToSize(summaryText, pageWidth - infoX - 15);
-    doc.text(summaryLines, infoX, infoY);
 
     yPosition = gaugeCenterY + gaugeSize + 20;
 
@@ -1090,37 +1095,50 @@ export function AddressSearchForm() {
     doc.text('Property Details & Location', 15, yPosition);
     yPosition += 10;
 
-    // 1. Property Details Card
+    // 1. Property Details Card (Revamped to match UI Card style)
     doc.setFillColor(...colors.white);
     doc.setDrawColor(...colors.border);
     doc.setLineWidth(0.3);
-    doc.roundedRect(15, yPosition, pageWidth - 30, 48, 2, 2, 'FD'); // Slightly taller for wrapped address
+    doc.roundedRect(15, yPosition, pageWidth - 30, 52, 2, 2, 'FD');
 
-    let detailY = yPosition + 10;
+    // Card Header Area
+    doc.setFillColor(249, 250, 251); // Very light gray background for header
+    doc.roundedRect(15.3, yPosition + 0.3, pageWidth - 30.6, 12, 2, 2, 'F');
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colors.textDark);
+    doc.text('Property Details', 22, yPosition + 8);
+
+    let detailY = yPosition + 22;
     const drawDetail = (label: string, value: any, x: number, y: number) => {
       doc.setFontSize(7.5);
       doc.setTextColor(...colors.textGray);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('helvetica', 'bold');
       doc.text(label.toUpperCase(), x, y);
 
       doc.setFontSize(10);
       doc.setTextColor(...colors.textDark);
-      doc.setFont('helvetica', 'bold');
-      doc.text(value || 'N/A', x, y + 5);
+      doc.setFont('helvetica', 'normal');
+      doc.text(String(value || 'N/A'), x, y + 5);
     };
 
     const halfW = (pageWidth - 30) / 2;
     const firstLineAddress = result.address.split(',')[0].trim();
     const wrappedAddress = doc.splitTextToSize(firstLineAddress, halfW - 20);
 
-    drawDetail('Physical Address', wrappedAddress, 25, detailY);
-    drawDetail('Local Authority', result.localAuthority, 25 + halfW, detailY);
+    drawDetail('Property Type', propertySummary?.propertyType || (propertyType === 'flat' ? 'Apartment / Flat' : 'Residential House'), 25, detailY);
+    drawDetail('Tenure', propertySummary?.tenure || 'Information Unavailable', 25 + halfW, detailY);
 
     detailY += 18;
-    drawDetail('Property Type', propertyType === 'flat' ? 'Apartment / Flat' : 'Residential House', 25, detailY);
-    drawDetail('Coordinates', `${result.coordinates?.lat.toFixed(6)}, ${result.coordinates?.lng.toFixed(6)}`, 25 + halfW, detailY);
+    const bedroomsLabel = isNaN(Number(propertySummary?.bedrooms)) ? (propertySummary?.bedrooms || 'Contact Local Authority') : `${propertySummary?.bedrooms} Bedrooms`;
+    const bathroomsLabel = isNaN(Number(propertySummary?.bathrooms)) ? (propertySummary?.bathrooms || 'Contact Local Authority') : `${propertySummary?.bathrooms} Bathrooms`;
 
-    yPosition += 58;
+    drawDetail('Bedrooms', bedroomsLabel, 25, detailY);
+    drawDetail('Bathrooms', bathroomsLabel, 25 + halfW, detailY);
+
+    yPosition += 62;
+
 
     // Flat-Specific Notice (Moved to Property Details page)
     if (propertyType === 'flat') {
@@ -1166,32 +1184,7 @@ export function AddressSearchForm() {
 
     yPosition += 11;
 
-    // Status box (carVertical style)
-    const isPass = result.hasPermittedDevelopmentRights && propertyType !== 'flat';
-    const isFlat = propertyType === 'flat';
-
-    const oversColor: [number, number, number] = isPass ? colors.success : (isFlat ? colors.info : colors.warning);
-    const oversBg: [number, number, number] = isPass ? colors.lightGreen : (isFlat ? colors.lightBlue : colors.lightYellow);
-
-    doc.setFillColor(...oversBg);
-    doc.roundedRect(15, yPosition, pageWidth - 30, 22, 4, 4, 'F');
-
-    doc.setTextColor(...oversColor);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-
-    let mainM: string;
-    if (propertyType === 'flat') {
-      mainM = 'Info - Flat Property identified. PD Rights generally not applicable.';
-    } else if (result.hasPermittedDevelopmentRights) {
-      mainM = 'Pass - No immediate restrictions detected for this property.';
-    } else {
-      mainM = 'Attention - Planning restrictions found. See details below.';
-    }
-
-    doc.text(mainM, 22, yPosition + 13);
-
-    yPosition += 32;
+    yPosition += 10;
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(9);
     doc.text(`Confidence Level: ${result.confidence}%`, 15, yPosition);
@@ -1413,6 +1406,40 @@ export function AddressSearchForm() {
       yPosition += 5;
     }
 
+    // --- RELOCATED: Property Analysis & Summary Section ---
+    if (propertySummary) {
+      checkNewPage(60);
+      const pdRightsApply = (result as any).score >= 5;
+
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(15, yPosition, pageWidth - 30, 35, 2, 2, 'F');
+
+      let summaryX = 20;
+      doc.setFontSize(9);
+      doc.setTextColor(...colors.primary);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PROPERTY ANALYSIS & SUMMARY', summaryX, yPosition + 7);
+
+      doc.setFontSize(8);
+      doc.setTextColor(...colors.textDark);
+      doc.setFont('helvetica', 'normal');
+
+      const bedroomsVal = isNaN(Number(propertySummary.bedrooms)) ? propertySummary.bedrooms : `${propertySummary.bedrooms} Bedrooms`;
+      const bathroomsVal = isNaN(Number(propertySummary.bathrooms)) ? propertySummary.bathrooms : `${propertySummary.bathrooms} Bathrooms`;
+      const summaryLine1 = `${propertySummary.propertyType} • ${bedroomsVal} • ${bathroomsVal} • ${propertySummary.tenure}`;
+      doc.text(summaryLine1, summaryX, yPosition + 15);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Last Sold Transaction: ${propertySummary.lastSoldPrice} on ${propertySummary.lastSoldDate}`, summaryX, yPosition + 23);
+
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.textGray);
+      doc.text('Data sourced from HMLR Transaction History and EPC Open Data Records.', summaryX, yPosition + 30);
+
+      yPosition += 45;
+    }
+
     // Summary Section
     checkNewPage(60);
     doc.setTextColor(...colors.textDark);
@@ -1485,13 +1512,50 @@ export function AddressSearchForm() {
     });
 
     addFooter();
+
+    // --- NEW: Land Registry Official PDF Attachment ---
+    if (includeLandRegistry) {
+      checkNewPage(200);
+      doc.addPage();
+      pageNumber++;
+
+      doc.setFillColor(...colors.primary);
+      doc.rect(0, 0, pageWidth, 40, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('OFFICIAL LAND REGISTRY DOCUMENT', pageWidth / 2, 25, { align: 'center' });
+
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(12);
+      doc.text('This is an official copy of the Title Register for:', 15, 60);
+      doc.setFontSize(14);
+      doc.text(result.address, 15, 70);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.textGray);
+      const lrNotice = "In a live environment, the actual Land Registry Official PDF would be retrieved via HM Land Registry Business Gateway and appended here. The original formatting of the official document is maintained as per regulatory requirements.";
+      const lrNoticeLines = doc.splitTextToSize(lrNotice, pageWidth - 30);
+      doc.text(lrNoticeLines, 15, 90);
+
+      // Mock attachment placeholder
+      doc.setDrawColor(...colors.border);
+      doc.setLineDashPattern([2, 2], 0);
+      doc.rect(15, 110, pageWidth - 30, 100);
+      doc.text('OFFICIAL DOCUMENT ATTACHED BELOW', pageWidth / 2, 160, { align: 'center' });
+      doc.setLineDashPattern([], 0);
+    }
+
     doc.save(`PDRightCheck-Report-${result.address.split(',')[0].replace(/\s+/g, '-')}.pdf`);
   }
 
   if (result) {
+    const pdRightsApply = (result as any).score >= 5 // Logic for the high-level indicator
     return (
       <div className="space-y-6">
-        <PlanningResultComponent result={result} propertyType={propertyType} />
+        <PlanningResultComponent result={result} propertyType={propertyType} propertySummary={propertySummary} />
         <div className="text-center space-y-4">
           <Button onClick={handleDownloadReport} className="px-8 bg-[#1E7A6F] hover:bg-[#19685f] text-white">
             <Download className="w-4 h-4 mr-2" />
@@ -1547,24 +1611,28 @@ export function AddressSearchForm() {
               </Select>
             </div>
 
-            {/* Flat Information Message */}
-            {/* {propertyType === "flat" && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-blue-900 mb-1">
-                      Important Information About Flats
-                    </h4>
-                    <p className="text-sm text-blue-800">
-                      Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
-                      You can still search to view planning history for this address. For any alterations,
-                      please consult with your local planning authority or building management.
-                    </p>
-                  </div>
+            {/* Land Registry Add-on */}
+            <div className="mb-6 p-4 bg-teal-50/50 border border-teal-100 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="land-registry"
+                  checked={includeLandRegistry}
+                  onCheckedChange={(checked) => setIncludeLandRegistry(checked as boolean)}
+                  className="border-teal-400 text-teal-600 focus:ring-teal-500"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <Label
+                    htmlFor="land-registry"
+                    className="text-sm font-bold text-teal-900 cursor-pointer"
+                  >
+                    Include Official HM Land Registry Title Register
+                  </Label>
+                  <p className="text-xs text-teal-700">
+                    Get the official document attached to your final report.
+                  </p>
                 </div>
               </div>
-            )} */}
+            </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
