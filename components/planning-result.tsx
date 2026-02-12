@@ -5,7 +5,7 @@ import { CheckCircle, XCircle, AlertTriangle, MapPin, History, ExternalLink, Che
 import { LegalDisclaimer } from "@/components/legal-disclaimer"
 import { ConfidenceIndicator } from "@/components/confidence-indicator"
 import { useState, useEffect, useRef } from "react"
-import { PropertySummary as PropertySummaryType } from "@/lib/property-api"
+import type { PropertySummary as PropertySummaryType } from "@/lib/property-api"
 
 export interface PlanningCheck {
   type: string

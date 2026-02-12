@@ -9,6 +9,7 @@ export interface PropertySummaryProps {
         tenure: string
         lastSoldPrice: string
         lastSoldDate: string
+        titleNumber?: string
     }
     pdRightsApply?: boolean
 }
@@ -57,9 +58,16 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                                 <span>Sold on <span className="text-foreground">{String(data.lastSoldDate || 'No recent transaction info')}</span></span>
                             </div>
                         </div>
-                        {/* <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            Data sourced from HM Land Registry Price Paid Data and Energy Performance Certificate (EPC) Open Data.
-                        </p> */}
+
+                        {data.titleNumber && (
+                            <div className="space-y-1 pt-2 border-t border-teal-50">
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">HMLR Title Number</span>
+                                <div className="flex items-center gap-1.5 text-sm font-medium text-[#1E7A6F]">
+                                    <Hash className="h-3.5 w-3.5" />
+                                    <span>{String(data.titleNumber)}</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </CardContent>
