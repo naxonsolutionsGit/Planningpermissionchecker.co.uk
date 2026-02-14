@@ -667,9 +667,31 @@ export function AddressSearchForm() {
     if (!result) return
 
     // Dynamically import jsPDF and Chart.js
-    const { jsPDF } = await import('jspdf');
-    const { Chart, registerables } = await import('chart.js');
-    Chart.register(...registerables);
+    let jsPDF: any;
+    let Chart: any;
+    let registerables: any;
+
+    try {
+      const jspdfModule = await import('jspdf');
+      jsPDF = jspdfModule.jsPDF || jspdfModule.default;
+
+      const chartModule = await import('chart.js');
+      Chart = chartModule.Chart || (chartModule as any).default;
+      registerables = chartModule.registerables;
+
+      if (Chart && registerables) {
+        Chart.register(...registerables);
+      }
+    } catch (importErr) {
+      console.error("Failed to load PDF/Chart libraries:", importErr);
+      setError("Failed to load report generation libraries. Please refresh and try again.");
+      return;
+    }
+
+    if (!jsPDF) {
+      setError("Report generation library (jsPDF) not available.");
+      return;
+    }
 
     // Create PDF document (A4 size)
     const doc = new jsPDF();
@@ -701,7 +723,7 @@ export function AddressSearchForm() {
       doc.setDrawColor(...colors.border); doc.setLineWidth(0.3); doc.line(15, footerY - 3, pageWidth - 15, footerY - 3);
       doc.setFontSize(7); doc.setTextColor(...colors.textGray); doc.setFont('helvetica', 'normal');
       doc.text(`Page ${pageNumber}`, 15, footerY);
-      doc.text(`PDRightCheck Report â€¢ Generated ${new Date().toLocaleDateString('en-GB')}`, pageWidth / 2, footerY, { align: 'center' });
+      doc.text(`PDRightCheck Report \u2022 Generated ${new Date().toLocaleDateString('en-GB')}`, pageWidth / 2, footerY, { align: 'center' });
       doc.text(`Report ID: PC-${Date.now().toString().slice(-8)}`, pageWidth - 15, footerY, { align: 'right' });
       pageNumber++;
     };
@@ -746,7 +768,7 @@ export function AddressSearchForm() {
       const postcodeMatch = result.address.match(/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/i);
       if (postcodeMatch) {
         const postcode = postcodeMatch[0].replace(/\s+/g, '+');
-        const response = await fetch(`https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.2&limit=50`);
+        const response = await fetch(`/api/planning/history?pcode=${postcode}&krad=0.2&limit=50`);
         if (response.ok) {
           const data = await response.json();
           const allApps = data.records || [];
@@ -1291,6 +1313,91 @@ export function AddressSearchForm() {
     }
 
 
+    // Helper to render a planning application card (shared by Property and Nearby sections)
+    const renderPlanningCard = (app: any) => {
+      const reference = app.reference || app.altid || app.uid || 'No Reference';
+      const status = app.status || 'Decided';
+      const decisionDate = app.decided_date || app.start_date || '';
+      const description = app.description || app.name || 'No description available';
+      const appAddress = app.address || '';
+
+      // Fix: Use even narrower wrapping width (pageWidth - 85) to ensure description stays in box
+      const descT = doc.splitTextToSize(description, pageWidth - 85);
+
+      // Fix: Wrap reference to avoid badge overlap (max width ~80)
+      const refLines = doc.splitTextToSize(reference, 80);
+
+      // Card height calculation (base + text wraps + address if present)
+      const addressLines = appAddress ? doc.splitTextToSize(appAddress, pageWidth - 85) : [];
+      const cH = 25 + (descT.length * 4) + (refLines.length > 1 ? (refLines.length - 1) * 4 : 0) + (addressLines.length * 4);
+
+      checkNewPage(cH + 5);
+
+      // Card box
+      doc.setFillColor(...colors.white);
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(15, yPosition - 5, pageWidth - 30, cH, 2, 2, 'FD');
+
+      doc.setTextColor(...colors.info);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+
+      // Fix: Draw wrapped reference
+      const appLink = app.link || app.url || '';
+      refLines.forEach((line: string, i: number) => {
+        if (appLink) {
+          doc.textWithLink(line, 20, yPosition + 2 + (i * 4), { url: appLink });
+        } else {
+          doc.text(line, 20, yPosition + 2 + (i * 4));
+        }
+      });
+
+      // Status Badge
+      const hC = status.toLowerCase().includes('approved') ? colors.success :
+        status.toLowerCase().includes('refused') ? colors.error : colors.warning;
+      doc.setFillColor(...hC);
+      doc.roundedRect(pageWidth - 60, yPosition - 2, 40, 6, 1, 1, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7);
+      doc.text(status.substring(0, 20), pageWidth - 57, yPosition + 2.5);
+
+      yPosition += 8 + (refLines.length > 1 ? (refLines.length - 1) * 4 : 0);
+      doc.setTextColor(...colors.textGray);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+
+      if (decisionDate) {
+        const fD = new Date(decisionDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        doc.text(`Decided: ${fD}`, 20, yPosition + 1);
+        yPosition += 5;
+      }
+
+      doc.text(descT, 20, yPosition + 1);
+      yPosition += (descT.length * 4) + 1;
+
+      // Add address if it's a nearby/property history item where address is relevant
+      if (addressLines.length > 0) {
+        doc.setTextColor(...colors.textGray);
+        doc.setFontSize(7.5);
+        doc.text(addressLines, 20, yPosition + 1);
+        yPosition += (addressLines.length * 4) + 1;
+      }
+
+      // Add "View Application" link if available
+      if (appLink) {
+        yPosition += 1;
+        doc.setTextColor(...colors.primary);
+        doc.setFontSize(7);
+        const label = 'View Application';
+        doc.textWithLink(label, 20, yPosition + 1, { url: appLink });
+        drawLinkIcon(20 + doc.getTextWidth(label) + 2, yPosition + 0.5);
+        yPosition += 14;
+      } else {
+        yPosition += 16;
+      }
+    };
+
     // Planning History Section - Professional Card Style
     if (planningHistory.length > 0) {
       checkNewPage(60);
@@ -1307,78 +1414,7 @@ export function AddressSearchForm() {
       doc.text(`${planningHistory.length} application(s) found at this address:`, 15, yPosition);
       yPosition += 12;
 
-      planningHistory.forEach((app: any, index: number) => {
-        const reference = app.reference || app.altid || app.uid || 'No Reference';
-        const status = app.status || 'Decided';
-        const decisionDate = app.decided_date || app.start_date || '';
-        const description = app.description || app.name || 'No description available';
-
-        // Fix: Use even narrower wrapping width (pageWidth - 85) to ensure description stays in box
-        const descT = doc.splitTextToSize(description, pageWidth - 85);
-
-        // Fix: Wrap reference to avoid badge overlap (max width ~80)
-        const refLines = doc.splitTextToSize(reference, 80);
-
-        const cH = 25 + (descT.length * 4) + (refLines.length > 1 ? (refLines.length - 1) * 4 : 0);
-
-        checkNewPage(cH + 5);
-
-        // Card box
-        doc.setFillColor(...colors.white);
-        doc.setDrawColor(...colors.border);
-        doc.setLineWidth(0.3);
-        doc.roundedRect(15, yPosition - 5, pageWidth - 30, cH, 2, 2, 'FD');
-
-        doc.setTextColor(...colors.info);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-
-        // Fix: Draw wrapped reference
-        const appLink = app.link || app.url || '';
-        refLines.forEach((line: string, i: number) => {
-          if (appLink) {
-            doc.textWithLink(line, 20, yPosition + 2 + (i * 4), { url: appLink });
-          } else {
-            doc.text(line, 20, yPosition + 2 + (i * 4));
-          }
-        });
-
-        // Status Badge
-        const hC = status.toLowerCase().includes('approved') ? colors.success :
-          status.toLowerCase().includes('refused') ? colors.error : colors.warning;
-        doc.setFillColor(...hC);
-        doc.roundedRect(pageWidth - 60, yPosition - 2, 40, 6, 1, 1, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(7);
-        doc.text(status.substring(0, 20), pageWidth - 57, yPosition + 2.5);
-
-        yPosition += 8 + (refLines.length > 1 ? (refLines.length - 1) * 4 : 0);
-        doc.setTextColor(...colors.textGray);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-
-        if (decisionDate) {
-          const fD = new Date(decisionDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-          doc.text(`Decided: ${fD}`, 20, yPosition + 1);
-          yPosition += 5;
-        }
-
-        doc.text(descT, 20, yPosition + 1);
-
-        // Add "View Application" link if available
-        if (appLink) {
-          yPosition += (descT.length * 4) + 2;
-          doc.setTextColor(...colors.primary);
-          doc.setFontSize(7);
-          const label = 'View Application';
-          doc.textWithLink(label, 20, yPosition + 1, { url: appLink });
-          drawLinkIcon(20 + doc.getTextWidth(label) + 2, yPosition + 0.5);
-          yPosition += 14;
-        } else {
-          yPosition += (descT.length * 4) + 16;
-        }
-      });
-
+      planningHistory.forEach((app: any) => renderPlanningCard(app));
     } else {
       checkNewPage(40);
       doc.setTextColor(...colors.textDark);
@@ -1407,92 +1443,10 @@ export function AddressSearchForm() {
       yPosition += 6;
       doc.setTextColor(...colors.textGray);
       doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
       doc.text('Contextual activity within 0.2km:', 15, yPosition);
       yPosition += 12;
 
-      nearbyHistory.slice(0, 15).forEach((app: any, index: number) => {
-        const reference = app.reference || app.altid || app.uid || 'No Reference';
-        const status = app.status || 'Decided';
-        const decisionDate = app.decided_date || app.start_date || '';
-        const description = app.description || app.name || 'No description available';
-        const appAddress = app.address || 'Nearby Location';
-
-        // Wrap address separately as it's a key part of nearby info
-        const addrLines = doc.splitTextToSize(appAddress, pageWidth - 85);
-        const descT = doc.splitTextToSize(description, pageWidth - 85);
-        const refLines = doc.splitTextToSize(reference, 80);
-
-        const cH = 28 + (addrLines.length * 4) + (descT.length * 4) + (refLines.length > 1 ? (refLines.length - 1) * 4 : 0);
-
-        checkNewPage(cH + 5);
-
-        // Card box
-        doc.setFillColor(...colors.white);
-        doc.setDrawColor(...colors.border);
-        doc.setLineWidth(0.3);
-        doc.roundedRect(15, yPosition - 5, pageWidth - 30, cH, 2, 2, 'FD');
-
-        doc.setTextColor(...colors.info);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-
-        // Draw wrapped reference
-        const appLink = app.link || app.url || '';
-        refLines.forEach((line: string, i: number) => {
-          if (appLink) {
-            doc.textWithLink(line, 20, yPosition + 2 + (i * 4), { url: appLink });
-          } else {
-            doc.text(line, 20, yPosition + 2 + (i * 4));
-          }
-        });
-
-        // Status Badge
-        const hC = status.toLowerCase().includes('approved') ? colors.success :
-          status.toLowerCase().includes('refused') ? colors.error : colors.warning;
-        doc.setFillColor(...hC);
-        doc.roundedRect(pageWidth - 60, yPosition - 2, 40, 6, 1, 1, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(7);
-        doc.text(status.substring(0, 20), pageWidth - 57, yPosition + 2.5);
-
-        yPosition += 8 + (refLines.length > 1 ? (refLines.length - 1) * 4 : 0);
-        doc.setTextColor(...colors.textGray);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-
-        if (decisionDate) {
-          const fD = new Date(decisionDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-          doc.text(`Decided: ${fD}`, 20, yPosition + 1);
-          yPosition += 5;
-        }
-
-        // Nearby address (emphasized)
-        doc.setTextColor(...colors.textDark);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.text(addrLines, 20, yPosition + 1);
-        yPosition += (addrLines.length * 4);
-
-        // Description
-        doc.setTextColor(...colors.textGray);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.text(descT, 20, yPosition + 1);
-
-        // Add "View Application" link if available
-        if (appLink) {
-          yPosition += (descT.length * 4) + 2;
-          doc.setTextColor(...colors.primary);
-          doc.setFontSize(7);
-          const label = 'View Application';
-          doc.textWithLink(label, 20, yPosition + 1, { url: appLink });
-          drawLinkIcon(20 + doc.getTextWidth(label) + 2, yPosition + 0.5);
-          yPosition += 14;
-        } else {
-          yPosition += (descT.length * 4) + 16;
-        }
-      });
+      nearbyHistory.slice(0, 10).forEach((app: any) => renderPlanningCard(app));
       yPosition += 5;
     }
 

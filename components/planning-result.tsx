@@ -105,15 +105,16 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
         return
       }
 
-      // Build URL helper
+      // Build URL helper (using our new server-side proxy to avoid CORS issues)
       const getApiUrl = (radius: number) => {
+        const params = new URLSearchParams({ krad: radius.toString(), limit: '100' })
         if (postcodeMatch) {
-          const postcode = postcodeMatch[0].replace(/\s+/g, '+')
-          return `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=${radius}&limit=100`
-        } else {
-          const { lat, lng } = result.coordinates!
-          return `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=${radius}&limit=100`
+          params.append('pcode', postcodeMatch[0].replace(/\s+/g, '+'))
+        } else if (result.coordinates) {
+          params.append('lat', result.coordinates.lat.toString())
+          params.append('lng', result.coordinates.lng.toString())
         }
+        return `/api/planning/history?${params.toString()}`
       }
 
       const response = await fetch(getApiUrl(0.2))
