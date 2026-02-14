@@ -1095,11 +1095,15 @@ export function AddressSearchForm() {
     doc.text('Property Details & Location', 15, yPosition);
     yPosition += 10;
 
-    // 1. Property Details Card (Revamped to match UI Card style)
+    // Property Details Card (styled to match frontend Property Details two-column layout)
+    const lastSoldPrice = String(propertySummary?.lastSoldPrice || 'Market Estimate Unavailable');
+    const lastSoldDate = String(propertySummary?.lastSoldDate || 'No recent transaction info');
+    const propCardHeight = 65;
+    checkNewPage(propCardHeight + 10);
     doc.setFillColor(...colors.white);
     doc.setDrawColor(...colors.border);
     doc.setLineWidth(0.3);
-    doc.roundedRect(15, yPosition, pageWidth - 30, 52, 2, 2, 'FD');
+    doc.roundedRect(15, yPosition, pageWidth - 30, propCardHeight, 2, 2, 'FD');
 
     // Card Header Area
     doc.setFillColor(249, 250, 251); // Very light gray background for header
@@ -1110,34 +1114,64 @@ export function AddressSearchForm() {
     doc.setTextColor(...colors.textDark);
     doc.text('Property Details', 22, yPosition + 8);
 
+    const halfW = (pageWidth - 30) / 2;
     let detailY = yPosition + 22;
+
+    // Helper to draw detail labels/values
     const drawDetail = (label: string, value: any, x: number, y: number) => {
       doc.setFontSize(7.5);
       doc.setTextColor(...colors.textGray);
       doc.setFont('helvetica', 'bold');
       doc.text(label.toUpperCase(), x, y);
 
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.setTextColor(...colors.textDark);
       doc.setFont('helvetica', 'normal');
       doc.text(String(value || 'N/A'), x, y + 5);
     };
 
-    const halfW = (pageWidth - 30) / 2;
-    const firstLineAddress = result.address.split(',')[0].trim();
-    const wrappedAddress = doc.splitTextToSize(firstLineAddress, halfW - 20);
-
+    // Column 1: Core Details
     drawDetail('Property Type', propertySummary?.propertyType || (propertyType === 'flat' ? 'Apartment / Flat' : 'Residential House'), 25, detailY);
-    drawDetail('Tenure', propertySummary?.tenure || 'Information Unavailable', 25 + halfW, detailY);
+    drawDetail('Tenure', propertySummary?.tenure || 'Information Unavailable', 25 + (halfW / 2), detailY);
 
     detailY += 18;
     const bedroomsLabel = isNaN(Number(propertySummary?.bedrooms)) ? (propertySummary?.bedrooms || 'Contact Local Authority') : `${propertySummary?.bedrooms} Bedrooms`;
     const bathroomsLabel = isNaN(Number(propertySummary?.bathrooms)) ? (propertySummary?.bathrooms || 'Contact Local Authority') : `${propertySummary?.bathrooms} Bathrooms`;
 
     drawDetail('Bedrooms', bedroomsLabel, 25, detailY);
-    drawDetail('Bathrooms', bathroomsLabel, 25 + halfW, detailY);
+    drawDetail('Bathrooms', bathroomsLabel, 25 + (halfW / 2), detailY);
 
-    yPosition += 62;
+    // Vertical Separator
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.2);
+    doc.line(15 + halfW, yPosition + 15, 15 + halfW, yPosition + propCardHeight - 5);
+
+    // Column 2: Last Sold Transaction
+    const col2X = 25 + halfW;
+    let col2Y = yPosition + 22;
+
+    doc.setFontSize(7.5);
+    doc.setTextColor(...colors.textGray);
+    doc.setFont('helvetica', 'bold');
+    doc.text('LAST SOLD TRANSACTION', col2X, col2Y);
+
+    doc.setFontSize(14);
+    doc.setTextColor(...colors.textDark);
+    doc.setFont('helvetica', 'bold');
+    doc.text(lastSoldPrice, col2X, col2Y + 8);
+
+    doc.setFontSize(8);
+    doc.setTextColor(...colors.textGray);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Sold on ${lastSoldDate}`, col2X, col2Y + 14);
+
+    doc.setFontSize(6.5);
+    doc.setTextColor(...colors.textGray);
+    const sourceNote = 'Data sourced from HM Land Registry Price Paid Data and Energy Performance Certificate (EPC) Open Data.';
+    const sourceLines = doc.splitTextToSize(sourceNote, halfW - 20);
+    doc.text(sourceLines, col2X, col2Y + 22);
+
+    yPosition += propCardHeight + 10;
 
 
     // Flat-Specific Notice (Moved to Property Details page)
@@ -1406,39 +1440,7 @@ export function AddressSearchForm() {
       yPosition += 5;
     }
 
-    // --- RELOCATED: Property Analysis & Summary Section ---
-    if (propertySummary) {
-      checkNewPage(60);
-      const pdRightsApply = (result as any).score >= 5;
 
-      doc.setFillColor(248, 250, 252);
-      doc.roundedRect(15, yPosition, pageWidth - 30, 35, 2, 2, 'F');
-
-      let summaryX = 20;
-      doc.setFontSize(9);
-      doc.setTextColor(...colors.primary);
-      doc.setFont('helvetica', 'bold');
-      doc.text('PROPERTY ANALYSIS & SUMMARY', summaryX, yPosition + 7);
-
-      doc.setFontSize(8);
-      doc.setTextColor(...colors.textDark);
-      doc.setFont('helvetica', 'normal');
-
-      const bedroomsVal = isNaN(Number(propertySummary.bedrooms)) ? propertySummary.bedrooms : `${propertySummary.bedrooms} Bedrooms`;
-      const bathroomsVal = isNaN(Number(propertySummary.bathrooms)) ? propertySummary.bathrooms : `${propertySummary.bathrooms} Bathrooms`;
-      const summaryLine1 = `${propertySummary.propertyType} • ${bedroomsVal} • ${bathroomsVal} • ${propertySummary.tenure}`;
-      doc.text(summaryLine1, summaryX, yPosition + 15);
-
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Last Sold Transaction: ${propertySummary.lastSoldPrice} on ${propertySummary.lastSoldDate}`, summaryX, yPosition + 23);
-
-      doc.setFontSize(7.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colors.textGray);
-      doc.text('Data sourced from HMLR Transaction History and EPC Open Data Records.', summaryX, yPosition + 30);
-
-      yPosition += 45;
-    }
 
     // Summary Section
     checkNewPage(60);
