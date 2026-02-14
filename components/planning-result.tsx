@@ -5,7 +5,7 @@ import { CheckCircle, XCircle, AlertTriangle, MapPin, History, ExternalLink, Che
 import { LegalDisclaimer } from "@/components/legal-disclaimer"
 import { ConfidenceIndicator } from "@/components/confidence-indicator"
 import { useState, useEffect, useRef } from "react"
-import type { PropertySummary as PropertySummaryType } from "@/lib/property-api"
+import { PropertySummary as PropertySummaryType } from "@/lib/property-api"
 
 export interface PlanningCheck {
   type: string
@@ -48,10 +48,12 @@ interface PlanningResultProps {
 }
 
 export function PlanningResult({ result, propertyType, propertySummary }: PlanningResultProps) {
-  const [planningApplications, setPlanningApplications] = useState<PlanningApplication[]>([])
+  const [propertyApps, setPropertyApps] = useState<PlanningApplication[]>([])
+  const [surroundingApps, setSurroundingApps] = useState<PlanningApplication[]>([])
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
   const [applicationsError, setApplicationsError] = useState<string | null>(null)
-  const [showPlanningHistory, setShowPlanningHistory] = useState(true)
+  const [showPropertyHistory, setShowPropertyHistory] = useState(true)
+  const [showSurroundingHistory, setShowSurroundingHistory] = useState(true)
   const prevAddressRef = useRef<string>("")
 
   const getStatusIcon = (hasRights: boolean) => {
@@ -77,17 +79,18 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
     const addressChanged = prevAddressRef.current !== result.address
 
     if (addressChanged) {
-      setPlanningApplications([])
+      setPropertyApps([])
+      setSurroundingApps([])
       setApplicationsError(null)
       prevAddressRef.current = result.address
 
-      if (showPlanningHistory && !isLoadingApplications) {
+      if (!isLoadingApplications) {
         fetchPlanningApplications()
       }
-    } else if (showPlanningHistory && planningApplications.length === 0 && !isLoadingApplications && !applicationsError) {
+    } else if (propertyApps.length === 0 && surroundingApps.length === 0 && !isLoadingApplications && !applicationsError) {
       fetchPlanningApplications()
     }
-  }, [showPlanningHistory, result.address])
+  }, [result.address])
 
   const fetchPlanningApplications = async () => {
     setIsLoadingApplications(true)
@@ -102,22 +105,24 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
         return
       }
 
-      let appsUrl: string
-      if (postcodeMatch) {
-        const postcode = postcodeMatch[0].replace(/\s+/g, '+')
-        appsUrl = `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=0.2&limit=100`
-      } else {
-        const { lat, lng } = result.coordinates!
-        appsUrl = `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=0.2&limit=100`
+      // Build URL helper
+      const getApiUrl = (radius: number) => {
+        if (postcodeMatch) {
+          const postcode = postcodeMatch[0].replace(/\s+/g, '+')
+          return `https://www.planit.org.uk/api/applics/json?pcode=${postcode}&krad=${radius}&limit=100`
+        } else {
+          const { lat, lng } = result.coordinates!
+          return `https://www.planit.org.uk/api/applics/json?lat=${lat}&lng=${lng}&krad=${radius}&limit=100`
+        }
       }
 
-      const response = await fetch(appsUrl)
+      const response = await fetch(getApiUrl(0.2))
       if (!response.ok) throw new Error('Failed to fetch planning applications')
 
       const data = await response.json()
       const allApplications = data.records || data || []
 
-      const mapApp = (app: any) => ({
+      const mapApp = (app: any): PlanningApplication => ({
         entity: app.uid || app.id,
         reference: app.reference || app.altid || app.uid || '',
         description: app.description || app.name || 'No description available',
@@ -129,22 +134,40 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
         url: app.link || app.url || (app.uid ? `https://www.planit.org.uk/planapplic/${app.uid}` : '')
       })
 
+      // Address filtering - match property-specific applications
+      const addressParts = result.address.split(',')[0].trim()
+      const streetMatch = addressParts.match(/^(\d+[a-zA-Z]?)\s+(.+)$/i)
+      const streetNumber = streetMatch ? streetMatch[1].toLowerCase() : ''
+      const streetName = streetMatch ? streetMatch[2].toLowerCase() : ''
+
+      const filterSpecific = (app: any): boolean => {
+        const appAddress = (app.address || '').toLowerCase()
+        const hasStreetNumber = streetNumber ? appAddress.includes(streetNumber) : false
+        const hasStreetName = streetName ? appAddress.includes(streetName.substring(0, Math.min(streetName.length, 10))) : false
+        return hasStreetNumber && hasStreetName
+      }
+
       if (allApplications && allApplications.length > 0) {
-        const mappedApps: PlanningApplication[] = allApplications
-          .sort((a: any, b: any) => {
-            const dateA = new Date(a.decided_date || a.start_date || a.last_changed || '1970-01-01')
-            const dateB = new Date(b.decided_date || b.start_date || b.last_changed || '1970-01-01')
-            return dateB.getTime() - dateA.getTime()
-          })
-          .map(mapApp)
+        const sortApps = (a: any, b: any) => {
+          const dateA = new Date(a.decided_date || a.start_date || a.last_changed || a['decision-date'] || '1970-01-01')
+          const dateB = new Date(b.decided_date || b.start_date || b.last_changed || b['decision-date'] || '1970-01-01')
+          return dateB.getTime() - dateA.getTime()
+        }
+
+        // Split into property-specific and surrounding
+        const specificRaw = allApplications.filter(filterSpecific)
+        const surroundingRaw = allApplications.filter((app: any) => !filterSpecific(app))
+
+        const specificMapped: PlanningApplication[] = specificRaw.sort(sortApps).map(mapApp)
+        const surroundingMapped: PlanningApplication[] = surroundingRaw.sort(sortApps).map(mapApp)
 
         // SPECIAL CASE: Hardcode missing planning permission for 35 Camden Road RM16 6PY
         if (result.address.toLowerCase().includes("35 camden road") && result.address.toLowerCase().includes("rm16")) {
           const missingRef = "00/00770/FUL"
-          const alreadyExists = mappedApps.some(app => app.reference === missingRef)
+          const alreadyExists = specificMapped.some((app: PlanningApplication) => app.reference === missingRef)
 
           if (!alreadyExists) {
-            mappedApps.push({
+            specificMapped.push({
               entity: 770001,
               reference: missingRef,
               description: "Conservatory to rear of garage",
@@ -156,7 +179,7 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
               url: "https://regs.thurrock.gov.uk/online-applications/applicationDetails.do?activeTab=summary&keyVal=0000770FUL"
             })
 
-            mappedApps.sort((a, b) => {
+            specificMapped.sort((a: PlanningApplication, b: PlanningApplication) => {
               const dateA = new Date(a['decision-date'] || '1970-01-01')
               const dateB = new Date(b['decision-date'] || '1970-01-01')
               return dateB.getTime() - dateA.getTime()
@@ -164,7 +187,8 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
           }
         }
 
-        setPlanningApplications(mappedApps)
+        setPropertyApps(specificMapped)
+        setSurroundingApps(surroundingMapped)
       } else {
         setApplicationsError('No planning applications found for this postcode or surrounding area.')
       }
@@ -318,32 +342,33 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
         </CardContent>
       </Card>
 
+      {/* Property Planning History Card */}
       <Card>
         <CardHeader>
-          <button onClick={() => setShowPlanningHistory(!showPlanningHistory)} className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
+          <button onClick={() => setShowPropertyHistory(!showPropertyHistory)} className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
             <div className="flex items-center gap-2">
               <History className="w-5 h-5 text-[#1E7A6F]" />
-              <CardTitle className="text-lg">Planning History - Applications Near This Address</CardTitle>
+              <CardTitle className="text-lg">Property Planning History</CardTitle>
             </div>
-            {showPlanningHistory ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+            {showPropertyHistory ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
           </button>
         </CardHeader>
 
-        {showPlanningHistory && (
+        {showPropertyHistory && (
           <CardContent>
             {isLoadingApplications ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-[#1E7A6F] mr-2" />
-                <span className="text-sm text-muted-foreground">Loading planning applications...</span>
+                <span className="text-sm text-muted-foreground">Loading property planning history...</span>
               </div>
             ) : applicationsError ? (
               <div className="text-center py-6">
                 <p className="text-sm text-muted-foreground">{applicationsError}</p>
               </div>
-            ) : planningApplications.length > 0 ? (
+            ) : propertyApps.length > 0 ? (
               <div className="space-y-4">
-                {planningApplications.map((app, index) => (
-                  <div key={`${app.reference}-${index}`} className="p-4 border border-border rounded-lg bg-white shadow-sm">
+                {propertyApps.map((app, index) => (
+                  <div key={`prop-${app.reference}-${index}`} className="p-4 border border-border rounded-lg bg-white shadow-sm">
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -371,7 +396,7 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
               </div>
             ) : (
               <div className="text-center py-8 px-4 border border-dashed border-border rounded-lg">
-                <p className="text-sm text-muted-foreground mb-4">No planning applications were automatically found for this address.</p>
+                <p className="text-sm text-muted-foreground mb-4">No planning applications were found for this specific property address.</p>
                 <div className="space-y-4">
                   <div className="p-3 bg-muted/50 rounded-md text-xs text-muted-foreground">
                     <p className="font-semibold mb-1">Why am I seeing this?</p>
@@ -382,6 +407,63 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
                     Search Official Thurrock Portal
                   </a>
                 </div>
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Planning Surrounding History Card */}
+      <Card>
+        <CardHeader>
+          <button onClick={() => setShowSurroundingHistory(!showSurroundingHistory)} className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-[#1E7A6F]" />
+              <CardTitle className="text-lg">Planning Surrounding History</CardTitle>
+            </div>
+            {showSurroundingHistory ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+          </button>
+        </CardHeader>
+
+        {showSurroundingHistory && (
+          <CardContent>
+            {isLoadingApplications ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-[#1E7A6F] mr-2" />
+                <span className="text-sm text-muted-foreground">Loading surrounding planning history...</span>
+              </div>
+            ) : surroundingApps.length > 0 ? (
+              <div className="space-y-4">
+                {surroundingApps.map((app, index) => (
+                  <div key={`surr-${app.reference}-${index}`} className="p-4 border border-border rounded-lg bg-white shadow-sm">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {app.reference && <Badge variant="secondary" className="text-xs font-mono">{app.reference}</Badge>}
+                          {app.status && (
+                            <Badge variant="outline" className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted') ? 'bg-green-50 border-green-300 text-green-800' : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected') ? 'bg-red-50 border-red-300 text-red-800' : 'bg-yellow-50 border-yellow-300 text-yellow-800'}`}>
+                              {app.status}
+                            </Badge>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {app['decision-date'] ? `Decided: ${formatDate(app['decision-date'])}` : `Submitted: ${formatDate(app['entry-date'])}`}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground mb-1">{app.description || 'No description available'}</p>
+                        {app.address && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" /> {app.address}</p>}
+                        {app.url && (
+                          <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:text-blue-800 underline mt-2 inline-block">
+                            View history details
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-sm text-muted-foreground">No surrounding planning applications found within the search area.</p>
               </div>
             )}
           </CardContent>

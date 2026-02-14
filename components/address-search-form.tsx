@@ -10,9 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, MapPin, Check, X, AlertCircle, ChevronRight, Home, Building, FileText, HelpCircle, Download, ChevronDown, ChevronUp } from "lucide-react"
 import { type PlanningResult, PlanningResult as PlanningResultComponent, type PlanningCheck } from "@/components/planning-result"
 import { PropertySummary } from "@/components/property-summary"
-import PaymentModal from "@/components/payment-modal"
-import { fetchPropertySummary } from "@/lib/property-api"
-import type { PropertySummary as PropertySummaryType } from "@/lib/property-api"
+import { fetchPropertySummary, type PropertySummary as PropertySummaryType } from "@/lib/property-api"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
@@ -89,8 +87,6 @@ export function AddressSearchForm() {
   const [propertyType, setPropertyType] = useState<string>("")
   const [propertySummary, setPropertySummary] = useState<PropertySummaryType | null>(null)
   const [includeLandRegistry, setIncludeLandRegistry] = useState(false)
-  const [hasPaidLandRegistry, setHasPaidLandRegistry] = useState(false)
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -1517,13 +1513,13 @@ export function AddressSearchForm() {
 
     addFooter();
 
-    // --- Land Registry Official PDF Attachment ---
-    if (includeLandRegistry && (hasPaidLandRegistry || process.env.NODE_ENV === 'development')) {
+    // --- NEW: Land Registry Official PDF Attachment ---
+    if (includeLandRegistry) {
       checkNewPage(200);
       doc.addPage();
       pageNumber++;
 
-      doc.setFillColor(30, 122, 111); // #1E7A6F
+      doc.setFillColor(...colors.primary);
       doc.rect(0, 0, pageWidth, 40, 'F');
 
       doc.setTextColor(255, 255, 255);
@@ -1531,47 +1527,28 @@ export function AddressSearchForm() {
       doc.setFont('helvetica', 'bold');
       doc.text('OFFICIAL LAND REGISTRY DOCUMENT', pageWidth / 2, 25, { align: 'center' });
 
-      doc.setTextColor(50, 50, 50);
+      doc.setTextColor(...colors.textDark);
       doc.setFontSize(12);
       doc.text('This is an official copy of the Title Register for:', 15, 60);
       doc.setFontSize(14);
       doc.text(result.address, 15, 70);
 
-      const titleNum = (propertySummary as any)?.titleNumber || "Pending Retrieval";
-      doc.setFontSize(11);
-      doc.text(`Title Number: ${titleNum}`, 15, 80);
-
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 100, 100);
-      const lrNotice = "This document confirms the ownership and legal status of the property as registered with HM Land Registry. The Title Number uniquely identifies the property and its boundary.";
+      doc.setTextColor(...colors.textGray);
+      const lrNotice = "In a live environment, the actual Land Registry Official PDF would be retrieved via HM Land Registry Business Gateway and appended here. The original formatting of the official document is maintained as per regulatory requirements.";
       const lrNoticeLines = doc.splitTextToSize(lrNotice, pageWidth - 30);
-      doc.text(lrNoticeLines, 15, 95);
+      doc.text(lrNoticeLines, 15, 90);
 
-      // Simulated Image/Scan of the document
-      doc.setDrawColor(200, 200, 200);
+      // Mock attachment placeholder
+      doc.setDrawColor(...colors.border);
       doc.setLineDashPattern([2, 2], 0);
-      doc.rect(15, 110, pageWidth - 30, 140);
-
-      doc.setTextColor(150, 150, 150);
-      doc.setFontSize(16);
-      doc.text('OFFICIAL REGISTER DOCUMENT ATTACHED', pageWidth / 2, 180, { align: 'center' });
-      doc.setFontSize(10);
-      doc.text('(Original Register Template - Unedited)', pageWidth / 2, 190, { align: 'center' });
+      doc.rect(15, 110, pageWidth - 30, 100);
+      doc.text('OFFICIAL DOCUMENT ATTACHED BELOW', pageWidth / 2, 160, { align: 'center' });
       doc.setLineDashPattern([], 0);
-
-      addFooter();
     }
 
     doc.save(`PDRightCheck-Report-${result.address.split(',')[0].replace(/\s+/g, '-')}.pdf`);
-  }
-
-  const onDownloadClick = () => {
-    if (includeLandRegistry && !hasPaidLandRegistry) {
-      setIsPaymentModalOpen(true);
-    } else {
-      handleDownloadReport();
-    }
   }
 
   if (result) {
@@ -1580,7 +1557,7 @@ export function AddressSearchForm() {
       <div className="space-y-6">
         <PlanningResultComponent result={result} propertyType={propertyType} propertySummary={propertySummary} />
         <div className="text-center space-y-4">
-          <Button onClick={onDownloadClick} className="px-8 bg-[#1E7A6F] hover:bg-[#19685f] text-white">
+          <Button onClick={handleDownloadReport} className="px-8 bg-[#1E7A6F] hover:bg-[#19685f] text-white">
             <Download className="w-4 h-4 mr-2" />
             Download PDF Report
           </Button>
@@ -1590,17 +1567,6 @@ export function AddressSearchForm() {
             </Button>
           </div>
         </div>
-
-        <PaymentModal
-          isOpen={isPaymentModalOpen}
-          onClose={() => setIsPaymentModalOpen(false)}
-          onSuccess={() => {
-            setHasPaidLandRegistry(true);
-            setTimeout(() => handleDownloadReport(), 500);
-          }}
-          amount={7.00}
-          address={result.address}
-        />
       </div>
     )
   }
