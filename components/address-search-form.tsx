@@ -1339,9 +1339,9 @@ export function AddressSearchForm() {
           const label = 'View Application';
           doc.textWithLink(label, 20, yPosition + 1, { url: appLink });
           drawLinkIcon(20 + doc.getTextWidth(label) + 2, yPosition + 0.5);
-          yPosition += 8;
+          yPosition += 14;
         } else {
-          yPosition += (descT.length * 4) + 10;
+          yPosition += (descT.length * 4) + 16;
         }
       });
 
@@ -1482,18 +1482,18 @@ export function AddressSearchForm() {
       'Local authority records may be incomplete, amended, subject to interpretation, inconsistently digitised, or updated after the date of assessment. Certain restrictions may not be apparent from publicly accessible sources alone, including (but not limited to) Article 4 Directions, historic planning conditions, reserved matters, or the removal of permitted development rights at the time of original construction or subsequent development. This is particularly relevant for properties constructed or materially altered after 1 January 2000.',
       '',
       'The information provided by PDRightCheck:',
-      'â€¢ does not constitute legal advice',
-      'â€¢ does not constitute planning advice',
-      'â€¢ does not constitute planning permission',
-      'â€¢ does not constitute a formal or binding determination of permitted development rights',
+      '\u2022 does not constitute legal advice',
+      '\u2022 does not constitute planning advice',
+      '\u2022 does not constitute planning permission',
+      '\u2022 does not constitute a formal or binding determination of permitted development rights',
       '',
       'PDRightCheck does not guarantee that permitted development rights exist or will be accepted by the Local Planning Authority, and no reliance should be placed on the report as a substitute for statutory confirmation.',
       '',
       'Users remain fully responsible for:',
-      'â€¢ ensuring the accuracy of the information submitted',
-      'â€¢ verifying planning status with the relevant Local Planning Authority',
-      'â€¢ obtaining written pre-application advice where appropriate',
-      'â€¢ securing a Lawful Development Certificate or other formal confirmation prior to commencing any development',
+      '\u2022 ensuring the accuracy of the information submitted',
+      '\u2022 verifying planning status with the relevant Local Planning Authority',
+      '\u2022 obtaining written pre-application advice where appropriate',
+      '\u2022 securing a Lawful Development Certificate or other formal confirmation prior to commencing any development',
       '',
       'To the fullest extent permitted by law, PDRightCheck accepts no liability for loss, delay, cost, or consequence arising from reliance on the information provided, whether arising from errors or omissions in user-supplied information, changes to planning policy, interpretation of records, or undisclosed site-specific restrictions.',
       '',
