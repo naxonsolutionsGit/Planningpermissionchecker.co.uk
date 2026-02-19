@@ -768,7 +768,7 @@ export function AddressSearchForm() {
       const postcodeMatch = result.address.match(/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/i);
       if (postcodeMatch) {
         const postcode = postcodeMatch[0].replace(/\s+/g, '+');
-        const response = await fetch(`/api/planning/history?pcode=${postcode}&krad=0.2&limit=50`);
+        const response = await fetch(`/api/planning/history?pcode=${postcode}&krad=0.2&limit=10`);
         if (response.ok) {
           const data = await response.json();
           const allApps = data.records || [];
@@ -797,7 +797,7 @@ export function AddressSearchForm() {
           };
 
           planningHistory = specificApps.sort(sortApps);
-          nearbyHistory = nearbyApps.sort(sortApps).slice(0, 15);
+          nearbyHistory = nearbyApps.sort(sortApps).slice(0, 10);
 
           if (result.address.toLowerCase().includes("35 camden road") && result.address.toLowerCase().includes("rm16")) {
             const missingRef = "00/00770/FUL";

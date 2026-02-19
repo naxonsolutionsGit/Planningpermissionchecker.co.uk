@@ -107,7 +107,7 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
 
       // Build URL helper (using our new server-side proxy to avoid CORS issues)
       const getApiUrl = (radius: number) => {
-        const params = new URLSearchParams({ krad: radius.toString(), limit: '100' })
+        const params = new URLSearchParams({ krad: radius.toString(), limit: '10' })
         if (postcodeMatch) {
           params.append('pcode', postcodeMatch[0].replace(/\s+/g, '+'))
         } else if (result.coordinates) {
@@ -160,7 +160,7 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
         const surroundingRaw = allApplications.filter((app: any) => !filterSpecific(app))
 
         const specificMapped: PlanningApplication[] = specificRaw.sort(sortApps).map(mapApp)
-        const surroundingMapped: PlanningApplication[] = surroundingRaw.sort(sortApps).map(mapApp)
+        const surroundingMapped: PlanningApplication[] = surroundingRaw.sort(sortApps).map(mapApp).slice(0, 10)
 
         // SPECIAL CASE: Hardcode missing planning permission for 35 Camden Road RM16 6PY
         if (result.address.toLowerCase().includes("35 camden road") && result.address.toLowerCase().includes("rm16")) {
