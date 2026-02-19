@@ -43,11 +43,10 @@ interface PlanningApplication {
 
 interface PlanningResultProps {
   result: PlanningResult
-  propertyType?: string
   propertySummary?: PropertySummaryType | null
 }
 
-export function PlanningResult({ result, propertyType, propertySummary }: PlanningResultProps) {
+export function PlanningResult({ result, propertySummary }: PlanningResultProps) {
   const [propertyApps, setPropertyApps] = useState<PlanningApplication[]>([])
   const [surroundingApps, setSurroundingApps] = useState<PlanningApplication[]>([])
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
@@ -324,21 +323,24 @@ export function PlanningResult({ result, propertyType, propertySummary }: Planni
                 </div>
               </div>
             ))}
-            {propertyType === "flat" && (
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-foreground">Important Information About Flats</span>
-                    <Badge variant="secondary" className="text-xs">Info</Badge>
+            {(propertySummary?.propertyType?.toLowerCase().includes("flat") ||
+              propertySummary?.propertyType?.toLowerCase().includes("apartment") ||
+              result.address.toLowerCase().includes("flat") ||
+              result.address.toLowerCase().includes("apartment")) && (
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-foreground">Important Information About Flats</span>
+                      <Badge variant="secondary" className="text-xs">Info</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
+                      You can still search to view planning history for this address.
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
-                    You can still search to view planning history for this address.
-                  </p>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </CardContent>
       </Card>

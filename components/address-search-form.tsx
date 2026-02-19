@@ -84,7 +84,6 @@ export function AddressSearchForm() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
-  const [propertyType, setPropertyType] = useState<string>("")
   const [propertySummary, setPropertySummary] = useState<PropertySummaryType | null>(null)
   const [includeLandRegistry, setIncludeLandRegistry] = useState(false)
   const suggestionsRef = useRef<HTMLDivElement>(null)
@@ -732,6 +731,11 @@ export function AddressSearchForm() {
       if (yPosition + req > pageHeight - 20) { addFooter(); doc.addPage(); yPosition = 20; }
     };
 
+    const isFlat = propertySummary?.propertyType?.toLowerCase().includes('flat') ||
+      propertySummary?.propertyType?.toLowerCase().includes('apartment') ||
+      address.toLowerCase().includes('flat') ||
+      address.toLowerCase().includes('apartment');
+
     const drawArc = (x: number, y: number, r: number, s: number, e: number) => {
       const step = 0.05;
       for (let t = s; t < e; t += step) {
@@ -1153,7 +1157,7 @@ export function AddressSearchForm() {
     };
 
     // Column 1: Core Details
-    drawDetail('Property Type', propertySummary?.propertyType || (propertyType === 'flat' ? 'Apartment / Flat' : 'Residential House'), 25, detailY);
+    drawDetail('Property Type', propertySummary?.propertyType || (isFlat ? 'Apartment / Flat' : 'Residential House'), 25, detailY);
     drawDetail('Tenure', propertySummary?.tenure || 'Information Unavailable', 25 + (halfW / 2), detailY);
 
     detailY += 18;
@@ -1197,7 +1201,7 @@ export function AddressSearchForm() {
 
 
     // Flat-Specific Notice (Moved to Property Details page)
-    if (propertyType === 'flat') {
+    if (isFlat) {
       checkNewPage(40);
       doc.setFillColor(...colors.lightBlue);
       doc.roundedRect(15, yPosition - 5, pageWidth - 30, 28, 2, 2, 'F');
@@ -1248,7 +1252,7 @@ export function AddressSearchForm() {
     yPosition += 12;
 
     // Detailed Checks Section - Exact carVertical style with icons
-    if (propertyType !== 'flat') {
+    if (!isFlat) {
       checkNewPage(50);
       doc.setTextColor(...colors.textDark);
       doc.setFontSize(14);
@@ -1461,7 +1465,7 @@ export function AddressSearchForm() {
     yPosition += 8;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    const summText = propertyType === 'flat' ? 'Flat identified. PD rights generally exempt.' : result.summary;
+    const summText = isFlat ? 'Flat identified. PD rights generally exempt.' : result.summary;
     const summLines = doc.splitTextToSize(summText, pageWidth - 30);
     doc.text(summLines, 15, yPosition);
     yPosition += summLines.length * 5 + 20;
@@ -1567,7 +1571,7 @@ export function AddressSearchForm() {
     const pdRightsApply = (result as any).score >= 5 // Logic for the high-level indicator
     return (
       <div className="space-y-6">
-        <PlanningResultComponent result={result} propertyType={propertyType} propertySummary={propertySummary} />
+        <PlanningResultComponent result={result} propertySummary={propertySummary} />
         <div className="text-center space-y-4">
           <Button onClick={handleDownloadReport} className="px-8 bg-[#1E7A6F] hover:bg-[#19685f] text-white">
             <Download className="w-4 h-4 mr-2" />
@@ -1597,31 +1601,6 @@ export function AddressSearchForm() {
 
           {/* Search Form */}
           <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
-            {/* Property Type Selector */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-[#1E7A6F] mb-2">
-                Property Type
-              </label>
-              <Select value={propertyType} onValueChange={setPropertyType}>
-                <SelectTrigger className="w-full h-12 border-[#E6E8E6] focus:border-[#1E7A6F] focus:ring-[#1E7A6F] text-[#4C5A63]">
-                  <SelectValue placeholder="Please select a property type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="house">
-                    <div className="flex items-center gap-2">
-                      <Home className="w-4 h-4 text-[#1E7A6F]" />
-                      <span>House</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="flat">
-                    <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-[#1E7A6F]" />
-                      <span>Flat</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Land Registry Add-on */}
             <div className="mb-6 p-4 bg-teal-50/50 border border-teal-100 rounded-lg">
@@ -1655,10 +1634,10 @@ export function AddressSearchForm() {
                   value={address}
                   onChange={(e) => handleAddressChange(e.target.value)}
                   className="pl-10 pr-4 py-3 h-14 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#4C5A63] text-lg"
-                  disabled={isLoading || !propertyType}
+                  disabled={isLoading}
                 />
 
-                {showSuggestions && propertyType && (
+                {showSuggestions && (
                   <div
                     ref={suggestionsRef}
                     className="absolute z-10 w-full mt-1 bg-white border border-[#E6E8E6] rounded-lg shadow-lg max-h-60 overflow-y-auto"
@@ -1694,7 +1673,7 @@ export function AddressSearchForm() {
               <Button
                 type="submit"
                 className="py-3 px-8 h-14 font-semibold bg-[#F5A623] hover:bg-[#e69519] text-white whitespace-nowrap text-lg"
-                disabled={isLoading || !address.trim() || !propertyType}
+                disabled={isLoading || !address.trim()}
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
