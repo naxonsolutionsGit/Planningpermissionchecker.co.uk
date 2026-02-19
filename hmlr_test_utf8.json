@@ -1,0 +1,83 @@
+{ "format" : "linked-data-api", "version" : "0.2", "result" : {"_about" : "https://landregistry.data.gov.uk/data/ppi/transaction-record.json?_pageSize=5&propertyAddress.postcode=RM16+6PY", "definition" : "https://landregistry.data.gov.uk/meta/data/ppi/transaction-record.json?propertyAddress.postcode=RM16+6PY", "extendedMetadataVersion" : "https://landregistry.data.gov.uk/data/ppi/transaction-record.json?_pageSize=5&propertyAddress.postcode=RM16+6PY&_metadata=all", "first" : "https://landregistry.data.gov.uk/data/ppi/transaction-record.json?_pageSize=5&_page=0&propertyAddress.postcode=RM16+6PY", "isPartOf" : {"_about" : "https://landregistry.data.gov.uk/data/ppi/transaction-record.json?propertyAddress.postcode=RM16+6PY", "definition" : "https://landregistry.data.gov.uk/meta/data/ppi/transaction-record.json?propertyAddress.postcode=RM16+6PY", "hasPart" : "https://landregistry.data.gov.uk/data/ppi/transaction-record.json?_pageSize=5&propertyAddress.postcode=RM16+6PY", "type" : ["http://purl.org/linked-data/api/vocab#ListEndpoint"]}
+    , "items" : [{"_about" : "http://landregistry.data.gov.uk/data/ppi/transaction/CADD0E12-6C84-4A11-A891-31F0743C9571/current", "estateType" : {"_about" : "http://landregistry.data.gov.uk/def/common/freehold", "label" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "hasTransaction" : "http://landregistry.data.gov.uk/data/ppi/transaction/CADD0E12-6C84-4A11-A891-31F0743C9571", "newBuild" : true, "pricePaid" : 67995, "propertyAddress" : {"_about" : "http://landregistry.data.gov.uk/data/ppi/address/e29a5ce8a3223b6ca67e02444d4ec3cf9d20b245", "county" : "THURROCK", "district" : "THURROCK", "locality" : "CHAFFORD HUNDRED", "paon" : "86", "postcode" : "RM16 6PY", "street" : "CAMDEN ROAD", "town" : "GRAYS", "type" : ["http://landregistry.data.gov.uk/def/common/BS7666Address"]}
+      , "propertyType" : {"_about" : "http://landregistry.data.gov.uk/def/common/semi-detached", "label" : [{"_value" : "Semi-detached", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "semi-detached", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "recordStatus" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/add", "label" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionCategory" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/standardPricePaidTransaction", "label" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionDate" : "Mon, 16 Dec 1996", "transactionId" : "CADD0E12-6C84-4A11-A891-31F0743C9571", "type" : [{"_about" : "http://landregistry.data.gov.uk/def/ppi/TransactionRecord", "label" : [{"_value" : "TransactionRecord", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      ]}
+    , {"_about" : "http://landregistry.data.gov.uk/data/ppi/transaction/3F8F59C0-8F2A-4915-83D0-EAFB0C772BB2/current", "estateType" : {"_about" : "http://landregistry.data.gov.uk/def/common/freehold", "label" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "hasTransaction" : "http://landregistry.data.gov.uk/data/ppi/transaction/3F8F59C0-8F2A-4915-83D0-EAFB0C772BB2", "newBuild" : false, "pricePaid" : 74995, "propertyAddress" : {"_about" : "http://landregistry.data.gov.uk/data/ppi/address/e29a5ce8a3223b6ca67e02444d4ec3cf9d20b245", "county" : "THURROCK", "district" : "THURROCK", "locality" : "CHAFFORD HUNDRED", "paon" : "86", "postcode" : "RM16 6PY", "street" : "CAMDEN ROAD", "town" : "GRAYS", "type" : ["http://landregistry.data.gov.uk/def/common/BS7666Address"]}
+      , "propertyType" : {"_about" : "http://landregistry.data.gov.uk/def/common/semi-detached", "label" : [{"_value" : "Semi-detached", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "semi-detached", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "recordStatus" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/add", "label" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionCategory" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/standardPricePaidTransaction", "label" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionDate" : "Thu, 08 Jul 1999", "transactionId" : "3F8F59C0-8F2A-4915-83D0-EAFB0C772BB2", "type" : [{"_about" : "http://landregistry.data.gov.uk/def/ppi/TransactionRecord", "label" : [{"_value" : "TransactionRecord", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      ]}
+    , {"_about" : "http://landregistry.data.gov.uk/data/ppi/transaction/FFA421FC-5E52-414C-8310-AD65E1FB8FC7/current", "estateType" : {"_about" : "http://landregistry.data.gov.uk/def/common/freehold", "label" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "hasTransaction" : "http://landregistry.data.gov.uk/data/ppi/transaction/FFA421FC-5E52-414C-8310-AD65E1FB8FC7", "newBuild" : true, "pricePaid" : 79995, "propertyAddress" : {"_about" : "http://landregistry.data.gov.uk/data/ppi/address/b5cf842ad4e85da6f54e15f266caae485d194dd5", "county" : "THURROCK", "district" : "THURROCK", "locality" : "CHAFFORD HUNDRED", "paon" : "60", "postcode" : "RM16 6PY", "street" : "CAMDEN ROAD", "town" : "GRAYS", "type" : ["http://landregistry.data.gov.uk/def/common/BS7666Address"]}
+      , "propertyType" : {"_about" : "http://landregistry.data.gov.uk/def/common/detached", "label" : [{"_value" : "Detached", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "detached", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "recordStatus" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/add", "label" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionCategory" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/standardPricePaidTransaction", "label" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionDate" : "Fri, 29 Mar 1996", "transactionId" : "FFA421FC-5E52-414C-8310-AD65E1FB8FC7", "type" : [{"_about" : "http://landregistry.data.gov.uk/def/ppi/TransactionRecord", "label" : [{"_value" : "TransactionRecord", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      ]}
+    , {"_about" : "http://landregistry.data.gov.uk/data/ppi/transaction/7AF468B7-00D1-4027-ADBF-E6F91677E6AF/current", "estateType" : {"_about" : "http://landregistry.data.gov.uk/def/common/freehold", "label" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "hasTransaction" : "http://landregistry.data.gov.uk/data/ppi/transaction/7AF468B7-00D1-4027-ADBF-E6F91677E6AF", "newBuild" : false, "pricePaid" : 127500, "propertyAddress" : {"_about" : "http://landregistry.data.gov.uk/data/ppi/address/b5cf842ad4e85da6f54e15f266caae485d194dd5", "county" : "THURROCK", "district" : "THURROCK", "locality" : "CHAFFORD HUNDRED", "paon" : "60", "postcode" : "RM16 6PY", "street" : "CAMDEN ROAD", "town" : "GRAYS", "type" : ["http://landregistry.data.gov.uk/def/common/BS7666Address"]}
+      , "propertyType" : {"_about" : "http://landregistry.data.gov.uk/def/common/detached", "label" : [{"_value" : "Detached", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "detached", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "recordStatus" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/add", "label" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionCategory" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/standardPricePaidTransaction", "label" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionDate" : "Wed, 22 Nov 2000", "transactionId" : "7AF468B7-00D1-4027-ADBF-E6F91677E6AF", "type" : [{"_about" : "http://landregistry.data.gov.uk/def/ppi/TransactionRecord", "label" : [{"_value" : "TransactionRecord", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      ]}
+    , {"_about" : "http://landregistry.data.gov.uk/data/ppi/transaction/E3B13D32-1B7B-4542-9BCE-161F99C20384/current", "estateType" : {"_about" : "http://landregistry.data.gov.uk/def/common/freehold", "label" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Freehold", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "hasTransaction" : "http://landregistry.data.gov.uk/data/ppi/transaction/E3B13D32-1B7B-4542-9BCE-161F99C20384", "newBuild" : false, "pricePaid" : 235000, "propertyAddress" : {"_about" : "http://landregistry.data.gov.uk/data/ppi/address/b5cf842ad4e85da6f54e15f266caae485d194dd5", "county" : "THURROCK", "district" : "THURROCK", "locality" : "CHAFFORD HUNDRED", "paon" : "60", "postcode" : "RM16 6PY", "street" : "CAMDEN ROAD", "town" : "GRAYS", "type" : ["http://landregistry.data.gov.uk/def/common/BS7666Address"]}
+      , "propertyType" : {"_about" : "http://landregistry.data.gov.uk/def/common/detached", "label" : [{"_value" : "Detached", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "detached", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "recordStatus" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/add", "label" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Add", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionCategory" : {"_about" : "http://landregistry.data.gov.uk/def/ppi/standardPricePaidTransaction", "label" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ], "prefLabel" : [{"_value" : "Standard price paid transaction", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      , "transactionDate" : "Fri, 17 Jun 2005", "transactionId" : "E3B13D32-1B7B-4542-9BCE-161F99C20384", "type" : [{"_about" : "http://landregistry.data.gov.uk/def/ppi/TransactionRecord", "label" : [{"_value" : "TransactionRecord", "_datatype" : "langString", "_lang" : "en"}
+        ]}
+      ]}
+    ], "itemsPerPage" : 5, "next" : "https://landregistry.data.gov.uk/data/ppi/transaction-record.json?_pageSize=5&_page=1&propertyAddress.postcode=RM16+6PY", "page" : 0, "startIndex" : 1, "type" : ["http://purl.org/linked-data/api/vocab#Page"]}
+}

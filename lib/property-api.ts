@@ -7,10 +7,12 @@ export interface PropertySummary {
     propertyType: string;
     bedrooms: number | string;
     bathrooms: number | string;
+    receptions: number | string;
     tenure: string;
     lastSoldPrice: string;
     lastSoldDate: string;
     titleNumber: string;
+    epcRating?: string;
 }
 
 import { determinePropertyType } from "./utils";
@@ -23,15 +25,17 @@ const EPC_BASE_URL = "https://epc.opendatacommunities.org/api/v1/domestic/search
 export async function fetchPropertySummary(address: string, postcode: string): Promise<PropertySummary | null> {
     console.log(`[Property API] Fetching data for: ${address}, ${postcode}`);
     try {
-        const [hmlrData, epcData, titleNumber] = await Promise.all([
+        const [hmlrData, epcData, titleNumber, propertyData, planningData] = await Promise.all([
             fetchHMLRData(postcode, address),
             fetchEPCData(postcode, address),
-            fetchTitleNumber(postcode, address)
+            fetchTitleNumber(postcode, address),
+            fetchPropertyDataFromSource(postcode, address),
+            fetchPlanningDescriptionData(postcode, address)
         ]);
 
-        console.log(`[PropertyAPI] Results - HMLR: ${hmlrData ? 'Success' : 'No Data'}, EPC: ${epcData ? 'Success' : 'No Data'}`);
+        console.log(`[PropertyAPI] Results - HMLR: ${hmlrData ? 'Success' : 'No Data'}, EPC: ${epcData ? 'Success' : 'No Data'}, PropertyData: ${propertyData ? 'Success' : 'No Data'}, Planning: ${planningData ? 'Success' : 'No Data'}`);
 
-        if (!hmlrData && !epcData) {
+        if (!hmlrData && !epcData && !propertyData && !planningData) {
             console.log("[PropertyAPI] Both APIs failed. Using address-based intelligent fallback.");
             const detectedType = determinePropertyType(address);
 
@@ -46,6 +50,7 @@ export async function fetchPropertySummary(address: string, postcode: string): P
                 propertyType: displayType,
                 bedrooms: "Information Unavailable",
                 bathrooms: "Information Unavailable",
+                receptions: "Information Unavailable",
                 tenure: "Information Unavailable",
                 lastSoldPrice: "Market Estimate Unavailable",
                 lastSoldDate: "No recent transaction info",
@@ -53,16 +58,28 @@ export async function fetchPropertySummary(address: string, postcode: string): P
             };
         }
 
-        const propertyType = epcData?.isBungalow ? "Bungalow" : (epcData?.propertyType || hmlrData?.propertyType || (determinePropertyType(address) === "flat" ? "Apartment" : "Residential House"));
+        const propertyType = propertyData?.propertyType || (epcData?.isBungalow ? "Bungalow" : (epcData?.propertyType || hmlrData?.propertyType || (determinePropertyType(address) === "flat" ? "Apartment" : "Residential House")));
+
+        // Intelligent fallback for bedrooms if no data found
+        let bedrooms = propertyData?.bedrooms || epcData?.bedrooms || planningData?.bedrooms;
+        if (!bedrooms) {
+            if (propertyType.toLowerCase().includes("detached")) bedrooms = "3-5 (Estimated)";
+            else if (propertyType.toLowerCase().includes("semi-detached")) bedrooms = "3-4 (Estimated)";
+            else if (propertyType.toLowerCase().includes("terraced")) bedrooms = "2-3 (Estimated)";
+            else if (propertyType.toLowerCase().includes("apartment") || propertyType.toLowerCase().includes("flat")) bedrooms = "1-2 (Estimated)";
+            else bedrooms = "Information Unavailable";
+        }
 
         return {
             propertyType,
-            bedrooms: epcData?.bedrooms || "Contact Local Authority",
-            bathrooms: epcData?.bathrooms || "Contact Local Authority",
-            tenure: hmlrData?.tenure || "Information Unavailable",
-            lastSoldPrice: hmlrData?.price ? `£${hmlrData.price.toLocaleString()}` : "Market Estimate Unavailable",
-            lastSoldDate: hmlrData?.date ? formatDate(hmlrData.date) : "No recent transaction info",
-            titleNumber: titleNumber || "Unknown",
+            bedrooms,
+            bathrooms: propertyData?.bathrooms || epcData?.bathrooms || planningData?.bathrooms || "Information Unavailable",
+            receptions: propertyData?.receptions || planningData?.receptions || "Information Unavailable",
+            tenure: propertyData?.tenure || hmlrData?.tenure || "Information Unavailable",
+            lastSoldPrice: propertyData?.lastSoldPrice ? `£${propertyData.lastSoldPrice.toLocaleString()}` : (hmlrData?.price ? `£${parseInt(hmlrData.price).toLocaleString()}` : "Market Estimate Unavailable"),
+            lastSoldDate: propertyData?.lastSoldDate ? formatDate(propertyData.lastSoldDate) : (hmlrData?.date ? formatDate(hmlrData.date) : "No recent transaction info"),
+            titleNumber: titleNumber || "Official Record Gated",
+            epcRating: epcData?.epcRating || propertyData?.epcRating
         };
     } catch (error) {
         console.error("[PropertyAPI] Error:", error);
@@ -85,10 +102,11 @@ async function fetchHMLRData(postcode: string, address: string) {
     console.log(`[HMLR] Searching for Postcode: ${cleanPostcode}, House Number: ${houseNumber}`);
 
     try {
-        // Broad search by postcode first
+        // Broad search by postcode first, sorted by latest transaction date
         const response = await fetch("https://landregistry.data.gov.uk/data/ppi/transaction-record.json?" + new URLSearchParams({
             "propertyAddress.postcode": cleanPostcode,
-            "_pageSize": "50",
+            "_pageSize": "200",
+            "_sort": "-transactionDate",
         }));
 
         if (!response.ok) return null;
@@ -150,11 +168,18 @@ async function fetchHMLRData(postcode: string, address: string) {
             console.log(`[HMLR] Match found: ${getVal(match.propertyAddress?.paon)} ${getVal(match.propertyAddress?.street)} (${getVal(match.transactionDate)})`);
         }
 
+        // Map Tenure more accurately
+        const rawTenure = getVal(match.estateType);
+        let tenure = "Unknown";
+        if (rawTenure.toLowerCase().includes("freehold")) tenure = "Freehold";
+        else if (rawTenure.toLowerCase().includes("leasehold")) tenure = "Leasehold";
+        else tenure = rawTenure || "Information Unavailable";
+
         return {
             price: getVal(match.pricePaid),
             date: getVal(match.transactionDate),
             propertyType: getVal(match.propertyType) || "Unknown",
-            tenure: getVal(match.estateType) || "Unknown",
+            tenure,
         };
     } catch (error) {
         console.error("[HMLR] Error processing data:", error);
@@ -192,9 +217,9 @@ async function fetchTitleNumber(postcode: string, address: string) {
             return match.titleNumber;
         }
 
-        // Fallback: Generate a plausible Title Number for demo if not found but requested
-        // In a real app, this would use the Business Gateway "Find Title" service
-        return `NGL${Math.floor(100000 + Math.random() * 900000)}`;
+        // Return null to signify that a free lookup is not possible for Title Number
+        // The UI will then show the "Official Record Gated" message
+        return null;
     } catch (error) {
         console.error("[HMLR] Error fetching Title Number:", error);
         return null;
@@ -256,6 +281,7 @@ async function fetchEPCData(postcode: string, address: string) {
 
         const rawType = record["property-type"] || "";
         const builtForm = record["built-form"] || "";
+        const epcRating = record["current-energy-rating"] || "";
         const isBungalow = rawType.toLowerCase().includes("bungalow") || builtForm.toLowerCase().includes("bungalow");
 
         // Map EPC house types to user requested terms
@@ -287,6 +313,7 @@ async function fetchEPCData(postcode: string, address: string) {
             isBungalow,
             bedrooms: estimatedBedrooms,
             bathrooms: estimatedBathrooms,
+            epcRating,
         };
     } catch {
         return null;
@@ -316,5 +343,95 @@ function formatDate(dateStr: string): string {
         });
     } catch {
         return dateStr;
+    }
+}
+/**
+ * Fetch detailed property data from PropertyData.co.uk API
+ */
+async function fetchPropertyDataFromSource(postcode: string, address: string) {
+    const apiKey = process.env.PROPERTYDATA_API_KEY;
+    if (!apiKey) {
+        console.warn("PropertyData API Key missing. Skipping detailed data lookup.");
+        return null;
+    }
+
+    try {
+        // PropertyData.co.uk "property/data" endpoint
+        const url = `https://api.propertydata.co.uk/property/data?key=${apiKey}&postcode=${encodeURIComponent(postcode)}&address=${encodeURIComponent(address)}`;
+
+        const response = await fetch(url);
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        if (data.status !== "success") return null;
+
+        const p = data.property;
+        return {
+            propertyType: p.type || p.style ? `${p.style || ''} ${p.type || ''}`.trim() : null,
+            bedrooms: p.bedrooms,
+            bathrooms: p.bathrooms,
+            receptions: p.receptions,
+            tenure: p.tenure,
+            lastSoldPrice: p.last_sale_price,
+            lastSoldDate: p.last_sale_date,
+            epcRating: p.epc_current_energy_rating
+        };
+    } catch (error) {
+        console.error("[PropertyData] Error:", error);
+        return null;
+    }
+}
+
+/**
+ * Fetch planning history and extract room counts from descriptions as a key-less fallback
+ */
+async function fetchPlanningDescriptionData(postcode: string, address: string) {
+    try {
+        const pcode = postcode.replace(/\s+/g, "");
+        const url = `https://www.planit.org.uk/api/applics/json?pcode=${pcode}&krad=0.2&limit=50`;
+
+        const response = await fetch(url, {
+            headers: { "Accept": "application/json", "User-Agent": "PlanningChecker/1.0" }
+        });
+
+        if (!response.ok) return null;
+        const data = await response.json();
+        const records = data.records || [];
+
+        if (records.length === 0) return null;
+
+        const streetNumberMatch = address.match(/(\d+[a-zA-Z]?)/);
+        const streetNumber = streetNumberMatch ? streetNumberMatch[1].toLowerCase() : "";
+
+        // Filter for applications likely related to this specific address
+        const relevantRecords = records.filter((r: any) => {
+            const appAddr = (r.address || "").toLowerCase();
+            return streetNumber && appAddr.includes(streetNumber);
+        });
+
+        if (relevantRecords.length === 0) return null;
+
+        let extracted = { bedrooms: null as any, bathrooms: null as any, receptions: null as any };
+
+        // Process descriptions to find patterns
+        relevantRecords.forEach((r: any) => {
+            const desc = (r.description || "").toLowerCase();
+
+            // Regex patterns for beds, baths, receptions
+            const bedMatch = desc.match(/(\d+)\s*(?:bed|bedroom)/i);
+            const bathMatch = desc.match(/(\d+)\s*(?:bath|bathroom)/i);
+            const recepMatch = desc.match(/(\d+)\s*(?:recep|reception)/i);
+
+            if (bedMatch && !extracted.bedrooms) extracted.bedrooms = bedMatch[1];
+            if (bathMatch && !extracted.bathrooms) extracted.bathrooms = bathMatch[1];
+            if (recepMatch && !extracted.receptions) extracted.receptions = recepMatch[1];
+        });
+
+        if (!extracted.bedrooms && !extracted.bathrooms && !extracted.receptions) return null;
+
+        return extracted;
+    } catch (error) {
+        console.error("[PlanningParsing] Error:", error);
+        return null;
     }
 }
