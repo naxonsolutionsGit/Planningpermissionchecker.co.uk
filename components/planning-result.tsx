@@ -142,8 +142,15 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
 
       const filterSpecific = (app: any): boolean => {
         const appAddress = (app.address || '').toLowerCase()
-        const hasStreetNumber = streetNumber ? appAddress.includes(streetNumber) : false
-        const hasStreetName = streetName ? appAddress.includes(streetName.substring(0, Math.min(streetName.length, 10))) : false
+        if (!streetNumber) return false
+
+        // Match exact street number (boundary check)
+        const numberRegex = new RegExp(`(^|\\D)${streetNumber}(\\D|$)`)
+        const hasStreetNumber = numberRegex.test(appAddress)
+
+        // Match street name prefix (6 chars is usually enough for "Camden", "Main ", etc.)
+        const hasStreetName = streetName ? appAddress.includes(streetName.substring(0, Math.min(streetName.length, 6))) : true
+
         return hasStreetNumber && hasStreetName
       }
 

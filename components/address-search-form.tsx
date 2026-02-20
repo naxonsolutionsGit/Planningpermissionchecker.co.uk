@@ -786,7 +786,12 @@ export function AddressSearchForm() {
 
           const filterSpecific = (app: any) => {
             const appAddress = (app.address || '').toLowerCase();
-            const hasStreetNumber = appAddress.includes(streetNumber);
+            if (!streetNumber) return false;
+
+            // Match exact street number (boundary check)
+            const numberRegex = new RegExp(`(^|\\D)${streetNumber}(\\D|$)`);
+            const hasStreetNumber = numberRegex.test(appAddress);
+
             const hasStreetName = !streetName || appAddress.includes(streetName.substring(0, Math.min(streetName.length, 6)));
             return hasStreetNumber && hasStreetName;
           };
@@ -869,7 +874,7 @@ export function AddressSearchForm() {
     const tagPadding = 4;
 
     const tags = [
-      `Property: ${propertySummary?.propertyType || (propertyType === 'flat' ? 'Flat' : 'House')}`
+      `Property: ${propertySummary?.propertyType || (isFlat ? 'Flat' : 'House')}`
     ];
 
     doc.setFontSize(8);
