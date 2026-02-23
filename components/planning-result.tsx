@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, XCircle, AlertTriangle, MapPin, History, ExternalLink, ChevronDown, ChevronUp, Loader2, Bed, Bath, Home, Calendar } from "lucide-react"
+import { CheckCircle, XCircle, AlertTriangle, MapPin, History, ExternalLink, ChevronDown, ChevronUp, Loader2, Bed, Home, Calendar } from "lucide-react"
 import { LegalDisclaimer } from "@/components/legal-disclaimer"
 import { ConfidenceIndicator } from "@/components/confidence-indicator"
 import { useState, useEffect, useRef } from "react"
@@ -261,6 +261,49 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
+                {result.coordinates && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (() => {
+                  const coords = result.coordinates;
+                  const lat = (coords as any).lat !== undefined ? (coords as any).lat : (Array.isArray(coords) ? coords[0] : (typeof coords === 'object' && 'latitude' in (coords as any) ? (coords as any).latitude : null));
+                  const lng = (coords as any).lng !== undefined ? (coords as any).lng : (Array.isArray(coords) ? coords[1] : (typeof coords === 'object' && 'longitude' in (coords as any) ? (coords as any).longitude : null));
+
+                  if (lat === null || lng === null) {
+                    return (
+                      <div className="mb-4 rounded-lg bg-red-50 border border-dashed border-red-200 p-4 text-center">
+                        <p className="text-xs text-red-600 font-medium">Coordinate error: {JSON.stringify(coords)}</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="mb-4 rounded-lg overflow-hidden border border-border bg-muted/20 relative aspect-[2/1] min-h-[150px]">
+                      <img
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                        alt="Property Location Map"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) {
+                            fallback.style.display = 'flex';
+                            console.error("Map image failed to load. URL was:", target.src);
+                          }
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-muted/30">
+                        <MapPin className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                        <p className="text-xs text-muted-foreground font-medium">Map load failed</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Check API restrictions, billing or key validity.</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+                {result.coordinates && !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
+                  <div className="mb-4 rounded-lg bg-muted/30 border border-dashed border-border flex flex-col items-center justify-center py-8 px-4 text-center">
+                    <MapPin className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                    <p className="text-xs text-muted-foreground">Map visualization unavailable (API Key required)</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Type</span>
@@ -275,13 +318,6 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                     <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                       <Bed className="h-3.5 w-3.5 text-muted-foreground" />
                       <span>{String(propertySummary.bedrooms || 'Information Unavailable')}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Bathrooms</span>
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                      <Bath className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{String(propertySummary.bathrooms || 'Information Unavailable')}</span>
                     </div>
                   </div>
                 </div>

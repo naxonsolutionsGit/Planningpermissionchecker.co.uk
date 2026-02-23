@@ -1,11 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Home, Calendar, Tag, Bed, Bath, Hash, Sofa, Zap } from "lucide-react"
+import { Home, Calendar, Tag, Bed, Hash, Sofa, Zap } from "lucide-react"
 
 export interface PropertySummaryProps {
     data: {
         propertyType: string
         bedrooms: number | string
-        bathrooms: number | string
         receptions: number | string
         tenure: string
         lastSoldPrice: string
@@ -42,13 +41,6 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Bathrooms</span>
-                                <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                                    <Bath className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span>{String(data.bathrooms || 'Information Unavailable')}</span>
-                                </div>
-                            </div>
-                            <div className="space-y-1">
                                 <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Receptions</span>
                                 <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                                     <Sofa className="h-3.5 w-3.5 text-muted-foreground" />
@@ -61,9 +53,9 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                                     <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                                         <Zap className="h-3.5 w-3.5 text-muted-foreground" />
                                         <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-bold text-white ${['A', 'B'].includes(data.epcRating) ? 'bg-green-600' :
-                                                ['C'].includes(data.epcRating) ? 'bg-green-500' :
-                                                    ['D'].includes(data.epcRating) ? 'bg-yellow-500' :
-                                                        'bg-orange-500'
+                                            ['C'].includes(data.epcRating) ? 'bg-green-500' :
+                                                ['D'].includes(data.epcRating) ? 'bg-yellow-500' :
+                                                    'bg-orange-500'
                                             }`}>
                                             Rating: {data.epcRating}
                                         </span>

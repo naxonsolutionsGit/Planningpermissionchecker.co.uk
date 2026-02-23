@@ -1167,10 +1167,7 @@ export function AddressSearchForm() {
 
     detailY += 18;
     const bedroomsLabel = isNaN(Number(propertySummary?.bedrooms)) ? (propertySummary?.bedrooms || 'Contact Local Authority') : `${propertySummary?.bedrooms} Bedrooms`;
-    const bathroomsLabel = isNaN(Number(propertySummary?.bathrooms)) ? (propertySummary?.bathrooms || 'Contact Local Authority') : `${propertySummary?.bathrooms} Bathrooms`;
-
     drawDetail('Bedrooms', bedroomsLabel, 25, detailY);
-    drawDetail('Bathrooms', bathroomsLabel, 25 + (halfW / 2), detailY);
 
     // Vertical Separator
     doc.setDrawColor(...colors.border);
@@ -1202,7 +1199,45 @@ export function AddressSearchForm() {
     const sourceLines = doc.splitTextToSize(sourceNote, halfW - 20);
     doc.text(sourceLines, col2X, col2Y + 22);
 
-    yPosition += propCardHeight + 10;
+    yPosition += propCardHeight + 5;
+
+    // Property Map Fragment
+    if (result.coordinates && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+      const mapW = pageWidth - 30;
+      const mapH = 60;
+      checkNewPage(mapH + 10);
+
+      try {
+        const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${result.coordinates.lat},${result.coordinates.lng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${result.coordinates.lat},${result.coordinates.lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+
+        // Fetch image and convert to base64 for reliable PDF embedding
+        const mapResp = await fetch(mapUrl);
+        if (mapResp.ok) {
+          const mapBlob = await mapResp.blob();
+          const reader = new FileReader();
+          const base64Promise = new Promise((resolve) => {
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(mapBlob);
+          });
+          const base64Data = await base64Promise as string;
+
+          doc.addImage(base64Data, 'JPEG', 15, yPosition, mapW, mapH);
+
+          doc.setDrawColor(...colors.border);
+          doc.setLineWidth(0.3);
+          doc.rect(15, yPosition, mapW, mapH);
+
+          yPosition += mapH + 10;
+        } else {
+          yPosition += 5;
+        }
+      } catch (mapErr) {
+        console.error("Failed to add map to PDF:", mapErr);
+        yPosition += 5;
+      }
+    } else {
+      yPosition += 5;
+    }
 
 
     // Flat-Specific Notice (Moved to Property Details page)

@@ -6,7 +6,6 @@
 export interface PropertySummary {
     propertyType: string;
     bedrooms: number | string;
-    bathrooms: number | string;
     receptions: number | string;
     tenure: string;
     lastSoldPrice: string;
@@ -49,7 +48,6 @@ export async function fetchPropertySummary(address: string, postcode: string): P
             return {
                 propertyType: displayType,
                 bedrooms: "Information Unavailable",
-                bathrooms: "Information Unavailable",
                 receptions: "Information Unavailable",
                 tenure: "Information Unavailable",
                 lastSoldPrice: "Market Estimate Unavailable",
@@ -73,7 +71,6 @@ export async function fetchPropertySummary(address: string, postcode: string): P
         return {
             propertyType,
             bedrooms,
-            bathrooms: propertyData?.bathrooms || epcData?.bathrooms || planningData?.bathrooms || "Information Unavailable",
             receptions: propertyData?.receptions || planningData?.receptions || "Information Unavailable",
             tenure: propertyData?.tenure || hmlrData?.tenure || "Information Unavailable",
             lastSoldPrice: propertyData?.lastSoldPrice ? `£${propertyData.lastSoldPrice.toLocaleString()}` : (hmlrData?.price ? `£${parseInt(hmlrData.price).toLocaleString()}` : "Market Estimate Unavailable"),
