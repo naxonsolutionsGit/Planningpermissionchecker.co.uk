@@ -56,11 +56,11 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
   const prevAddressRef = useRef<string>("")
 
   const getStatusIcon = (hasRights: boolean) => {
-    return hasRights ? <CheckCircle className="w-8 h-8 text-green-600" /> : <XCircle className="w-8 h-8 text-red-600" />
+    return hasRights ? <CheckCircle className="w-10 h-10 text-[#253325]" /> : <XCircle className="w-10 h-10 text-red-600" />
   }
 
   const getStatusColor = (hasRights: boolean) => {
-    return hasRights ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+    return hasRights ? "bg-[#F8F7F3] border-[#EEECE6]" : "bg-red-50 border-red-100"
   }
 
   const getCheckIcon = (status: "pass" | "fail" | "warning") => {
@@ -222,41 +222,41 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      <Card className={`${getStatusColor(result.hasPermittedDevelopmentRights)} border-2`}>
-        <CardHeader className="text-center pb-4">
-          <div className="flex justify-center mb-4">{getStatusIcon(result.hasPermittedDevelopmentRights)}</div>
-          <CardTitle className="text-2xl font-bold">
+      <Card className={`${getStatusColor(result.hasPermittedDevelopmentRights)} border-2 shadow-none`}>
+        <CardHeader className="text-center pb-6 pt-8">
+          <div className="flex justify-center mb-6">{getStatusIcon(result.hasPermittedDevelopmentRights)}</div>
+          <CardTitle className="text-3xl font-normal text-[#253325] leading-tight mb-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
             {result.hasPermittedDevelopmentRights
-              ? "Permitted Development Rights Apply"
+              ? "Permitted Development Rights Likely Apply"
               : "Planning Permission Likely Required"}
           </CardTitle>
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 text-[#9A9488]">
             <MapPin className="w-4 h-4" />
-            <span className="text-sm">{result.address}</span>
+            <span className="text-sm font-medium">{result.address}</span>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Located in <span className="font-semibold">{result.localAuthority}</span>
+        <CardContent className="pb-8">
+          <div className="text-center max-w-md mx-auto">
+            <p className="text-sm text-[#4A4A4A] leading-relaxed">
+              Based on our analysis of <span className="font-semibold text-[#253325]">{result.localAuthority}</span> planning policy and property data.
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Summary</CardTitle>
+      <Card className="border-[#EEECE6] shadow-none">
+        <CardHeader className="pb-3 text-center">
+          <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Expert Analysis Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-foreground">{result.summary}</p>
+          <p className="text-[#4A4A4A] leading-relaxed text-center px-4">{result.summary}</p>
         </CardContent>
       </Card>
 
       {propertySummary && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Property Details</CardTitle>
+        <Card className="border-[#EEECE6] shadow-none overflow-hidden">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property Context</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -269,71 +269,69 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                   if (lat === null || lng === null) {
                     return (
                       <div className="mb-4 rounded-lg bg-red-50 border border-dashed border-red-200 p-4 text-center">
-                        <p className="text-xs text-red-600 font-medium">Coordinate error: {JSON.stringify(coords)}</p>
+                        <p className="text-[10px] text-red-600 font-medium">Coordinate mapping unavailable</p>
                       </div>
                     );
                   }
 
                   return (
-                    <div className="mb-4 rounded-lg overflow-hidden border border-border bg-muted/20 relative aspect-[2/1] min-h-[150px]">
+                    <div className="mb-4 rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative aspect-[2/1] min-h-[150px] group shadow-sm">
                       <img
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x300&maptype=satellite&markers=color:0x253325%7C${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
                         alt="Property Location Map"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
                           const fallback = target.nextElementSibling as HTMLElement;
                           if (fallback) {
                             fallback.style.display = 'flex';
-                            console.error("Map image failed to load. URL was:", target.src);
                           }
                         }}
                       />
-                      <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-muted/30">
-                        <MapPin className="h-8 w-8 text-muted-foreground/50 mb-2" />
-                        <p className="text-xs text-muted-foreground font-medium">Map load failed</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">Check API restrictions, billing or key validity.</p>
+                      <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-[#F8F7F3]/80 backdrop-blur-sm">
+                        <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
+                        <p className="text-[10px] text-[#253325] font-semibold uppercase tracking-wider">Map Preview Unavailable</p>
                       </div>
                     </div>
                   );
                 })()}
                 {result.coordinates && !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
-                  <div className="mb-4 rounded-lg bg-muted/30 border border-dashed border-border flex flex-col items-center justify-center py-8 px-4 text-center">
-                    <MapPin className="h-8 w-8 text-muted-foreground/50 mb-2" />
-                    <p className="text-xs text-muted-foreground">Map visualization unavailable (API Key required)</p>
+                  <div className="mb-4 rounded-lg bg-[#F8F7F3] border border-dashed border-[#EEECE6] flex flex-col items-center justify-center py-8 px-4 text-center">
+                    <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
+                    <p className="text-[10px] text-[#253325] font-semibold uppercase tracking-wider">Map visualization unavailable</p>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-5">
                   <div className="space-y-1">
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Type</span>
-                    <div className="text-sm font-medium text-foreground capitalize">{String(propertySummary.propertyType || 'Residential Property')}</div>
+                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Type</span>
+                    <div className="text-[14px] font-medium text-[#4A4A4A] capitalize">{String(propertySummary.propertyType || 'Residential Property')}</div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Tenure</span>
-                    <div className="text-sm font-medium text-foreground">{String(propertySummary.tenure || 'Information Unavailable')}</div>
+                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Tenure</span>
+                    <div className="text-[14px] font-medium text-[#4A4A4A]">{String(propertySummary.tenure || 'Information Unavailable')}</div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Bedrooms</span>
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                      <Bed className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Bedrooms</span>
+                    <div className="flex items-center gap-1.5 text-[14px] font-medium text-[#4A4A4A]">
+                      <Bed className="h-3.5 w-3.5 text-[#9A9488]" />
                       <span>{String(propertySummary.bedrooms || 'Information Unavailable')}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-6 border-border">
+              <div className="space-y-5 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-8 border-[#EEECE6]">
                 <div className="space-y-1">
-                  <span className="text-[10px] text-muted-foreground font-bold uppercase block tracking-wider">Last Sold Transaction</span>
-                  <div className="text-2xl font-bold text-foreground">{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Last Sold Value</span>
+                  <div className="text-2xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
+                  <div className="flex items-center gap-2 text-[11px] text-[#9A9488]">
                     <Calendar className="h-3.5 w-3.5" />
-                    <span>Sold on <span className="text-foreground">{String(propertySummary.lastSoldDate || 'No recent transaction info')}</span></span>
+                    <span>Transaction Date: <span className="text-[#4A4A4A] font-medium">{String(propertySummary.lastSoldDate || 'No recent data')}</span></span>
                   </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  Data sourced from HM Land Registry Price Paid Data and Energy Performance Certificate (EPC) Open Data.
+                <p className="text-[10px] text-[#A09A8E] leading-relaxed italic border-t border-[#EEECE6] pt-3">
+                  Sourced from HM Land Registry and EPC Open Data.
                 </p>
               </div>
             </div>
@@ -341,26 +339,32 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Planning Checks Performed</CardTitle>
+      <Card className="border-[#EEECE6] shadow-none">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Policy Compliance Checks</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {result.checks.map((check, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                {getCheckIcon(check.status)}
+              <div key={index} className="flex items-start gap-3 p-4 rounded-lg bg-[#FAF9F6] border border-[#EEECE6]/50">
+                <div className="mt-0.5">{getCheckIcon(check.status)}</div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-foreground">{check.type}</span>
-                    <Badge variant={check.status === "pass" ? "default" : check.status === "fail" ? "destructive" : "secondary"} className="text-xs">
-                      {check.status === "pass" ? "Clear" : check.status === "fail" ? "Restriction Found" : "Check Required"}
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="font-semibold text-[#253325] text-[15px]">{check.type}</span>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0 border-none ${check.status === "pass" ? "bg-green-100 text-green-800" :
+                        check.status === "fail" ? "bg-red-100 text-red-800" :
+                          "bg-[#EEECE6] text-[#4A4A4A]"
+                        }`}
+                    >
+                      {check.status === "pass" ? "Compliant" : check.status === "fail" ? "Restriction" : "Review"}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">{check.description}</p>
+                  <p className="text-[13px] text-[#4A4A4A] leading-relaxed mb-2">{check.description}</p>
                   {check.documentationUrl && (
-                    <a href={check.documentationUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:text-blue-800 underline">
-                      View official documentation
+                    <a href={check.documentationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-[#253325] hover:opacity-70 transition-opacity uppercase tracking-tight">
+                      Policy Guidance <ExternalLink className="h-2.5 w-2.5" />
                     </a>
                   )}
                 </div>
@@ -389,23 +393,28 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
       </Card>
 
       {/* Property Planning History Card */}
-      <Card>
-        <CardHeader>
-          <button onClick={() => setShowPropertyHistory(!showPropertyHistory)} className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
-            <div className="flex items-center gap-2">
-              <History className="w-5 h-5 text-[#1E7A6F]" />
-              <CardTitle className="text-lg">Property Planning History</CardTitle>
+      <Card className="border-[#EEECE6] shadow-none overflow-hidden">
+        <CardHeader className="p-0">
+          <button
+            onClick={() => setShowPropertyHistory(!showPropertyHistory)}
+            className="w-full flex items-center justify-between p-5 text-left hover:bg-[#F8F7F3] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-[#EEECE6] p-2 rounded-full">
+                <History className="w-5 h-5 text-[#253325]" />
+              </div>
+              <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property History</CardTitle>
             </div>
-            {showPropertyHistory ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+            {showPropertyHistory ? <ChevronUp className="w-5 h-5 text-[#9A9488]" /> : <ChevronDown className="w-5 h-5 text-[#9A9488]" />}
           </button>
         </CardHeader>
 
         {showPropertyHistory && (
           <CardContent>
             {isLoadingApplications ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-[#1E7A6F] mr-2" />
-                <span className="text-sm text-muted-foreground">Loading property planning history...</span>
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-[#253325]/20 mb-3" />
+                <span className="text-xs font-bold uppercase tracking-widest text-[#9A9488]">Retrieving records...</span>
               </div>
             ) : applicationsError ? (
               <div className="text-center py-6">
@@ -441,16 +450,20 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 px-4 border border-dashed border-border rounded-lg">
-                <p className="text-sm text-muted-foreground mb-4">No planning applications were found for this specific property address.</p>
-                <div className="space-y-4">
-                  <div className="p-3 bg-muted/50 rounded-md text-xs text-muted-foreground">
-                    <p className="font-semibold mb-1">Why am I seeing this?</p>
-                    <p>Some historical or very recent applications might not be indexed in our automated search yet. You can check the official council portal directly.</p>
-                  </div>
-                  <a href="https://regs.thurrock.gov.uk/online-applications/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#1E7A6F] text-white rounded-lg hover:bg-[#155a52] transition-colors text-sm font-semibold shadow-sm">
-                    <ExternalLink className="w-4 h-4" />
-                    Search Official Thurrock Portal
+              <div className="flex flex-col items-center text-center py-10 px-6 border border-dashed border-[#EEECE6] bg-[#F8F7F3]/30 rounded-lg">
+                <p className="text-sm text-[#9A9488] mb-6 italic">No indexed planning records found specifically for this address.</p>
+                <div className="max-w-sm space-y-4">
+                  <p className="text-[11px] text-[#A09A8E] leading-relaxed uppercase tracking-wider font-bold">
+                    Institutional Record Check
+                  </p>
+                  <a
+                    href="https://regs.thurrock.gov.uk/online-applications/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#253325] text-[#FAF9F6] rounded-full hover:bg-[#1A241A] transition-all transform hover:-translate-y-0.5 text-xs font-bold uppercase tracking-widest shadow-lg shadow-black/5"
+                  >
+                    Search Local Authority Portal
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
               </div>
@@ -460,23 +473,28 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
       </Card>
 
       {/* Planning Surrounding History Card */}
-      <Card>
-        <CardHeader>
-          <button onClick={() => setShowSurroundingHistory(!showSurroundingHistory)} className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-[#1E7A6F]" />
-              <CardTitle className="text-lg">Planning Surrounding History</CardTitle>
+      <Card className="border-[#EEECE6] shadow-none overflow-hidden">
+        <CardHeader className="p-0">
+          <button
+            onClick={() => setShowSurroundingHistory(!showSurroundingHistory)}
+            className="w-full flex items-center justify-between p-5 text-left hover:bg-[#F8F7F3] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-[#EEECE6] p-2 rounded-full">
+                <MapPin className="w-5 h-5 text-[#253325]" />
+              </div>
+              <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Surrounding Area History</CardTitle>
             </div>
-            {showSurroundingHistory ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+            {showSurroundingHistory ? <ChevronUp className="w-5 h-5 text-[#9A9488]" /> : <ChevronDown className="w-5 h-5 text-[#9A9488]" />}
           </button>
         </CardHeader>
 
         {showSurroundingHistory && (
-          <CardContent>
+          <CardContent className="pt-2">
             {isLoadingApplications ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-[#1E7A6F] mr-2" />
-                <span className="text-sm text-muted-foreground">Loading surrounding planning history...</span>
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-[#253325]/20 mb-3" />
+                <span className="text-xs font-bold uppercase tracking-widest text-[#9A9488]">Searching vicinity...</span>
               </div>
             ) : surroundingApps.length > 0 ? (
               <div className="space-y-4">

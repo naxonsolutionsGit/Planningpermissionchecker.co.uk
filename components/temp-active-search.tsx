@@ -1,7 +1,3 @@
-//           </div>
-//         </div>
-//       </section>
-*/
 "use client"
 
 import type React from "react"
@@ -728,7 +724,7 @@ export function AddressSearchForm() {
     }
 
     // Use the professional PDF generator library
-    const { generateUKProfessionalPDF } = await import('@/lib/pdf-generator-uk');
+    // const { generateUKProfessionalPDF } = await import('@/lib/pdf-generator-uk');
 
     const pdfData = {
       ...result,
@@ -736,15 +732,17 @@ export function AddressSearchForm() {
       nearbyHistory
     };
 
-    await generateUKProfessionalPDF(pdfData as any, propertyType);
+    // await generateUKProfessionalPDF(pdfData as any, propertyType);
+    console.log('PDF Generation requested for:', pdfData);
+    alert('PDF Generation logic is being updated. Please use the main search form for reports.');
   }
 
   if (result) {
     return (
       <div className="space-y-6">
-        <PlanningResultComponent result={result} propertyType={propertyType} />
+        <PlanningResultComponent result={result} />
         <div className="text-center space-y-4">
-          <Button onClick={handleDownloadReport} className="px-8 bg-[#1E7A6F] hover:bg-[#19685f] text-white">
+          <Button onClick={handleDownloadReport} className="px-8 bg-[#253325] hover:bg-[#1A241A] text-white">
             <Download className="w-4 h-4 mr-2" />
             Download PDF Report
           </Button>
@@ -761,7 +759,7 @@ export function AddressSearchForm() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="py-16 bg-gradient-to-br from-[#1E7A6F] to-[#2A9D8F] text-white">
+      <section className="py-16 bg-[#253325] text-white">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 max-w-3xl mx-auto leading-tight">
             Instantly Check if Your Property Has Permitted Development Rights
@@ -771,10 +769,10 @@ export function AddressSearchForm() {
           </p>
 
           {/* Search Form */}
-          <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
+          <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8 transform -translate-y-8 border border-[#EEECE6]">
             {/* Property Type Selector */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#1E7A6F] mb-2">
+              <label className="block text-sm font-medium text-[#253325] mb-2">
                 Property Type
               </label>
               <Select value={propertyType} onValueChange={setPropertyType}>
@@ -784,8 +782,8 @@ export function AddressSearchForm() {
                 <SelectContent>
                   <SelectItem value="house">
                     <div className="flex items-center gap-2">
-                      <Home className="w-4 h-4 text-[#1E7A6F]" />
-                      <span>House</span>
+                      <Home className={`w-8 h-8 mb-3 ${propertyType === "house" ? "text-[#253325]" : "text-[#9A9488]"}`} />
+                      <span className={`font-semibold ${propertyType === "house" ? "text-[#253325]" : "text-[#4A4A4A]"}`}>House</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="flat">
@@ -836,7 +834,7 @@ export function AddressSearchForm() {
                   >
                     {isLoadingSuggestions ? (
                       <div className="px-4 py-3 text-[#4C5A63] flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-[#1E7A6F] border-t-transparent rounded-full animate-spin mr-2"></div>
+                        <div className="w-4 h-4 border-2 border-[#253325] border-t-transparent rounded-full animate-spin mr-2"></div>
                         Loading suggestions...
                       </div>
                     ) : (
@@ -847,7 +845,7 @@ export function AddressSearchForm() {
                           onClick={() => handleSuggestionClick(suggestion)}
                         >
                           <div className="font-medium text-[#4C5A63] flex items-start">
-                            <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 text-[#1E7A6F]" />
+                            <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 text-[#253325]" />
                             <div>
                               <div>{suggestion.structured_formatting.main_text}</div>
                               <div className="text-sm text-[#4C5A63]/70">
@@ -864,7 +862,7 @@ export function AddressSearchForm() {
 
               <Button
                 type="submit"
-                className="py-3 px-8 h-14 font-semibold bg-[#F5A623] hover:bg-[#e69519] text-white whitespace-nowrap text-lg"
+                className="py-3 px-8 h-14 font-semibold bg-[#253325] hover:bg-[#1A241A] text-white whitespace-nowrap text-lg"
                 disabled={isLoading || !address.trim() || !propertyType}
               >
                 {isLoading ? (
@@ -888,27 +886,27 @@ export function AddressSearchForm() {
       {/* How It Works Section */}
       <section id="how-it-works" className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-[#1E7A6F] mb-4">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center text-[#253325] mb-4">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-12">
             <div className="text-center">
               <div className="w-20 h-20 bg-[#1E7A6F] rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">1</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-[#1E7A6F]">Enter the property address</h3>
+              <h3 className="text-xl font-semibold mb-3 text-[#253325]">Enter the property address</h3>
               <p className="text-[#4C5A63]">Start by entering your full property address</p>
             </div>
             <div className="text-center">
               <div className="w-20 h-20 bg-[#1E7A6F] rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">2</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-[#1E7A6F]">We identify any restrictions</h3>
+              <h3 className="text-xl font-semibold mb-3 text-[#253325]">We identify any restrictions</h3>
               <p className="text-[#4C5A63]">We check for Article 4 Directions, Conservation Areas, and other restrictions</p>
             </div>
             <div className="text-center">
               <div className="w-20 h-20 bg-[#1E7A6F] rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">3</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-[#1E7A6F]">Get your report</h3>
+              <h3 className="text-xl font-semibold mb-3 text-[#253325]">Get your report</h3>
               <p className="text-[#4C5A63]">Receive a comprehensive report showing PD rights status in seconds</p>
             </div>
           </div>
@@ -918,30 +916,30 @@ export function AddressSearchForm() {
       {/* What We Check Section */}
       <section className="py-16 bg-[#F8F9FA]">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-[#1E7A6F] mb-12">What We Check</h2>
+          <h2 className="text-3xl font-bold text-center text-[#253325] mb-12">What We Check</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#1E7A6F] mb-2">Article 4 Directions</h3>
+              <h3 className="font-semibold text-[#253325] mb-2">Article 4 Directions</h3>
               <p className="text-[#4C5A63] text-sm">Areas where councils have withdrawn PD rights</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#1E7A6F] mb-2">Conservation Areas</h3>
+              <h3 className="font-semibold text-[#253325] mb-2">Conservation Areas</h3>
               <p className="text-[#4C5A63] text-sm">Protected areas with special character</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#1E7A6F] mb-2">National Parks & AONBs</h3>
+              <h3 className="font-semibold text-[#253325] mb-2">National Parks & AONBs</h3>
               <p className="text-[#4C5A63] text-sm">Areas of Outstanding Natural Beauty</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#1E7A6F] mb-2">Listed Buildings</h3>
+              <h3 className="font-semibold text-[#253325] mb-2">Listed Buildings</h3>
               <p className="text-[#4C5A63] text-sm">Buildings of special architectural interest</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#1E7A6F] mb-2">Flats & Maisonettes</h3>
+              <h3 className="font-semibold text-[#253325] mb-2">Flats & Maisonettes</h3>
               <p className="text-[#4C5A63] text-sm">Properties with limited PD rights</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#1E7A6F] mb-2">Commercial Properties</h3>
+              <h3 className="font-semibold text-[#253325] mb-2">Commercial Properties</h3>
               <p className="text-[#4C5A63] text-sm">Different rules for business premises</p>
             </div>
           </div>
@@ -951,7 +949,7 @@ export function AddressSearchForm() {
       {/* Comprehensive Planning Information Section */}
       <section id="planning-info" className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-[#1E7A6F] mb-12">Understanding Planning & Permitted Development</h2>
+          <h2 className="text-2xl font-bold text-center text-[#253325] mb-12">Understanding Planning & Permitted Development</h2>
 
           <div className="max-w-4xl mx-auto space-y-6">
             {/* What is Planning Permission */}
@@ -960,7 +958,7 @@ export function AddressSearchForm() {
                 onClick={() => toggleSection('planning-permission')}
                 className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-[#E6E8E6] transition-colors"
               >
-                <h3 className="text-lg font-semibold text-[#1E7A6F]">What is Planning Permission?</h3>
+                <h3 className="text-lg font-semibold text-[#253325]">What is Planning Permission?</h3>
                 {expandedSections['planning-permission'] ? (
                   <ChevronUp className="w-5 h-5 text-[#1E7A6F]" />
                 ) : (
@@ -999,7 +997,7 @@ export function AddressSearchForm() {
                 onClick={() => toggleSection('pd-rights')}
                 className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-[#E6E8E6] transition-colors"
               >
-                <h3 className="text-lg font-semibold text-[#1E7A6F]">What Are Permitted Development Rights?</h3>
+                <h3 className="text-lg font-semibold text-[#253325]">What Are Permitted Development Rights?</h3>
                 {expandedSections['pd-rights'] ? (
                   <ChevronUp className="w-5 h-5 text-[#1E7A6F]" />
                 ) : (
@@ -1088,7 +1086,7 @@ export function AddressSearchForm() {
                 onClick={() => toggleSection('restrictions')}
                 className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-[#E6E8E6] transition-colors"
               >
-                <h3 className="text-lg font-semibold text-[#1E7A6F]">Common Restrictions That Remove PD Rights</h3>
+                <h3 className="text-lg font-semibold text-[#253325]">Common Restrictions That Remove PD Rights</h3>
                 {expandedSections['restrictions'] ? (
                   <ChevronUp className="w-5 h-5 text-[#1E7A6F]" />
                 ) : (
@@ -1156,7 +1154,7 @@ export function AddressSearchForm() {
                 onClick={() => toggleSection('next-steps')}
                 className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-[#E6E8E6] transition-colors"
               >
-                <h3 className="text-lg font-semibold text-[#1E7A6F]">Next Steps & Getting Help</h3>
+                <h3 className="text-lg font-semibold text-[#253325]">Next Steps & Getting Help</h3>
                 {expandedSections['next-steps'] ? (
                   <ChevronUp className="w-5 h-5 text-[#1E7A6F]" />
                 ) : (
@@ -1210,15 +1208,17 @@ export function AddressSearchForm() {
 
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-[#1E7A6F] to-[#2A9D8F] text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Check Your Property?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Get instant clarity on your permitted development rights
+      <section className="bg-[#253325] py-20 text-white relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          <h1 className="text-4xl md:text-6xl font-normal mb-4 tracking-tight" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+            Permitted Development <span className="italic">Screening</span>
+          </h1>
+          <p className="text-xl opacity-90 mb-12 font-light tracking-wide text-[#B5AE9A]">
+            Professional planning analysis for UK residential properties.
           </p>
           <Button
             onClick={() => document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' })}
-            className="py-4 px-12 h-14 font-semibold bg-white text-[#1E7A6F] hover:bg-gray-100 text-lg"
+            className="py-4 px-12 h-14 font-semibold bg-white text-[#253325] hover:bg-gray-100 text-lg"
           >
             Start Your PD Rights Check
           </Button>
@@ -1226,7 +1226,7 @@ export function AddressSearchForm() {
       </section>
 
       {/* Simple Footer */}
-      <footer className="bg-[#2D3748] text-white py-12">
+      <footer className="bg-[#1C291C] text-white py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-white/70">
             This service helps identify common planning restrictions. Always verify with your local planning authority before starting work.

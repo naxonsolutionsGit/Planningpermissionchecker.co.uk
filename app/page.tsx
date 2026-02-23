@@ -93,7 +93,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState("search")
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <Header />
       <main className="w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

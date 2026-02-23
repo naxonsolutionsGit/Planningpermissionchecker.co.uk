@@ -1,33 +1,25 @@
 import Link from "next/link"
-import { ModeToggle } from "@/components/mode-toggle"
-import { Phone, Mail } from "lucide-react"
+import Image from "next/image"
 
 export function Header() {
   return (
-    <header className="bg-card border-b border-border shadow-sm">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-3">
-            {/* <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-primary-foreground font-bold text-lg">PC</span>
-            </div> */}
-            <div className="w-10 h-10  from-primary to-accent rounded-xl flex items-center justify-center shadow-md overflow-hidden">
-  <img 
-    src="/Logo1.png" 
-    alt="Planning Check Logo" 
-    className="w-full h-full object-cover"
-  />
-</div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-foreground">PDRIGHTSCHECK</span>
-              <span className="text-xs text-muted-foreground font-medium">.co.uk</span>
+    <header style={{ backgroundColor: '#253325', paddingTop: '40px', paddingBottom: '8px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+              <Image
+                src="/Logo1.png"
+                alt="PD RightsCheck Logo"
+                width={48}
+                height={48}
+                style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+              />
             </div>
+            <span style={{ fontSize: '24px', fontWeight: 600, color: '#F0ECE3', letterSpacing: '0.05em', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+              PD RightsCheck
+            </span>
           </Link>
-
-
-          {/* <div className="flex items-center space-x-4">
-            <ModeToggle />
-          </div> */}
         </div>
       </div>
     </header>

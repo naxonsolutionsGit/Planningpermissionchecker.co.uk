@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { DM_Sans, Inter } from "next/font/google"
+import { DM_Sans, Inter, Playfair_Display } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -18,6 +18,13 @@ const inter = Inter({
   weight: ["400", "500", "600"],
 })
 
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-playfair",
+  weight: ["400", "500", "600", "700"],
+})
+
 export const metadata: Metadata = {
   title: "PDRIGHTSCHECK.co.uk",
   description:
@@ -31,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${inter.variable} antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${dmSans.variable} ${inter.variable} ${playfair.variable} antialiased`} suppressHydrationWarning>
       <body className="font-sans">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange={false}>
           {children}

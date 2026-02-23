@@ -40,7 +40,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, addre
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <CreditCard className="w-5 h-5 text-[#1E7A6F]" />
+                        <CreditCard className="w-5 h-5 text-[#253325]" />
                         Official Land Registry Document
                     </DialogTitle>
                     <DialogDescription>
@@ -48,14 +48,14 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, addre
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="py-6 border-y border-teal-50 my-4">
+                <div className="py-6 border-y border-[#EEECE6] my-4">
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-sm text-muted-foreground">Property Address</span>
                         <span className="text-sm font-medium text-right max-w-[200px] truncate">{address}</span>
                     </div>
                     <div className="flex justify-between items-center text-lg font-bold">
                         <span>Total Payable</span>
-                        <span className="text-[#1E7A6F]">£{amount.toFixed(2)}</span>
+                        <span className="text-[#253325]">£{amount.toFixed(2)}</span>
                     </div>
                 </div>
 
@@ -84,7 +84,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, addre
                             </Button>
                             <Button
                                 onClick={handlePayment}
-                                className="bg-[#1E7A6F] hover:bg-[#19685f]"
+                                className="bg-[#253325] hover:bg-[#1A241A]"
                                 disabled={status === 'processing'}
                             >
                                 {status === 'processing' ? (
