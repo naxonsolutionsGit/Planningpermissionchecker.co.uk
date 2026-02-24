@@ -7,7 +7,7 @@ export default function LegalNoticePage() {
     const legalNoticeSections = [
         {
             title: "Overview",
-            icon: <Shield className="w-6 h-6 text-[#253325]" />,
+            icon: <Shield className="w-6 h-6 text-[#25423D]" />,
             content: [
                 "PDRightCheck is a paid information and screening service that collates, analyses, and presents planning-related information to support early-stage feasibility and decision-making.",
                 "The service provides a professional desktop assessment of permitted development potential, including checks against Article 4 Directions, planning constraints, and other relevant planning records, using publicly available datasets, mapping systems, and local authority information accessible at the time of the search."
@@ -15,7 +15,7 @@ export default function LegalNoticePage() {
         },
         {
             title: "User Responsibilities",
-            icon: <CheckCircle className="w-6 h-6 text-[#253325]" />,
+            icon: <CheckCircle className="w-6 h-6 text-[#25423D]" />,
             content: [
                 "The assessment is based in part on information submitted by the user, including (but not limited to) the property address, classification of the property (for example, house or flat), and other property-specific details. PDRightCheck relies on the accuracy and completeness of this information when generating its report.",
                 "Where incorrect, incomplete, or inaccurate information is provided, the results may not be applicable to the property in question. Users remain fully responsible for ensuring the accuracy of the information submitted."
@@ -23,7 +23,7 @@ export default function LegalNoticePage() {
         },
         {
             title: "Limitations of Information",
-            icon: <Scale className="w-6 h-6 text-[#253325]" />,
+            icon: <Scale className="w-6 h-6 text-[#25423D]" />,
             content: [
                 "While PDRightCheck takes reasonable care and professional diligence in sourcing and interpreting planning information, it does not create, verify, amend, or certify official planning records, nor does it replace the statutory role of the Local Planning Authority.",
                 "Local authority records may be incomplete, amended, subject to interpretation, inconsistently digitised, or updated after the date of assessment. Certain restrictions may not be apparent from publicly accessible sources alone, including Article 4 Directions, historic planning conditions, or the removal of permitted development rights at the time of original construction.",
@@ -46,7 +46,7 @@ export default function LegalNoticePage() {
             <Header />
 
             {/* Hero Section */}
-            <section className="bg-[#253325] py-16 text-white text-center">
+            <section className="bg-[#25423D] py-16 text-white text-center">
                 <div className="container mx-auto px-4">
                     <h1 className="text-4xl md:text-5xl font-normal mb-4" style={{ fontFamily: 'var(--font-playfair), serif' }}>Legal Notice & Disclaimer</h1>
                     <p className="text-lg opacity-90 max-w-2xl mx-auto">
@@ -64,7 +64,7 @@ export default function LegalNoticePage() {
                                 <div className="p-3 bg-[#F8F7F3] rounded-lg">
                                     {section.icon}
                                 </div>
-                                <h2 className="text-2xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{section.title}</h2>
+                                <h2 className="text-2xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{section.title}</h2>
                             </div>
                             <div className="space-y-4">
                                 {section.content.map((para, pIdx) => (
@@ -78,7 +78,7 @@ export default function LegalNoticePage() {
 
                     {/* Detailed Points */}
                     <div className="bg-white rounded-xl p-8 shadow-sm border border-[#E6E8E6]">
-                        <h3 className="text-xl font-normal text-[#253325] mb-6" style={{ fontFamily: 'var(--font-playfair), serif' }}>Users remain responsible for:</h3>
+                        <h3 className="text-xl font-normal text-[#25423D] mb-6" style={{ fontFamily: 'var(--font-playfair), serif' }}>Users remain responsible for:</h3>
                         <ul className="space-y-3">
                             {[
                                 "Verifying planning status with the relevant Local Planning Authority",
@@ -87,7 +87,7 @@ export default function LegalNoticePage() {
                                 "Compliance with building regulations and neighbor consultations"
                             ].map((item, i) => (
                                 <li key={i} className="flex items-start gap-3 text-[#4C5A63]">
-                                    <CheckCircle className="w-5 h-5 text-[#253325] mt-1 flex-shrink-0" />
+                                    <CheckCircle className="w-5 h-5 text-[#25423D] mt-1 flex-shrink-0" />
                                     <span>{item}</span>
                                 </li>
                             ))}

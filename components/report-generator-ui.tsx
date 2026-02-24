@@ -195,7 +195,7 @@ export function ReportGeneratorUI({ propertyData }: ReportGeneratorUIProps) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-[#25423D]" />
                 Report Generated Successfully
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -288,7 +288,7 @@ export function ReportGeneratorUI({ propertyData }: ReportGeneratorUIProps) {
                             <div className="text-sm text-muted-foreground">Restrictive</div>
                           </div>
                           <div className="text-center p-3 bg-muted rounded">
-                            <div className="text-2xl font-bold text-green-600">{section.data.confidence}%</div>
+                            <div className="text-2xl font-bold text-[#25423D]">{section.data.confidence}%</div>
                             <div className="text-sm text-muted-foreground">Confidence</div>
                           </div>
                         </div>

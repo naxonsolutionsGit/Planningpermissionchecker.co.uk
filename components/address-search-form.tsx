@@ -608,7 +608,7 @@ export function AddressSearchForm() {
         checks.push({
           type: "Property Type",
           status: "fail",
-          description: "Flat or maisonette detected â€” limited PD rights.",
+          description: "Flat or maisonette detected — limited PD rights.",
           documentationUrl: "",
           entitiesFound: 0
         })
@@ -619,7 +619,7 @@ export function AddressSearchForm() {
         checks.push({
           type: "Property Use",
           status: "fail",
-          description: "Commercial property detected â€” different PD rules apply.",
+          description: "Commercial property detected — different PD rules apply.",
           documentationUrl: "",
           entitiesFound: 0
         })
@@ -701,7 +701,7 @@ export function AddressSearchForm() {
     let pageNumber = 1;
 
     const colors = {
-      primary: [37, 51, 37] as [number, number, number], // #253325 (Dark Green)
+      primary: [37, 66, 61] as [number, number, number], // #25423D (Dark Green)
       success: [22, 163, 74] as [number, number, number],
       warning: [133, 77, 14] as [number, number, number],
       error: [211, 47, 47] as [number, number, number],
@@ -713,7 +713,7 @@ export function AddressSearchForm() {
       lightGreen: [220, 252, 231] as [number, number, number],
       lightYellow: [254, 249, 195] as [number, number, number],
       gaugeFill: [250, 249, 246] as [number, number, number], // #FAF9F6
-      info: [37, 51, 37] as [number, number, number], // Match primary
+      info: [37, 66, 61] as [number, number, number], // Match primary
       white: [255, 255, 255] as [number, number, number],
     };
 
@@ -1613,7 +1613,7 @@ export function AddressSearchForm() {
       <div className="space-y-6">
         <PlanningResultComponent result={result} propertySummary={propertySummary} />
         <div className="text-center space-y-4">
-          <Button onClick={handleDownloadReport} className="px-8 bg-[#253325] hover:bg-[#2F422F] text-white">
+          <Button onClick={handleDownloadReport} className="px-8 bg-[#25423D] hover:bg-[#1A241A] text-white">
             <Download className="w-4 h-4 mr-2" />
             Download PDF Report
           </Button>
@@ -1630,7 +1630,7 @@ export function AddressSearchForm() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section - exact match to design image */}
-      <section className="bg-[#253325]">
+      <section className="bg-[#25423D]">
         <div className="flex flex-col items-center px-6 pt-2 pb-20">
 
           {/* Subtitle - wide letter-spaced uppercase */}
@@ -1675,12 +1675,12 @@ export function AddressSearchForm() {
                   id="land-registry"
                   checked={includeLandRegistry}
                   onCheckedChange={(checked) => setIncludeLandRegistry(checked as boolean)}
-                  className="border-[#253325] text-[#253325] focus:ring-[#253325]"
+                  className="border-[#25423D] text-[#25423D] focus:ring-[#25423D]"
                 />
                 <div className="grid gap-1.5 leading-none">
                   <Label
                     htmlFor="land-registry"
-                    className="text-sm font-bold text-[#253325] cursor-pointer"
+                    className="text-sm font-bold text-[#25423D] cursor-pointer"
                   >
                     Include Official HM Land Registry Title Register
                   </Label>
@@ -1699,7 +1699,7 @@ export function AddressSearchForm() {
                   placeholder="Enter property address or postcode"
                   value={address}
                   onChange={(e) => handleAddressChange(e.target.value)}
-                  className="pl-11 pr-4 py-3.5 h-[52px] border border-[#DDD9D0] rounded-[12px] bg-[#EEECE6] focus-visible:ring-1 focus-visible:ring-[#253325]/20 focus-visible:border-[#253325]/30 text-[#4A4A4A] text-[15px] placeholder:text-[#A09A8E]"
+                  className="pl-11 pr-4 py-3.5 h-[52px] border border-[#DDD9D0] rounded-[12px] bg-[#EEECE6] focus-visible:ring-1 focus-visible:ring-[#25423D]/20 focus-visible:border-[#25423D]/30 text-[#4A4A4A] text-[15px] placeholder:text-[#A09A8E]"
                   disabled={isLoading}
                 />
 
@@ -1710,7 +1710,7 @@ export function AddressSearchForm() {
                   >
                     {isLoadingSuggestions ? (
                       <div className="px-4 py-3 text-[#4C5A63] flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-[#253325] border-t-transparent rounded-full animate-spin mr-2"></div>
+                        <div className="w-4 h-4 border-2 border-[#25423D] border-t-transparent rounded-full animate-spin mr-2"></div>
                         Loading suggestions...
                       </div>
                     ) : (
@@ -1721,7 +1721,7 @@ export function AddressSearchForm() {
                           onClick={() => handleSuggestionClick(suggestion)}
                         >
                           <div className="font-medium text-[#4C5A63] flex items-start">
-                            <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 text-[#253325]" />
+                            <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 text-[#25423D]" />
                             <div>
                               <div>{suggestion.structured_formatting.main_text}</div>
                               <div className="text-sm text-[#4C5A63]/70">
@@ -1738,7 +1738,7 @@ export function AddressSearchForm() {
 
               <Button
                 type="submit"
-                className="w-full py-3 px-6 h-[52px] font-semibold bg-[#253325] hover:bg-[#2F422F] text-[#E4DED2] whitespace-nowrap text-[15px] rounded-[12px] transition-colors"
+                className="w-full py-3 px-6 h-[52px] font-semibold bg-[#25423D] hover:bg-[#1A241A] text-[#E4DED2] whitespace-nowrap text-[15px] rounded-[12px] transition-colors"
                 disabled={isLoading || !address.trim()}
               >
                 {isLoading ? (
@@ -1763,27 +1763,27 @@ export function AddressSearchForm() {
       {/* How It Works Section */}
       <section id="how-it-works" className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-[#253325] mb-4">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center text-[#25423D] mb-4">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-12">
             <div className="text-center">
-              <div className="w-20 h-20 bg-[#253325] rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-[#25423D] rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">1</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-[#253325]">Enter the property address</h3>
+              <h3 className="text-xl font-semibold mb-3 text-[#25423D]">Enter the property address</h3>
               <p className="text-[#4C5A63]">Start by entering your full property address</p>
             </div>
             <div className="text-center">
-              <div className="w-20 h-20 bg-[#253325] rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-[#25423D] rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">2</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-[#253325]">We identify any restrictions</h3>
+              <h3 className="text-xl font-semibold mb-3 text-[#25423D]">We identify any restrictions</h3>
               <p className="text-[#4C5A63]">We check for Article 4 Directions, Conservation Areas, and other restrictions</p>
             </div>
             <div className="text-center">
-              <div className="w-20 h-20 bg-[#253325] rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-[#25423D] rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">3</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-[#253325]">Get your report</h3>
+              <h3 className="text-xl font-semibold mb-3 text-[#25423D]">Get your report</h3>
               <p className="text-[#4C5A63]">Receive a comprehensive report showing PD rights status in seconds</p>
             </div>
           </div>
@@ -1793,30 +1793,30 @@ export function AddressSearchForm() {
       {/* What We Check Section */}
       <section className="py-16 bg-[#F8F9FA]">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-[#253325] mb-12">What We Check</h2>
+          <h2 className="text-3xl font-bold text-center text-[#25423D] mb-12">What We Check</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#253325] mb-2">Article 4 Directions</h3>
+              <h3 className="font-semibold text-[#25423D] mb-2">Article 4 Directions</h3>
               <p className="text-[#4C5A63] text-sm">Areas where councils have withdrawn PD rights</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#253325] mb-2">Conservation Areas</h3>
+              <h3 className="font-semibold text-[#25423D] mb-2">Conservation Areas</h3>
               <p className="text-[#4C5A63] text-sm">Protected areas with special character</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#253325] mb-2">National Parks & AONBs</h3>
+              <h3 className="font-semibold text-[#25423D] mb-2">National Parks & AONBs</h3>
               <p className="text-[#4C5A63] text-sm">Areas of Outstanding Natural Beauty</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#253325] mb-2">Listed Buildings</h3>
+              <h3 className="font-semibold text-[#25423D] mb-2">Listed Buildings</h3>
               <p className="text-[#4C5A63] text-sm">Buildings of special architectural interest</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#253325] mb-2">Flats & Maisonettes</h3>
+              <h3 className="font-semibold text-[#25423D] mb-2">Flats & Maisonettes</h3>
               <p className="text-[#4C5A63] text-sm">Properties with limited PD rights</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E8E6]">
-              <h3 className="font-semibold text-[#253325] mb-2">Commercial Properties</h3>
+              <h3 className="font-semibold text-[#25423D] mb-2">Commercial Properties</h3>
               <p className="text-[#4C5A63] text-sm">Different rules for business premises</p>
             </div>
           </div>
@@ -1826,7 +1826,7 @@ export function AddressSearchForm() {
       {/* Comprehensive Planning Information Section */}
       <section id="planning-info" className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-[#253325] mb-12">Understanding Planning & Permitted Development</h2>
+          <h2 className="text-2xl font-bold text-center text-[#25423D] mb-12">Understanding Planning & Permitted Development</h2>
 
           <div className="max-w-4xl mx-auto space-y-6">
             {/* What is Planning Permission */}
@@ -1835,11 +1835,11 @@ export function AddressSearchForm() {
                 onClick={() => toggleSection('planning-permission')}
                 className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-[#E6E8E6] transition-colors"
               >
-                <h3 className="text-lg font-semibold text-[#253325]">What is Planning Permission?</h3>
+                <h3 className="text-lg font-semibold text-[#25423D]">What is Planning Permission?</h3>
                 {expandedSections['planning-permission'] ? (
-                  <ChevronUp className="w-5 h-5 text-[#253325]" />
+                  <ChevronUp className="w-5 h-5 text-[#25423D]" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-[#253325]" />
+                  <ChevronDown className="w-5 h-5 text-[#25423D]" />
                 )}
               </button>
               {expandedSections['planning-permission'] && (
@@ -1874,11 +1874,11 @@ export function AddressSearchForm() {
                 onClick={() => toggleSection('pd-rights')}
                 className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-[#E6E8E6] transition-colors"
               >
-                <h3 className="text-lg font-semibold text-[#253325]">What Are Permitted Development Rights?</h3>
+                <h3 className="text-lg font-semibold text-[#25423D]">What Are Permitted Development Rights?</h3>
                 {expandedSections['pd-rights'] ? (
-                  <ChevronUp className="w-5 h-5 text-[#253325]" />
+                  <ChevronUp className="w-5 h-5 text-[#25423D]" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-[#253325]" />
+                  <ChevronDown className="w-5 h-5 text-[#25423D]" />
                 )}
               </button>
               {expandedSections['pd-rights'] && (
@@ -1894,12 +1894,12 @@ export function AddressSearchForm() {
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                      <div className="bg-green-50 p-4 rounded border border-green-200">
-                        <h4 className="font-semibold text-green-800 mb-3 flex items-center">
+                      <div className="bg-[#25423D]/5 p-4 rounded border border-[#25423D]/20">
+                        <h4 className="font-semibold text-[#25423D] mb-3 flex items-center">
                           <Check className="w-4 h-4 mr-2" />
                           Common PD Rights Include:
                         </h4>
-                        <ul className="text-sm space-y-2 text-green-700">
+                        <ul className="text-sm space-y-2 text-[#25423D]/80">
                           <li className="flex items-start">
                             <Check className="w-3 h-3 mr-2 mt-1 flex-shrink-0" />
                             Small rear extensions (single storey)
@@ -1963,11 +1963,11 @@ export function AddressSearchForm() {
                 onClick={() => toggleSection('restrictions')}
                 className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-[#E6E8E6] transition-colors"
               >
-                <h3 className="text-lg font-semibold text-[#253325]">Common Restrictions That Remove PD Rights</h3>
+                <h3 className="text-lg font-semibold text-[#25423D]">Common Restrictions That Remove PD Rights</h3>
                 {expandedSections['restrictions'] ? (
-                  <ChevronUp className="w-5 h-5 text-[#253325]" />
+                  <ChevronUp className="w-5 h-5 text-[#25423D]" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-[#253325]" />
+                  <ChevronDown className="w-5 h-5 text-[#25423D]" />
                 )}
               </button>
               {expandedSections['restrictions'] && (
@@ -1976,21 +1976,21 @@ export function AddressSearchForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <div className="border-l-4 border-red-500 pl-4">
-                          <h4 className="font-semibold text-[#253325]">Article 4 Directions</h4>
+                          <h4 className="font-semibold text-[#25423D]">Article 4 Directions</h4>
                           <p className="text-sm mt-1">
                             Local councils can remove specific PD rights in certain areas to protect local character.
                           </p>
                         </div>
 
                         <div className="border-l-4 border-red-500 pl-4">
-                          <h4 className="font-semibold text-[#253325]">Conservation Areas</h4>
+                          <h4 className="font-semibold text-[#25423D]">Conservation Areas</h4>
                           <p className="text-sm mt-1">
                             Special protections for areas of architectural or historic interest.
                           </p>
                         </div>
 
                         <div className="border-l-4 border-red-500 pl-4">
-                          <h4 className="font-semibold text-[#253325]">Listed Buildings</h4>
+                          <h4 className="font-semibold text-[#25423D]">Listed Buildings</h4>
                           <p className="text-sm mt-1">
                             Strict controls on any alterations to buildings of special architectural or historic interest.
                           </p>
@@ -1999,21 +1999,21 @@ export function AddressSearchForm() {
 
                       <div className="space-y-4">
                         <div className="border-l-4 border-red-500 pl-4">
-                          <h4 className="font-semibold text-[#253325]">National Parks & AONBs</h4>
+                          <h4 className="font-semibold text-[#25423D]">National Parks & AONBs</h4>
                           <p className="text-sm mt-1">
                             Enhanced protections in areas of outstanding natural beauty.
                           </p>
                         </div>
 
                         <div className="border-l-4 border-red-500 pl-4">
-                          <h4 className="font-semibold text-[#253325]">Flats & Maisonettes</h4>
+                          <h4 className="font-semibold text-[#25423D]">Flats & Maisonettes</h4>
                           <p className="text-sm mt-1">
                             Most PD rights don't apply to flats - different rules for each dwelling type.
                           </p>
                         </div>
 
                         <div className="border-l-4 border-red-500 pl-4">
-                          <h4 className="font-semibold text-[#253325]">Commercial Properties</h4>
+                          <h4 className="font-semibold text-[#25423D]">Commercial Properties</h4>
                           <p className="text-sm mt-1">
                             Different PD rules apply to commercial, retail, and industrial properties.
                           </p>
@@ -2031,11 +2031,11 @@ export function AddressSearchForm() {
                 onClick={() => toggleSection('next-steps')}
                 className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-[#E6E8E6] transition-colors"
               >
-                <h3 className="text-lg font-semibold text-[#253325]">Next Steps & Getting Help</h3>
+                <h3 className="text-lg font-semibold text-[#25423D]">Next Steps & Getting Help</h3>
                 {expandedSections['next-steps'] ? (
-                  <ChevronUp className="w-5 h-5 text-[#253325]" />
+                  <ChevronUp className="w-5 h-5 text-[#25423D]" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-[#253325]" />
+                  <ChevronDown className="w-5 h-5 text-[#25423D]" />
                 )}
               </button>
               {expandedSections['next-steps'] && (
@@ -2051,27 +2051,27 @@ export function AddressSearchForm() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                       <div className="bg-white p-4 rounded border border-[#E6E8E6]">
-                        <h4 className="font-semibold text-[#253325] mb-2">Find Your Local Council</h4>
+                        <h4 className="font-semibold text-[#25423D] mb-2">Find Your Local Council</h4>
                         <p className="text-sm text-[#4C5A63]">
                           Contact details for planning departments in your area.
                         </p>
                       </div>
 
                       <div className="bg-white p-4 rounded border border-[#E6E8E6]">
-                        <h4 className="font-semibold text-[#253325] mb-2">Professional Advice</h4>
+                        <h4 className="font-semibold text-[#25423D] mb-2">Professional Advice</h4>
                         <p className="text-sm text-[#4C5A63]">
                           Consider consulting with a qualified planning consultant for complex projects.
                         </p>
                       </div>
                     </div>
 
-                    <div className="bg-green-50 p-4 rounded border border-green-200 mt-4">
-                      <h4 className="font-semibold text-green-800 mb-2">Remember:</h4>
-                      <ul className="text-sm space-y-1 text-green-700">
-                        <li>â€¢ PD rights only cover certain types and sizes of development</li>
-                        <li>â€¢ Building regulations approval is usually still required</li>
-                        <li>â€¢ Neighbour consultation may be needed for larger extensions</li>
-                        <li>â€¢ Conditions and limitations vary across different property types</li>
+                    <div className="bg-[#25423D]/5 p-4 rounded border border-[#25423D]/20 mt-4">
+                      <h4 className="font-semibold text-[#25423D] mb-2">Remember:</h4>
+                      <ul className="text-sm space-y-1 text-[#25423D]/80">
+                        <li className="flex items-start"><Check className="w-3 h-3 mr-2 mt-1 flex-shrink-0" /> PD rights only cover certain types and sizes of development</li>
+                        <li className="flex items-start"><Check className="w-3 h-3 mr-2 mt-1 flex-shrink-0" /> Building regulations approval is usually still required</li>
+                        <li className="flex items-start"><Check className="w-3 h-3 mr-2 mt-1 flex-shrink-0" /> Neighbour consultation may be needed for larger extensions</li>
+                        <li className="flex items-start"><Check className="w-3 h-3 mr-2 mt-1 flex-shrink-0" /> Conditions and limitations vary across different property types</li>
                       </ul>
                     </div>
                   </div>
@@ -2085,7 +2085,7 @@ export function AddressSearchForm() {
 
 
       {/* CTA Section */}
-      <section className="py-16 bg-[#253325] text-[#F0ECE3]">
+      <section className="py-16 bg-[#25423D] text-[#F0ECE3]">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: 'var(--font-playfair), serif' }}>Ready to Check Your Property?</h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto text-[#B5AE9A]">
@@ -2093,7 +2093,7 @@ export function AddressSearchForm() {
           </p>
           <Button
             onClick={() => document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' })}
-            className="py-4 px-12 h-14 font-semibold bg-[#F0ECE3] text-[#253325] hover:bg-[#E4DED2] text-lg rounded-xl"
+            className="py-4 px-12 h-14 font-semibold bg-[#F0ECE3] text-[#25423D] hover:bg-[#E4DED2] text-lg rounded-xl"
           >
             Start Your PD Rights Check
           </Button>
@@ -2101,7 +2101,7 @@ export function AddressSearchForm() {
       </section>
 
       {/* Simple Footer */}
-      <footer className="bg-[#1C291C] text-[#F0ECE3] py-12">
+      <footer className="bg-[#25423D] text-[#F0ECE3] py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-white/70 mb-4">
             This service helps identify common planning restrictions. Always verify with your local planning authority before starting work.
@@ -2110,11 +2110,11 @@ export function AddressSearchForm() {
             <Link href="/legal-notice" className="hover:text-white transition-colors underline underline-offset-4">
               Legal Notice / Disclaimer
             </Link>
-            <span className="hidden sm:inline opacity-30">â€¢</span>
+            <span className="hidden sm:inline opacity-30">•</span>
             <p>Information based on publicly available planning data from gov.uk</p>
           </div>
           <p className="text-white/30 text-[10px] mt-8">
-            Â© {new Date().getFullYear()} PDRightCheck.co.uk. All rights reserved.
+            © {new Date().getFullYear()} PDRightCheck.co.uk. All rights reserved.
           </p>
         </div>
       </footer>

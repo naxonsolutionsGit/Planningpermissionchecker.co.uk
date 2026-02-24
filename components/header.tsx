@@ -3,7 +3,7 @@ import Image from "next/image"
 
 export function Header() {
   return (
-    <header style={{ backgroundColor: '#253325', paddingTop: '40px', paddingBottom: '8px' }}>
+    <header style={{ backgroundColor: '#25423D', paddingTop: '40px', paddingBottom: '8px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>

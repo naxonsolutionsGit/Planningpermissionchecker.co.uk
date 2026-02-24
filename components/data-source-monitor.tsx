@@ -34,7 +34,7 @@ export function DataSourceMonitor() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "active":
-        return <CheckCircle className="h-4 w-4 text-green-600" />
+        return <CheckCircle className="h-4 w-4 text-[#25423D]" />
       case "maintenance":
         return <Clock className="h-4 w-4 text-yellow-600" />
       case "error":
@@ -47,7 +47,7 @@ export function DataSourceMonitor() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-[#25423D]/10 text-[#25423D] border-[#25423D]/20"
       case "maintenance":
         return "bg-yellow-100 text-yellow-800 border-yellow-200"
       case "error":
@@ -99,7 +99,7 @@ export function DataSourceMonitor() {
           <div className="pt-4 border-t">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-[#25423D]">
                   {sources.filter((s) => s.status === "active").length}
                 </div>
                 <div className="text-sm text-muted-foreground">Active</div>

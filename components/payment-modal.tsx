@@ -40,7 +40,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, addre
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <CreditCard className="w-5 h-5 text-[#253325]" />
+                        <CreditCard className="w-5 h-5 text-[#25423D]" />
                         Official Land Registry Document
                     </DialogTitle>
                     <DialogDescription>
@@ -55,15 +55,15 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, addre
                     </div>
                     <div className="flex justify-between items-center text-lg font-bold">
                         <span>Total Payable</span>
-                        <span className="text-[#253325]">£{amount.toFixed(2)}</span>
+                        <span className="text-[#25423D]">£{amount.toFixed(2)}</span>
                     </div>
                 </div>
 
                 {status === 'success' ? (
                     <div className="flex flex-col items-center justify-center py-4 text-center">
-                        <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
-                        <p className="font-bold text-green-700">Payment Successful!</p>
-                        <p className="text-sm text-green-600">Retrieving official document...</p>
+                        <CheckCircle2 className="w-12 h-12 text-[#25423D] mb-2" />
+                        <p className="font-bold text-[#25423D]">Payment Successful!</p>
+                        <p className="text-sm text-[#25423D]/70">Retrieving official document...</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -84,7 +84,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, addre
                             </Button>
                             <Button
                                 onClick={handlePayment}
-                                className="bg-[#253325] hover:bg-[#1A241A]"
+                                className="bg-[#25423D] hover:bg-[#1A241A]"
                                 disabled={status === 'processing'}
                             >
                                 {status === 'processing' ? (

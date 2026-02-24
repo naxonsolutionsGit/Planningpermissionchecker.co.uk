@@ -56,7 +56,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
   const prevAddressRef = useRef<string>("")
 
   const getStatusIcon = (hasRights: boolean) => {
-    return hasRights ? <CheckCircle className="w-10 h-10 text-[#253325]" /> : <XCircle className="w-10 h-10 text-red-600" />
+    return hasRights ? <CheckCircle className="w-10 h-10 text-[#25423D]" /> : <XCircle className="w-10 h-10 text-red-600" />
   }
 
   const getStatusColor = (hasRights: boolean) => {
@@ -66,7 +66,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
   const getCheckIcon = (status: "pass" | "fail" | "warning") => {
     switch (status) {
       case "pass":
-        return <CheckCircle className="w-5 h-5 text-green-600" />
+        return <CheckCircle className="w-5 h-5 text-[#25423D]" />
       case "fail":
         return <XCircle className="w-5 h-5 text-red-600" />
       case "warning":
@@ -225,7 +225,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
       <Card className={`${getStatusColor(result.hasPermittedDevelopmentRights)} border-2 shadow-none`}>
         <CardHeader className="text-center pb-6 pt-8">
           <div className="flex justify-center mb-6">{getStatusIcon(result.hasPermittedDevelopmentRights)}</div>
-          <CardTitle className="text-3xl font-normal text-[#253325] leading-tight mb-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+          <CardTitle className="text-3xl font-normal text-[#25423D] leading-tight mb-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
             {result.hasPermittedDevelopmentRights
               ? "Permitted Development Rights Likely Apply"
               : "Planning Permission Likely Required"}
@@ -238,7 +238,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
         <CardContent className="pb-8">
           <div className="text-center max-w-md mx-auto">
             <p className="text-sm text-[#4A4A4A] leading-relaxed">
-              Based on our analysis of <span className="font-semibold text-[#253325]">{result.localAuthority}</span> planning policy and property data.
+              Based on our analysis of <span className="font-semibold text-[#25423D]">{result.localAuthority}</span> planning policy and property data.
             </p>
           </div>
         </CardContent>
@@ -246,7 +246,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
 
       <Card className="border-[#EEECE6] shadow-none">
         <CardHeader className="pb-3 text-center">
-          <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Expert Analysis Summary</CardTitle>
+          <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Expert Analysis Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-[#4A4A4A] leading-relaxed text-center px-4">{result.summary}</p>
@@ -256,7 +256,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
       {propertySummary && (
         <Card className="border-[#EEECE6] shadow-none overflow-hidden">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property Context</CardTitle>
+            <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property Context</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -277,7 +277,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                   return (
                     <div className="mb-4 rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative aspect-[2/1] min-h-[150px] group shadow-sm">
                       <img
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x300&maptype=satellite&markers=color:0x253325%7C${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x300&maptype=satellite&markers=color:0x25423D%7C${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
                         alt="Property Location Map"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         onError={(e) => {
@@ -291,7 +291,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                       />
                       <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-[#F8F7F3]/80 backdrop-blur-sm">
                         <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
-                        <p className="text-[10px] text-[#253325] font-semibold uppercase tracking-wider">Map Preview Unavailable</p>
+                        <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map Preview Unavailable</p>
                       </div>
                     </div>
                   );
@@ -299,7 +299,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                 {result.coordinates && !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
                   <div className="mb-4 rounded-lg bg-[#F8F7F3] border border-dashed border-[#EEECE6] flex flex-col items-center justify-center py-8 px-4 text-center">
                     <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
-                    <p className="text-[10px] text-[#253325] font-semibold uppercase tracking-wider">Map visualization unavailable</p>
+                    <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map visualization unavailable</p>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-x-4 gap-y-5">
@@ -324,7 +324,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
               <div className="space-y-5 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-8 border-[#EEECE6]">
                 <div className="space-y-1">
                   <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Last Sold Value</span>
-                  <div className="text-2xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
+                  <div className="text-2xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
                   <div className="flex items-center gap-2 text-[11px] text-[#9A9488]">
                     <Calendar className="h-3.5 w-3.5" />
                     <span>Transaction Date: <span className="text-[#4A4A4A] font-medium">{String(propertySummary.lastSoldDate || 'No recent data')}</span></span>
@@ -341,7 +341,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
 
       <Card className="border-[#EEECE6] shadow-none">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Policy Compliance Checks</CardTitle>
+          <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Policy Compliance Checks</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -350,10 +350,10 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                 <div className="mt-0.5">{getCheckIcon(check.status)}</div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-semibold text-[#253325] text-[15px]">{check.type}</span>
+                    <span className="font-semibold text-[#25423D] text-[15px]">{check.type}</span>
                     <Badge
                       variant="outline"
-                      className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0 border-none ${check.status === "pass" ? "bg-green-100 text-green-800" :
+                      className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0 border-none ${check.status === "pass" ? "bg-[#25423D]/10 text-[#25423D]" :
                         check.status === "fail" ? "bg-red-100 text-red-800" :
                           "bg-[#EEECE6] text-[#4A4A4A]"
                         }`}
@@ -363,7 +363,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                   </div>
                   <p className="text-[13px] text-[#4A4A4A] leading-relaxed mb-2">{check.description}</p>
                   {check.documentationUrl && (
-                    <a href={check.documentationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-[#253325] hover:opacity-70 transition-opacity uppercase tracking-tight">
+                    <a href={check.documentationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-[#25423D] hover:opacity-70 transition-opacity uppercase tracking-tight">
                       Policy Guidance <ExternalLink className="h-2.5 w-2.5" />
                     </a>
                   )}
@@ -401,9 +401,9 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
           >
             <div className="flex items-center gap-3">
               <div className="bg-[#EEECE6] p-2 rounded-full">
-                <History className="w-5 h-5 text-[#253325]" />
+                <History className="w-5 h-5 text-[#25423D]" />
               </div>
-              <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property History</CardTitle>
+              <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property History</CardTitle>
             </div>
             {showPropertyHistory ? <ChevronUp className="w-5 h-5 text-[#9A9488]" /> : <ChevronDown className="w-5 h-5 text-[#9A9488]" />}
           </button>
@@ -413,7 +413,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
           <CardContent>
             {isLoadingApplications ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-[#253325]/20 mb-3" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#25423D]/20 mb-3" />
                 <span className="text-xs font-bold uppercase tracking-widest text-[#9A9488]">Retrieving records...</span>
               </div>
             ) : applicationsError ? (
@@ -429,7 +429,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           {app.reference && <Badge variant="secondary" className="text-xs font-mono">{app.reference}</Badge>}
                           {app.status && (
-                            <Badge variant="outline" className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted') ? 'bg-green-50 border-green-300 text-green-800' : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected') ? 'bg-red-50 border-red-300 text-red-800' : 'bg-yellow-50 border-yellow-300 text-yellow-800'}`}>
+                            <Badge variant="outline" className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted') ? 'bg-[#25423D]/10 border-[#25423D]/30 text-[#25423D]' : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected') ? 'bg-red-50 border-red-300 text-red-800' : 'bg-yellow-50 border-yellow-300 text-yellow-800'}`}>
                               {app.status}
                             </Badge>
                           )}
@@ -460,7 +460,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                     href="https://regs.thurrock.gov.uk/online-applications/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#253325] text-[#FAF9F6] rounded-full hover:bg-[#1A241A] transition-all transform hover:-translate-y-0.5 text-xs font-bold uppercase tracking-widest shadow-lg shadow-black/5"
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#25423D] text-[#FAF9F6] rounded-full hover:bg-[#1A241A] transition-all transform hover:-translate-y-0.5 text-xs font-bold uppercase tracking-widest shadow-lg shadow-black/5"
                   >
                     Search Local Authority Portal
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -481,9 +481,9 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
           >
             <div className="flex items-center gap-3">
               <div className="bg-[#EEECE6] p-2 rounded-full">
-                <MapPin className="w-5 h-5 text-[#253325]" />
+                <MapPin className="w-5 h-5 text-[#25423D]" />
               </div>
-              <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Surrounding Area History</CardTitle>
+              <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Surrounding Area History</CardTitle>
             </div>
             {showSurroundingHistory ? <ChevronUp className="w-5 h-5 text-[#9A9488]" /> : <ChevronDown className="w-5 h-5 text-[#9A9488]" />}
           </button>
@@ -493,7 +493,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
           <CardContent className="pt-2">
             {isLoadingApplications ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-[#253325]/20 mb-3" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#25423D]/20 mb-3" />
                 <span className="text-xs font-bold uppercase tracking-widest text-[#9A9488]">Searching vicinity...</span>
               </div>
             ) : surroundingApps.length > 0 ? (
@@ -505,7 +505,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           {app.reference && <Badge variant="secondary" className="text-xs font-mono">{app.reference}</Badge>}
                           {app.status && (
-                            <Badge variant="outline" className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted') ? 'bg-green-50 border-green-300 text-green-800' : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected') ? 'bg-red-50 border-red-300 text-red-800' : 'bg-yellow-50 border-yellow-300 text-yellow-800'}`}>
+                            <Badge variant="outline" className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted') ? 'bg-[#25423D]/10 border-[#25423D]/30 text-[#25423D]' : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected') ? 'bg-red-50 border-red-300 text-red-800' : 'bg-yellow-50 border-yellow-300 text-yellow-800'}`}>
                               {app.status}
                             </Badge>
                           )}

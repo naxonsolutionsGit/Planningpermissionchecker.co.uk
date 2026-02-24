@@ -9,7 +9,7 @@ interface ConfidenceIndicatorProps {
 
 export function ConfidenceIndicator({ confidence, showDetails = false, size = "md" }: ConfidenceIndicatorProps) {
   const getConfidenceLevel = (confidence: number) => {
-    if (confidence >= 95) return { level: "High Certainty", color: "bg-green-100 text-green-800", icon: TrendingUp }
+    if (confidence >= 95) return { level: "High Certainty", color: "bg-[#25423D]/10 text-[#25423D]", icon: TrendingUp }
     if (confidence >= 85) return { level: "Good Certainty", color: "bg-yellow-100 text-yellow-800", icon: Minus }
     return { level: "Review Advised", color: "bg-red-100 text-red-800", icon: TrendingDown }
   }
@@ -47,7 +47,7 @@ export function ConfidenceIndicator({ confidence, showDetails = false, size = "m
             cy="50%"
             r={radius}
             fill="transparent"
-            stroke="#253325"
+            stroke="#25423D"
             strokeWidth="6"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
@@ -58,7 +58,7 @@ export function ConfidenceIndicator({ confidence, showDetails = false, size = "m
 
         {/* Center Text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-normal text-[#253325] leading-none mb-0.5" style={{ fontFamily: 'var(--font-playfair), serif' }}>{confidence}</span>
+          <span className="text-3xl font-normal text-[#25423D] leading-none mb-0.5" style={{ fontFamily: 'var(--font-playfair), serif' }}>{confidence}</span>
           <span className="text-[10px] font-bold text-[#9A9488] uppercase tracking-tighter">%</span>
         </div>
       </div>

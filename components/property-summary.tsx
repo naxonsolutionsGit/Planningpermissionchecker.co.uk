@@ -19,7 +19,7 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
     return (
         <Card>
             <CardHeader className="pb-4">
-                <CardTitle className="text-xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property Details</CardTitle>
+                <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property Details</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -68,7 +68,7 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                     <div className="space-y-5 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-8 border-[#EEECE6]">
                         <div className="space-y-1">
                             <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Last Sold Transaction</span>
-                            <div className="text-3xl font-normal text-[#253325]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{String(data.lastSoldPrice || 'Market Estimate Unavailable')}</div>
+                            <div className="text-3xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{String(data.lastSoldPrice || 'Market Estimate Unavailable')}</div>
                             <div className="flex items-center gap-2 text-xs text-[#9A9488]">
                                 <Calendar className="h-3.5 w-3.5" />
                                 <span>Sold on <span className="text-[#4A4A4A]">{String(data.lastSoldDate || 'No recent transaction info')}</span></span>
@@ -78,7 +78,7 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                         {data.titleNumber && (
                             <div className="space-y-1 pt-3 border-t border-[#EEECE6]">
                                 <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">HMLR Title Number</span>
-                                <div className="flex items-center gap-1.5 text-[14px] font-medium text-[#253325]">
+                                <div className="flex items-center gap-1.5 text-[14px] font-medium text-[#25423D]">
                                     <Hash className="h-3.5 w-3.5 text-[#9A9488]" />
                                     <span>{String(data.titleNumber)}</span>
                                 </div>
