@@ -11,6 +11,15 @@ export interface PropertySummaryProps {
         lastSoldDate: string
         titleNumber?: string
         epcRating?: string
+        epcData?: {
+            lmkKey: string;
+            currentEnergyRating: string;
+            potentialEnergyRating: string;
+            currentEnergyEfficiency: string;
+            potentialEnergyEfficiency: string;
+            inspectionDate: string;
+        };
+        postcode?: string;
     }
     pdRightsApply?: boolean
 }
@@ -47,17 +56,67 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                                     <span>{String(data.receptions || 'Information Unavailable')}</span>
                                 </div>
                             </div>
-                            {data.epcRating && (
+                            {data.epcRating ? (
                                 <div className="space-y-1">
                                     <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">EPC Rating</span>
-                                    <div className="flex items-center gap-1.5 text-[15px] font-medium text-[#4A4A4A]">
-                                        <Zap className="h-3.5 w-3.5 text-[#9A9488]" />
-                                        <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-bold text-white ${['A', 'B'].includes(data.epcRating) ? 'bg-green-600' :
-                                            ['C'].includes(data.epcRating) ? 'bg-green-500' :
-                                                ['D'].includes(data.epcRating) ? 'bg-yellow-500' :
-                                                    'bg-orange-500'
-                                            }`}>
-                                            Rating: {data.epcRating}
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-1.5 text-[15px] font-medium text-[#4A4A4A]">
+                                            <Zap className="h-3.5 w-3.5 text-[#9A9488]" />
+                                            <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-bold text-white ${['A', 'B'].includes(data.epcRating) ? 'bg-green-600' :
+                                                ['C'].includes(data.epcRating) ? 'bg-green-500' :
+                                                    ['D'].includes(data.epcRating) ? 'bg-yellow-500' :
+                                                        'bg-orange-500'
+                                                }`}>
+                                                Rating: {data.epcRating}
+                                            </span>
+                                        </div>
+                                        {data.epcData?.lmkKey ? (
+                                            <a
+                                                href={`https://find-energy-certificate.service.gov.uk/energy-certificate/${data.epcData.lmkKey}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[9px] text-[#25423D] hover:underline flex items-center gap-0.5 underline-offset-2"
+                                            >
+                                                View Official Certificate
+                                            </a>
+                                        ) : (
+                                            <a
+                                                href={`https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(data.postcode || "")}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[9px] text-[#25423D] hover:underline flex items-center gap-0.5 underline-offset-2"
+                                            >
+                                                Search Register
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-1">
+                                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">EPC Register</span>
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-1.5 text-[15px] font-medium text-[#4A4A4A]">
+                                            <Zap className="h-3.5 w-3.5 text-[#9A9488]" />
+                                            <span className="text-[14px]">Search Records</span>
+                                        </div>
+                                        <a
+                                            href={`https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(data.postcode || "")}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[9px] text-[#25423D] hover:underline flex items-center gap-0.5 underline-offset-2"
+                                        >
+                                            Search Official Register
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+                            {data.epcData?.currentEnergyEfficiency && (
+                                <div className="space-y-1">
+                                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Efficiency Score</span>
+                                    <div className="text-[15px] font-medium text-[#4A4A4A]">
+                                        {data.epcData.currentEnergyEfficiency}
+                                        <span className="text-[11px] text-[#9A9488] ml-1">
+                                            (Potential: {data.epcData.potentialEnergyEfficiency})
                                         </span>
                                     </div>
                                 </div>

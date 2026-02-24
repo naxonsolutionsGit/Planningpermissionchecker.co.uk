@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, XCircle, AlertTriangle, MapPin, History, ExternalLink, ChevronDown, ChevronUp, Loader2, Bed, Home, Calendar } from "lucide-react"
+import { CheckCircle, XCircle, AlertTriangle, MapPin, History, ExternalLink, ChevronDown, ChevronUp, Loader2, Bed, Home, Calendar, Zap } from "lucide-react"
 import { LegalDisclaimer } from "@/components/legal-disclaimer"
 import { ConfidenceIndicator } from "@/components/confidence-indicator"
 import { useState, useEffect, useRef } from "react"
@@ -12,6 +12,7 @@ export interface PlanningCheck {
   status: "pass" | "fail" | "warning"
   description: string
   documentationUrl: string
+  reference?: string // Reference for Article 4 etc.
   entitiesFound?: number
   allEntities?: any[]
 }
@@ -24,6 +25,7 @@ export interface PlanningResult {
   }
   hasPermittedDevelopmentRights: boolean
   confidence?: number
+  score?: number // Overall score (e.g., 6)
   localAuthority: string
   checks: PlanningCheck[]
   summary: string
@@ -318,6 +320,45 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                       <span>{String(propertySummary.bedrooms || 'Information Unavailable')}</span>
                     </div>
                   </div>
+                  {propertySummary.epcRating ? (
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">EPC Rating</span>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 text-[14px] font-medium text-[#4A4A4A]">
+                          <Zap className="h-3.5 w-3.5 text-[#9A9488]" />
+                          <span className={`px-2 py-0.5 rounded-sm text-[10px] font-bold text-white ${['A', 'B'].includes(propertySummary.epcRating) ? 'bg-green-600' :
+                            ['C'].includes(propertySummary.epcRating) ? 'bg-green-500' :
+                              ['D'].includes(propertySummary.epcRating) ? 'bg-yellow-500' :
+                                'bg-orange-500'
+                            }`}>
+                            Rating: {propertySummary.epcRating}
+                          </span>
+                        </div>
+                        {propertySummary.epcData?.lmkKey && (
+                          <a
+                            href={`https://find-energy-certificate.service.gov.uk/energy-certificate/${propertySummary.epcData.lmkKey}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#25423D] hover:opacity-70 transition-opacity uppercase tracking-tight"
+                          >
+                            View Online Certificate <ExternalLink className="h-2.5 w-2.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">EPC Register</span>
+                      <a
+                        href={`https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary.postcode || result.address.split(',').pop()?.trim() || "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#25423D] bg-[#F8F7F3] border border-[#EEECE6] px-3 py-1.5 rounded-md hover:bg-[#EEECE6] transition-colors uppercase tracking-tight"
+                      >
+                        Search EPC Register <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -330,6 +371,17 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                     <span>Transaction Date: <span className="text-[#4A4A4A] font-medium">{String(propertySummary.lastSoldDate || 'No recent data')}</span></span>
                   </div>
                 </div>
+                {propertySummary.epcData?.currentEnergyEfficiency && (
+                  <div className="space-y-1 pt-3 border-t border-[#EEECE6]">
+                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Efficiency Score</span>
+                    <div className="text-[14px] font-medium text-[#4A4A4A]">
+                      {propertySummary.epcData.currentEnergyEfficiency}
+                      <span className="text-[11px] text-[#9A9488] ml-1">
+                        (Potential: {propertySummary.epcData.potentialEnergyEfficiency})
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <p className="text-[10px] text-[#A09A8E] leading-relaxed italic border-t border-[#EEECE6] pt-3">
                   Sourced from HM Land Registry and EPC Open Data.
                 </p>

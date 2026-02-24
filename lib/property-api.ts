@@ -12,6 +12,15 @@ export interface PropertySummary {
     lastSoldDate: string;
     titleNumber: string;
     epcRating?: string;
+    epcData?: {
+        lmkKey: string;
+        currentEnergyRating: string;
+        potentialEnergyRating: string;
+        currentEnergyEfficiency: string;
+        potentialEnergyEfficiency: string;
+        inspectionDate: string;
+    };
+    postcode?: string;
 }
 
 import { determinePropertyType } from "./utils";
@@ -76,7 +85,9 @@ export async function fetchPropertySummary(address: string, postcode: string): P
             lastSoldPrice: propertyData?.lastSoldPrice ? `£${propertyData.lastSoldPrice.toLocaleString()}` : (hmlrData?.price ? `£${parseInt(hmlrData.price).toLocaleString()}` : "Market Estimate Unavailable"),
             lastSoldDate: propertyData?.lastSoldDate ? formatDate(propertyData.lastSoldDate) : (hmlrData?.date ? formatDate(hmlrData.date) : "No recent transaction info"),
             titleNumber: titleNumber || "Official Record Gated",
-            epcRating: epcData?.epcRating || propertyData?.epcRating
+            epcRating: epcData?.epcRating || propertyData?.epcRating,
+            epcData: epcData?.epcFullData,
+            postcode: postcode
         };
     } catch (error) {
         console.error("[PropertyAPI] Error:", error);
@@ -257,22 +268,32 @@ async function fetchEPCData(postcode: string, address: string) {
         // Better address matching for EPC
         const houseIdentifier = houseNumber || address.split(",")[0].toLowerCase().trim();
 
-        const record = rows.find((r: any) => {
+        // Exact house number + Street match (highest priority)
+        let record = rows.find((r: any) => {
             const epcAddr = String(r["address"] || "").toLowerCase();
             const epcAddr1 = String(r["address1"] || "").toLowerCase();
-            const epcAddr2 = String(r["address2"] || "").toLowerCase();
-            const epcAddr3 = String(r["address3"] || "").toLowerCase();
 
-            // Check if house number AND street name are present
             const hasHouse = epcAddr.includes(houseIdentifier) || epcAddr1.includes(houseIdentifier);
             const hasStreet = epcAddr.includes(streetNameMatch) || epcAddr1.includes(streetNameMatch);
 
             return hasHouse && hasStreet;
-        }) || rows.find((r: any) => {
-            // Fallback to just house number
-            const epcAddr = String(r["address"] || "").toLowerCase();
-            return houseNumber && epcAddr.includes(houseNumber);
-        }) || rows[0];
+        });
+
+        // Fallback: Just house number match if street name is slightly different (e.g. "Camden Rd" vs "Camden Road")
+        if (!record && houseNumber) {
+            record = rows.find((r: any) => {
+                const epcAddr = String(r["address"] || "").toLowerCase();
+                const epcAddr1 = String(r["address1"] || "").toLowerCase();
+                // Check for house number followed by space or comma to avoid matching "12" with "123"
+                const houseRegex = new RegExp(`(^|\\s|,)${houseNumber}(\\s|,|$)`);
+                return houseRegex.test(epcAddr) || houseRegex.test(epcAddr1);
+            });
+        }
+
+        if (!record) {
+            console.log(`[EPC] No precise match found for ${houseIdentifier} in ${cleanPostcode}`);
+            return null;
+        }
 
         console.log(`[EPC] Match found: ${record["address"]}`);
 
@@ -311,6 +332,14 @@ async function fetchEPCData(postcode: string, address: string) {
             bedrooms: estimatedBedrooms,
             bathrooms: estimatedBathrooms,
             epcRating,
+            epcFullData: {
+                lmkKey: record["lmk-key"] || "",
+                currentEnergyRating: record["current-energy-rating"] || "",
+                potentialEnergyRating: record["potential-energy-rating"] || "",
+                currentEnergyEfficiency: record["current-energy-efficiency"] || "",
+                potentialEnergyEfficiency: record["potential-energy-efficiency"] || "",
+                inspectionDate: record["inspection-date"] || ""
+            }
         };
     } catch {
         return null;

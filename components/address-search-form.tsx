@@ -710,8 +710,8 @@ export function AddressSearchForm() {
       tagBg: [243, 244, 246] as [number, number, number],
       border: [238, 236, 230] as [number, number, number],
       lightBlue: [248, 247, 243] as [number, number, number], // #F8F7F3 (Cream)
-      lightGreen: [220, 252, 231] as [number, number, number],
-      lightYellow: [254, 249, 195] as [number, number, number],
+      lightGreen: [240, 242, 240] as [number, number, number], // #F0F2F0 (Lightest Green)
+      lightYellow: [254, 252, 248] as [number, number, number], // #FEFCF8 (Lightest Yellow)
       gaugeFill: [250, 249, 246] as [number, number, number], // #FAF9F6
       info: [37, 66, 61] as [number, number, number], // Match primary
       white: [255, 255, 255] as [number, number, number],
@@ -743,12 +743,56 @@ export function AddressSearchForm() {
       }
     };
 
-    const drawCheckmark = (x: number, y: number, c: [number, number, number]) => {
-      doc.setDrawColor(...c); doc.setLineWidth(0.8); doc.line(x - 1.5, y, x - 0.5, y + 1.2); doc.line(x - 0.5, y + 1.2, x + 1.8, y - 1.5);
+    const drawCheckmark = (x: number, y: number, c: [number, number, number], size: number = 1.2) => {
+      doc.setDrawColor(...c);
+      doc.setLineWidth(0.4);
+      doc.line(x - size, y, x - size * 0.3, y + size);
+      doc.line(x - size * 0.3, y + size, x + size * 1.5, y - size);
     };
 
     const drawExclamation = (x: number, y: number, c: [number, number, number]) => {
-      doc.setFillColor(...c); doc.rect(x - 0.4, y - 1.8, 0.8, 2.5, 'F'); doc.circle(x, y + 1.5, 0.5, 'F');
+      doc.setFillColor(...c);
+      doc.rect(x - 0.4, y - 1.8, 0.8, 2.5, 'F');
+      doc.circle(x, y + 1.5, 0.5, 'F');
+    };
+
+    const drawCaution = (x: number, y: number, c: [number, number, number]) => {
+      doc.setDrawColor(...c);
+      doc.setLineWidth(0.5);
+      // Triangle
+      doc.line(x, y - 4, x - 4, y + 3);
+      doc.line(x - 4, y + 3, x + 4, y + 3);
+      doc.line(x + 4, y + 3, x, y - 4);
+      // Exclamation
+      doc.setFillColor(...c);
+      doc.rect(x - 0.3, y - 2, 0.6, 2.5, 'F');
+      doc.circle(x, y + 1.8, 0.4, 'F');
+    };
+
+    const drawShield = (x: number, y: number, c: [number, number, number]) => {
+      doc.setDrawColor(...c);
+      doc.setLineWidth(0.4);
+      // Shield shape
+      doc.line(x - 3, y - 3, x + 3, y - 3); // Top
+      doc.line(x - 3, y - 3, x - 3, y + 1); // Left side
+      doc.line(x + 3, y - 3, x + 3, y + 1); // Right side
+      // Curved bottom
+      doc.line(x - 3, y + 1, x, y + 4);
+      doc.line(x + 3, y + 1, x, y + 4);
+    };
+
+    const drawFile = (x: number, y: number, c: [number, number, number]) => {
+      doc.setDrawColor(...c);
+      doc.setLineWidth(0.4);
+      // Main rectangle
+      doc.rect(x - 2.5, y - 3.5, 5, 7);
+      // Folded corner
+      doc.line(x + 1, y - 3.5, x + 2.5, y - 2);
+      // Lines inside
+      doc.setLineWidth(0.2);
+      doc.line(x - 1.5, y - 1, x + 1.5, y - 1);
+      doc.line(x - 1.5, y + 1, x + 1.5, y + 1);
+      doc.line(x - 1.5, y + 2.5, x + 0.5, y + 2.5);
     };
 
     const drawLinkIcon = (x: number, y: number, size: number = 2) => {
@@ -829,108 +873,215 @@ export function AddressSearchForm() {
       console.error('Error fetching planning history for PDF:', error);
     }
 
-    // ===== HEADER (carVertical Layout Match) =====
+    // ===== PAGE 1: PROFESSIONAL COVER PAGE (Styled from Mockup) =====
 
-    // 1. Logo & Heading (Top Left)
-    try {
-      // Add Logo (Next to heading)
-      doc.addImage('/Logo1.png', 'PNG', 15, 12, 10, 10);
+    // 1. Background Map (Satellite view background for cover)
+    if (result.coordinates && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+      try {
+        const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${result.coordinates.lat},${result.coordinates.lng}&zoom=17&size=800x600&maptype=satellite&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+        const mapResp = await fetch(mapUrl);
+        if (mapResp.ok) {
+          const mapBlob = await mapResp.blob();
+          const reader = new FileReader();
+          const base64Promise = new Promise((resolve) => {
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(mapBlob);
+          });
+          const base64Data = await base64Promise as string;
 
-      // Heading text shifted to the right of the logo
-      doc.setTextColor(...colors.primary);
-      doc.setFontSize(22);
-      doc.setFont('helvetica', 'bold');
-      doc.text('PD RightCheck', 28, 20);
-    } catch (e) {
-      // Fallback if logo fails to load
-      doc.setTextColor(...colors.primary);
-      doc.setFontSize(22);
-      doc.setFont('helvetica', 'bold');
-      doc.text('PD RightCheck', 15, 20);
+          // Add map to bottom 60% of page
+          doc.addImage(base64Data, 'JPEG', 0, pageHeight * 0.4, pageWidth, pageHeight * 0.6);
+
+          // White gradient/overlay at top of map
+          doc.setFillColor(255, 255, 255);
+          for (let i = 0; i < 20; i++) {
+            doc.setGState(new (doc as any).GState({ opacity: 1 - (i * 0.05) }));
+            doc.rect(0, pageHeight * 0.4 + (i * 2), pageWidth, 2.5, 'F');
+          }
+          doc.setGState(new (doc as any).GState({ opacity: 1 }));
+        }
+      } catch (e) { console.error("Cover map error:", e); }
     }
 
-    // 3. Main Content Block (Left, below Logo)
-    yPosition = 40;
+    // 2. Logo & Branding
+    try {
+      doc.addImage('/Logo1.png', 'PNG', 15, 15, 8, 8);
+      doc.setTextColor(...colors.primary);
+      doc.setFontSize(14);
+      doc.setFont('times', 'bold');
+      doc.text('PD RightCheck', 25, 21);
+    } catch (e) {
+      doc.setTextColor(...colors.primary);
+      doc.setFontSize(14);
+      doc.setFont('times', 'bold');
+      doc.text('PD RightCheck', 15, 21);
+    }
 
-    // Property Title (Address)
+    // 3. Title
+    doc.setTextColor(...colors.primary);
+    doc.setFontSize(32);
+    doc.setFont('times', 'normal');
+    doc.text('PERMITTED DEVELOPMENT', 15, 75);
+    doc.text('FEASIBILITY REPORT', 15, 88);
+
+    // 4. Address
     doc.setTextColor(...colors.textDark);
-    doc.setFontSize(26); // Slightly bigger for impact
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    const titleLines = doc.splitTextToSize(result.address.split(',')[0].trim().toUpperCase(), pageWidth - 70);
-    doc.text(titleLines, 15, yPosition);
-    yPosition += (titleLines.length * 11);
+    const displayAddr = result.address.split(',').map(s => s.trim()).join(', ');
+    const addrLines = doc.splitTextToSize(displayAddr, pageWidth - 30);
+    doc.text(addrLines, 15, 110);
 
-    // Generated Date subtitle
-    doc.setFontSize(10);
-    doc.setTextColor(150, 150, 150); // Light Grey
+    // 5. Metadata
+    let metaY = 135;
+    const drawMeta = (label: string, value: string) => {
+      doc.setFontSize(9);
+      doc.setTextColor(...colors.textGray);
+      doc.setFont('helvetica', 'normal');
+      doc.text(label, 15, metaY);
+      doc.setTextColor(...colors.textDark);
+      doc.setFont('helvetica', 'bold');
+      doc.text(value, 45, metaY);
+      metaY += 7;
+    };
+
+    drawMeta('Prepared:', new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }));
+    drawMeta('Report Reference:', `PC-${Date.now().toString().slice(-8)}`);
+    drawMeta('Prepared by:', 'PD RightCheck \u2013 Professional Planning Screening Service');
+
+    // Cover Page Footer
+    doc.setFontSize(8);
+    doc.setTextColor(...colors.textGray);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Generated on ${new Date().toLocaleDateString('en-GB')}`, 15, yPosition);
+    doc.text('Prepared by: PD RightCheck \u2013 Professional Planning Screening Service', pageWidth / 2, pageHeight - 15, { align: 'center' });
+
+    // Move to next page for contents
+    doc.addPage();
+    pageNumber++;
+    yPosition = 25;
+
+    // ===== PAGE 2: EXECUTIVE SUMMARY (Styled from Mockup) =====
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(18);
+    doc.setFont('times', 'normal');
+    doc.text('Executive Summary', 15, yPosition);
+    yPosition += 10;
+
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    const execLines = doc.splitTextToSize('This property has been professionally screened for permitted development potential and planning constraints.', pageWidth - 30);
+    doc.text(execLines, 15, yPosition);
+    yPosition += 12;
+
+    // Key Findings
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Key Findings:', 15, yPosition);
+    yPosition += 8;
+
+    const findings = [
+      { text: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? 'Article 4 Direction detected \u2013 permitted development rights may be restricted.' : 'No Article 4 Direction restrictions identified.' },
+      { text: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'Conservation Area restriction identified.' : 'No Conservation Area restriction.' },
+      { text: result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'Listed Building status identified.' : 'No Listed Building status.' },
+      { text: 'No AONB or National Park constraints.' },
+      { text: `${result.confidence}% confidence score based on desktop planning data analysis.` }
+    ];
+
+    findings.forEach(f => {
+      drawCheckmark(18, yPosition - 1, colors.primary, 0.8);
+      doc.setFontSize(8);
+      doc.setTextColor(...colors.textDark);
+      doc.setFont('helvetica', 'normal');
+      const fLines = doc.splitTextToSize(f.text, pageWidth - 35);
+      doc.text(fLines, 25, yPosition);
+      yPosition += (fLines.length * 4) + 2;
+    });
 
     yPosition += 8;
 
-    // 4. Data Tags (Grey Background Pills)
-    let tagX = 15;
-    const tagHeight = 6;
-    const tagPadding = 4;
-
-    const tags = [
-      `Property: ${propertySummary?.propertyType || (isFlat ? 'Flat' : 'House')}`
-    ];
-
-    doc.setFontSize(8);
+    // Professional Recommendation
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
+    doc.text('Professional Recommendation:', 15, yPosition);
+    yPosition += 6;
 
-    tags.forEach(tag => {
-      const textWidth = doc.getTextWidth(tag);
-      const boxWidth = textWidth + (tagPadding * 2);
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    const recText = result.score >= 5
+      ? "Based on the screening results, the property appears to retain its standard permitted development rights. However, a Lawful Development Certificate is recommended for formal confirmation."
+      : "Due to identified constraints, a full planning application or formal written confirmation from the Local Planning Authority is likely required prior to development.";
+    const recLines = doc.splitTextToSize(recText, pageWidth - 30);
+    doc.text(recLines, 15, yPosition);
+    yPosition += (recLines.length * 4.5) + 12;
 
-      // Background
-      doc.setFillColor(...colors.tagBg);
-      doc.roundedRect(tagX, yPosition, boxWidth, tagHeight, 1, 1, 'F');
+    // Summary Check Cards (Mockup Style)
+    const drawSummaryCard = (label: string, status: string, iconType: 'shield' | 'file' | 'caution') => {
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(15, yPosition, pageWidth - 30, 15, 1, 1, 'S');
 
-      // Text
-      doc.setTextColor(55, 65, 81); // #374151 - matching analysis
-      doc.text(tag, tagX + tagPadding, yPosition + 4.2);
+      const iconX = 22;
+      const iconY = yPosition + 7.5;
+      if (iconType === 'shield') drawShield(iconX, iconY, colors.primary);
+      else if (iconType === 'file') drawFile(iconX, iconY, colors.primary);
+      else drawCaution(iconX, iconY, colors.warning);
 
-      tagX += boxWidth + 4; // Gap between tags
-    });
+      doc.setFontSize(9);
+      doc.setTextColor(...colors.textDark);
+      doc.setFont('helvetica', 'normal');
+      doc.text(label, 32, yPosition + 8.5);
 
-    // Add margin after tags to prevent overlap with gauge
-    yPosition += tagHeight + 10;
+      doc.setFontSize(7);
+      doc.setTextColor(...colors.textGray);
+      doc.text(status, pageWidth - 20, yPosition + 8.5, { align: 'right' });
 
-    // --- High-level status banner removed ---
+      yPosition += 18;
+    };
 
-    // --- Property Summary Section removed from here and relocated below restrictions ---
+    drawSummaryCard('Policy Restriction Identified', result.checks.find(c => c.type.toLowerCase().includes('article'))?.reference || 'NONE DETECTED', 'caution');
+    drawSummaryCard('Conservation Area Check', result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'RESTRICTION' : 'PASSED', 'shield');
+    drawSummaryCard('Listed Status Check', result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'RESTRICTION' : 'PASSED', 'file');
 
-    // ===== SCORE SECTION (Left Aligned Gauge) =====
-    // Matches "carVertical Score" section layout
+    addFooter();
 
-    const gaugeSize = 22; // Precision sizing
+    // ===== PAGE 3: PLANNING SCREENING DETAILS =====
+    doc.addPage();
+    pageNumber++;
+    yPosition = 25;
+
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PLANNING SCREENING CHECKS', 15, yPosition);
+    yPosition += 15;
+
+    // Confidence Score Section (Restored Gauge)
+    const gaugeSize = 22;
     const gaugeX = 38;
-    const gaugeCenterY = yPosition + gaugeSize + 5;
+    const gaugeCenterY = yPosition + gaugeSize;
 
-    // Calculation for the gap at the top
-    const gapAngle = (Math.PI * 2) * 0.12; // 12% gap for carVertical style
-    const startAngle = -Math.PI / 2 + (gapAngle / 2);
-    const fullCircleAngle = (Math.PI * 2) - gapAngle;
-
-    // 1. Donut Chart (Gauge)
-    // Center Fill
+    // Donut Chart Background
     doc.setFillColor(...colors.gaugeFill);
     doc.circle(gaugeX, gaugeCenterY, gaugeSize - 4, 'F');
 
-    // Background Ring (Light Blue Track)
+    // Background Ring
+    const gapAngle = (Math.PI * 2) * 0.12;
+    const startAngle = -Math.PI / 2 + (gapAngle / 2);
+    const fullCircleAngle = (Math.PI * 2) - gapAngle;
+
     doc.setLineCap('round');
     doc.setLineWidth(5.5);
     doc.setDrawColor(...colors.lightBlue);
     drawArc(gaugeX, gaugeCenterY, gaugeSize, startAngle, startAngle + fullCircleAngle);
 
-    // Progress Arc (Primary Blue)
+    // Progress Arc
     const passedChecks = result.checks.filter(c => c.status === 'pass').length;
     const totalChecks = result.checks.length;
     const checkPercentage = (passedChecks / totalChecks) * 100;
-
-    // Validate calculations
     const safePercentage = isNaN(checkPercentage) ? 0 : Math.min(100, Math.max(0, checkPercentage));
     const endAngleProgress = startAngle + (fullCircleAngle * (safePercentage / 100));
 
@@ -938,128 +1089,50 @@ export function AddressSearchForm() {
     if (passedChecks > 0) {
       drawArc(gaugeX, gaugeCenterY, gaugeSize, startAngle, endAngleProgress);
     }
-
-    doc.setLineCap('butt'); // Reset line cap
+    doc.setLineCap('butt');
 
     // Score Text inside Gauge
     doc.setTextColor(...colors.textDark);
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('6/6', gaugeX, gaugeCenterY + 2.5, { align: 'center' });
+    doc.text(`${passedChecks}/${totalChecks}`, gaugeX, gaugeCenterY + 2.5, { align: 'center' });
 
-    // 2. Score Info Block (Right of Gauge)
+    // Score Label
     const infoX = gaugeX + gaugeSize + 12;
-    let infoY = gaugeCenterY - 10;
-
-    // Title
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Confidence Score', infoX, infoY);
+    doc.text('Confidence Score', infoX, gaugeCenterY - 4);
 
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${result.confidence}% confidence rating based on statutory data.`, infoX, gaugeCenterY + 2);
 
+    yPosition = gaugeCenterY + gaugeSize + 15;
 
-    yPosition = gaugeCenterY + gaugeSize + 20;
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Detailed professional assessment of planning constraints:', 15, yPosition);
+    yPosition += 10;
 
-    // ===== STATUS CARDS (Grid Layout) =====
-    // 2 Rows, 3 Columns
-
-    const cardGap = 8;
-    const cardWidth = (pageWidth - 30 - (cardGap * 2)) / 3;
-    const cardHeight = 60;
-
-    const statusCards = [
-      {
-        title: 'Restrictions',
-        status: result.hasPermittedDevelopmentRights ? 'NO ISSUES' : 'ATTENTION',
-        desc: 'General planning permission and development rights check.',
-        state: result.hasPermittedDevelopmentRights ? 'success' : 'warning'
-      },
-      {
-        title: 'Article 4',
-        status: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? 'ATTENTION' : 'NO ISSUES',
-        desc: 'Specific directions removing permitted development rights.',
-        state: result.checks.find(c => c.type.toLowerCase().includes('article'))?.status === 'fail' ? 'warning' : 'success'
-      },
-      {
-        title: 'Conservation',
-        status: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'ATTENTION' : 'NO ISSUES',
-        desc: 'Proximity to conservation areas or designated land.',
-        state: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'warning' : 'success'
-      },
-      {
-        title: 'Listed Building',
-        status: result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'ATTENTION' : 'NO ISSUES',
-        desc: 'National statutory listed building status check.',
-        state: result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'warning' : 'success'
-      },
-      {
-        title: 'Region Check',
-        status: 'NO ISSUES',
-        desc: 'Local authority specific planning policy mapping.',
-        state: 'success'
-      },
-      {
-        title: 'Safety Risk',
-        status: 'NO ISSUES',
-        desc: 'Environmental factors and basic risk assessment.',
-        state: 'success'
-      }
-    ];
-
-    let currentX = 15;
-    let currentY = yPosition;
-
-    statusCards.forEach((card, index) => {
-      if (index > 0 && index % 3 === 0) {
-        currentX = 15;
-        currentY += cardHeight + cardGap;
-      }
-
-      // Card Container (White with gray border)
-      doc.setFillColor(255, 255, 255);
-      doc.setDrawColor(...colors.border);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(currentX, currentY, cardWidth, cardHeight, 2, 2, 'FD');
-
-      // Icon & Badge Center
-      const iconCenterX = currentX + (cardWidth / 2);
-      const iconCenterY = currentY + 12;
-      const cardIsSuccess = card.state === 'success';
-      const iconColors = cardIsSuccess ? { bg: colors.lightGreen, txt: colors.success } : { bg: colors.lightYellow, txt: colors.warning };
-
-      doc.setFillColor(...iconColors.bg);
-      doc.circle(iconCenterX, iconCenterY, 5, 'F');
-      if (cardIsSuccess) {
-        drawCheckmark(iconCenterX, iconCenterY, iconColors.txt);
-      } else {
-        drawExclamation(iconCenterX, iconCenterY, iconColors.txt);
-      }
-
-      // Status Badge
-      doc.setFillColor(...iconColors.bg);
-      const sBadgeWidth = doc.getTextWidth(card.status) + 6;
-      doc.roundedRect(iconCenterX - (sBadgeWidth / 2), iconCenterY + 8, sBadgeWidth, 5, 1, 1, 'F');
-      doc.setTextColor(...iconColors.txt);
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'bold');
-      doc.text(card.status, iconCenterX, iconCenterY + 11.5, { align: 'center' });
-
-      // Title & Description
+    // Development Limitation Banner (if applicable)
+    if (result.score < 6) {
+      doc.setFillColor(...colors.lightYellow);
+      doc.roundedRect(15, yPosition, pageWidth - 30, 22, 1, 1, 'F');
+      drawCaution(25, yPosition + 11, colors.warning);
       doc.setTextColor(...colors.textDark);
-      doc.setFontSize(10);
-      doc.text(card.title, iconCenterX, currentY + 34, { align: 'center' });
-
-      doc.setTextColor(...colors.textGray);
-      doc.setFontSize(7.5);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Development Limitation Identified', 35, yPosition + 10);
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      const dLns = doc.splitTextToSize(card.desc, cardWidth - 12);
-      doc.text(dLns, iconCenterX, currentY + 42, { align: 'center' });
-
-      currentX += cardWidth + cardGap;
-    });
-
-    yPosition = currentY + cardHeight + 10; // Slightly tighter spacing
+      doc.setTextColor(...colors.textGray);
+      const limitLines = doc.splitTextToSize('Article 4 directions may limit or remove certain permitted development rights in this area. Planning approval may be required from the local authority.', pageWidth - 55);
+      doc.text(limitLines, 35, yPosition + 15);
+      yPosition += 35;
+    }
 
     // ===== PLANNING ACTIVITY TRENDS =====
     checkNewPage(100);
@@ -1115,157 +1188,7 @@ export function AddressSearchForm() {
 
     yPosition = chBottom + 15;
 
-    // ===== PROPERTY DETAILS & MAP SECTION =====
-    // Ensure this major section starts on a fresh page if we are low on space
-    // Trend + Details + Map usually fits Page 2 if spilled from Page 1
-    checkNewPage(150);
 
-    doc.setTextColor(...colors.textDark);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Property Details & Location', 15, yPosition);
-    yPosition += 10;
-
-    // Property Details Card (styled to match frontend Property Details two-column layout)
-    const lastSoldPrice = String(propertySummary?.lastSoldPrice || 'Market Estimate Unavailable');
-    const lastSoldDate = String(propertySummary?.lastSoldDate || 'No recent transaction info');
-    const propCardHeight = 65;
-    checkNewPage(propCardHeight + 10);
-    doc.setFillColor(...colors.white);
-    doc.setDrawColor(...colors.border);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(15, yPosition, pageWidth - 30, propCardHeight, 2, 2, 'FD');
-
-    // Card Header Area
-    doc.setFillColor(249, 250, 251); // Very light gray background for header
-    doc.roundedRect(15.3, yPosition + 0.3, pageWidth - 30.6, 12, 2, 2, 'F');
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...colors.textDark);
-    doc.text('Property Details', 22, yPosition + 8);
-
-    const halfW = (pageWidth - 30) / 2;
-    let detailY = yPosition + 22;
-
-    // Helper to draw detail labels/values
-    const drawDetail = (label: string, value: any, x: number, y: number) => {
-      doc.setFontSize(7.5);
-      doc.setTextColor(...colors.textGray);
-      doc.setFont('helvetica', 'bold');
-      doc.text(label.toUpperCase(), x, y);
-
-      doc.setFontSize(9);
-      doc.setTextColor(...colors.textDark);
-      doc.setFont('helvetica', 'normal');
-      doc.text(String(value || 'N/A'), x, y + 5);
-    };
-
-    // Column 1: Core Details
-    drawDetail('Property Type', propertySummary?.propertyType || (isFlat ? 'Apartment / Flat' : 'Residential House'), 25, detailY);
-    drawDetail('Tenure', propertySummary?.tenure || 'Information Unavailable', 25 + (halfW / 2), detailY);
-
-    detailY += 18;
-    const bedroomsLabel = isNaN(Number(propertySummary?.bedrooms)) ? (propertySummary?.bedrooms || 'Contact Local Authority') : `${propertySummary?.bedrooms} Bedrooms`;
-    drawDetail('Bedrooms', bedroomsLabel, 25, detailY);
-
-    // Vertical Separator
-    doc.setDrawColor(...colors.border);
-    doc.setLineWidth(0.2);
-    doc.line(15 + halfW, yPosition + 15, 15 + halfW, yPosition + propCardHeight - 5);
-
-    // Column 2: Last Sold Transaction
-    const col2X = 25 + halfW;
-    let col2Y = yPosition + 22;
-
-    doc.setFontSize(7.5);
-    doc.setTextColor(...colors.textGray);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LAST SOLD TRANSACTION', col2X, col2Y);
-
-    doc.setFontSize(14);
-    doc.setTextColor(...colors.textDark);
-    doc.setFont('helvetica', 'bold');
-    doc.text(lastSoldPrice, col2X, col2Y + 8);
-
-    doc.setFontSize(8);
-    doc.setTextColor(...colors.textGray);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Sold on ${lastSoldDate}`, col2X, col2Y + 14);
-
-    doc.setFontSize(6.5);
-    doc.setTextColor(...colors.textGray);
-    const sourceNote = 'Data sourced from HM Land Registry Price Paid Data and Energy Performance Certificate (EPC) Open Data.';
-    const sourceLines = doc.splitTextToSize(sourceNote, halfW - 20);
-    doc.text(sourceLines, col2X, col2Y + 22);
-
-    yPosition += propCardHeight + 5;
-
-    // Property Map Fragment
-    if (result.coordinates && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-      const mapW = pageWidth - 30;
-      const mapH = 60;
-      checkNewPage(mapH + 10);
-
-      try {
-        const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${result.coordinates.lat},${result.coordinates.lng}&zoom=18&size=600x300&maptype=satellite&markers=color:0x253325%7C${result.coordinates.lat},${result.coordinates.lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-
-        // Fetch image and convert to base64 for reliable PDF embedding
-        const mapResp = await fetch(mapUrl);
-        if (mapResp.ok) {
-          const mapBlob = await mapResp.blob();
-          const reader = new FileReader();
-          const base64Promise = new Promise((resolve) => {
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(mapBlob);
-          });
-          const base64Data = await base64Promise as string;
-
-          doc.addImage(base64Data, 'JPEG', 15, yPosition, mapW, mapH);
-
-          doc.setDrawColor(...colors.border);
-          doc.setLineWidth(0.3);
-          doc.rect(15, yPosition, mapW, mapH);
-
-          yPosition += mapH + 10;
-        } else {
-          yPosition += 5;
-        }
-      } catch (mapErr) {
-        console.error("Failed to add map to PDF:", mapErr);
-        yPosition += 5;
-      }
-    } else {
-      yPosition += 5;
-    }
-
-
-    // Flat-Specific Notice (Moved to Property Details page)
-    if (isFlat) {
-      checkNewPage(40);
-      doc.setFillColor(...colors.lightBlue);
-      doc.roundedRect(15, yPosition - 5, pageWidth - 30, 28, 2, 2, 'F');
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colors.primary);
-      doc.text('IMPORTANT: FLAT PROPERTY NOTICE', 20, yPosition + 1);
-
-      yPosition += 8;
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colors.textDark);
-
-      const flatNoticeText = [
-        'Identified as a flat/maisonette. These properties are generally exempt from standard PD rights.',
-        '- External alterations usually require full planning permission.',
-        '- Building regulations approval is required for structural changes.',
-        'Consult with your local authority or building management for specific guidance.'
-      ];
-
-      doc.text(flatNoticeText, 20, yPosition); // Using array directly for wrapping
-      yPosition += (flatNoticeText.length * 4.5) + 5;
-    }
 
     // ===== OVERALL ASSESSMENT SECTION =====
     // Push assessment to a new page to keep "Property Details" page focused
@@ -1305,27 +1228,34 @@ export function AddressSearchForm() {
       doc.text("Professional assessment of specific planning constraints:", 15, yPosition);
       yPosition += 12;
 
-      result.checks.forEach((check) => {
-        checkNewPage(25);
+      result.checks.forEach((check: any) => {
+        checkNewPage(30);
         const iconX = 18;
         const iconY = yPosition - 1.5;
-        const radius = 3;
-        let iconColor = colors.success;
-        if (check.status === 'fail') iconColor = colors.error;
-        if (check.status === 'warning') iconColor = colors.warning;
-        doc.setFillColor(...iconColor);
-        doc.circle(iconX, iconY, radius, 'F');
 
-        // White symbol inside
-        doc.setDrawColor(255, 255, 255);
-        doc.setLineWidth(0.4);
+        let iconType: 'shield' | 'file' | 'caution' = 'shield';
+        let iconColor = colors.primary;
+
+        if (check.type.toLowerCase().includes('article')) {
+          iconType = 'caution';
+          iconColor = check.status === 'pass' ? colors.primary : colors.warning;
+        } else if (check.type.toLowerCase().includes('listed')) {
+          iconType = 'file';
+        }
+
+        if (iconType === 'shield') drawShield(iconX, iconY, iconColor);
+        else if (iconType === 'file') drawFile(iconX, iconY, iconColor);
+        else drawCaution(iconX, iconY, iconColor);
+
+        // Right side badge (Passed/Restriction)
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
         if (check.status === 'pass') {
-          doc.line(iconX - 1.2, iconY, iconX - 0.3, iconY + 1);
-          doc.line(iconX - 0.3, iconY + 1, iconX + 1.2, iconY - 1);
+          doc.setTextColor(...colors.success);
+          doc.text('PASSED', pageWidth - 20, yPosition, { align: 'right' });
         } else {
-          doc.setFillColor(255, 255, 255);
-          doc.rect(iconX - 0.3, iconY - 1.2, 0.6, 1.8, 'F');
-          doc.circle(iconX, iconY + 1.2, 0.3, 'F');
+          doc.setTextColor(...colors.error);
+          doc.text('RESTRICTION', pageWidth - 20, yPosition, { align: 'right' });
         }
 
         doc.setTextColor(...colors.textDark);
@@ -1334,7 +1264,7 @@ export function AddressSearchForm() {
         doc.text(check.type, 26, yPosition);
         yPosition += 5;
         doc.setTextColor(...colors.textGray);
-        doc.setFontSize(8.5);
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         const lns = doc.splitTextToSize(check.description, pageWidth - 65);
         doc.text(lns, 26, yPosition);
@@ -1355,6 +1285,68 @@ export function AddressSearchForm() {
       });
       yPosition += 5;
     }
+
+
+    // ===== PROPERTY DETAILS SECTION (Styled from Mockup) =====
+    checkNewPage(120);
+
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(14);
+    doc.setFont('times', 'normal');
+    const displayAddrFull = result.address.split(',').map(s => s.trim()).join(', ');
+    doc.text('Property Details & Location', 15, yPosition);
+    yPosition += 6;
+    doc.setTextColor(...colors.textGray);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(displayAddrFull, 15, yPosition);
+    yPosition += 12;
+
+    // Property Details Card
+    const propCardHeight = 55;
+    doc.setFillColor(...colors.white);
+    doc.setDrawColor(...colors.border);
+    doc.roundedRect(15, yPosition, pageWidth - 30, propCardHeight, 1, 1, 'S');
+
+    const halfW = (pageWidth - 30) / 2;
+    let detailY = yPosition + 10;
+
+    const drawDetail = (label: string, value: any, x: number, y: number) => {
+      doc.setFontSize(7);
+      doc.setTextColor(...colors.textGray);
+      doc.setFont('helvetica', 'bold');
+      doc.text(label.toUpperCase(), x, y);
+
+      doc.setFontSize(9);
+      doc.setTextColor(...colors.textDark);
+      doc.setFont('helvetica', 'normal');
+      doc.text(String(value || 'N/A'), x, y + 5);
+    };
+
+    drawDetail('Property Type', propertySummary?.propertyType || (isFlat ? 'Flat' : 'House'), 25, detailY);
+    drawDetail('Tenure', propertySummary?.tenure || 'N/A', 25 + (halfW / 2), detailY);
+
+    detailY += 15;
+    drawDetail('Bedrooms', propertySummary?.bedrooms || 'N/A', 25, detailY);
+    drawDetail('Receptions', propertySummary?.receptions || 'N/A', 25 + (halfW / 2), detailY);
+
+    detailY += 15;
+    drawDetail('Title Number', propertySummary?.titleNumber || 'N/A', 25, detailY);
+
+    // Right Column (Last Sold)
+    const col2X = 25 + halfW;
+    let col2Y = yPosition + 10;
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.textGray);
+    doc.setFont('helvetica', 'bold');
+    doc.text('LAST SOLD TRANSACTION', col2X, col2Y);
+    doc.setFontSize(14);
+    doc.setTextColor(...colors.textDark);
+    doc.text(String(propertySummary?.lastSoldPrice || 'N/A'), col2X, col2Y + 8);
+    doc.setFontSize(7.5);
+    doc.text(`Sold on ${propertySummary?.lastSoldDate || 'N/A'}`, col2X, col2Y + 14);
+
+    yPosition += propCardHeight + 10;
 
 
     // Helper to render a planning application card (shared by Property and Nearby sections)
@@ -1442,6 +1434,97 @@ export function AddressSearchForm() {
       }
     };
 
+    // ===== ENERGY PERFORMANCE SECTION (Styled from Mockup) =====
+    if (propertySummary?.epcRating || propertySummary?.epcData) {
+      checkNewPage(65);
+
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(14);
+      doc.setFont('times', 'normal');
+      doc.text('Energy Performance Assessment', 15, yPosition);
+
+      yPosition += 6;
+      doc.setTextColor(...colors.textGray);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Official energy efficiency rating and certification details.', 15, yPosition);
+      yPosition += 10;
+
+      // EPC Card
+      const epcCardH = 35;
+      doc.setFillColor(...colors.white);
+      doc.setDrawColor(...colors.border);
+      doc.roundedRect(15, yPosition, pageWidth - 30, epcCardH, 1, 1, 'S');
+
+      // Rating Badge
+      const rating = propertySummary.epcRating || 'N/A';
+      const ratingColor = ['A', 'B'].includes(rating) ? [34, 197, 94] :
+        ['C'].includes(rating) ? [22, 163, 74] :
+          ['D'].includes(rating) ? [234, 179, 8] : [249, 115, 22];
+
+      doc.setFillColor(...ratingColor);
+      doc.roundedRect(25, yPosition + 6, 22, 22, 1, 1, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(rating, 36, yPosition + 20, { align: 'center' });
+
+      // Rating Label
+      doc.setTextColor(...colors.textGray);
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CURRENT RATING', 25, yPosition + 4.5);
+
+      // Details
+      const epcX1 = 55;
+      const epcX2 = 105;
+      let epcY = yPosition + 10;
+
+      const drawEPCDetail = (label: string, value: string, x: number, y: number) => {
+        doc.setFontSize(7);
+        doc.setTextColor(...colors.textGray);
+        doc.setFont('helvetica', 'bold');
+        doc.text(label.toUpperCase(), x, y);
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.textDark);
+        doc.setFont('helvetica', 'normal');
+        doc.text(value, x, y + 5);
+      };
+
+      if (propertySummary.epcData) {
+        drawEPCDetail('Potential Rating', propertySummary.epcData.potentialEnergyRating || 'N/A', epcX1, epcY);
+        drawEPCDetail('Efficiency Score', propertySummary.epcData.currentEnergyEfficiency || 'N/A', epcX2, epcY);
+        epcY += 13;
+        drawEPCDetail('Inspection Date', propertySummary.epcData.inspectionDate || 'N/A', epcX1, epcY);
+      } else {
+        drawEPCDetail('Record Status', 'Available Online', epcX1, epcY);
+      }
+
+      // Button-style link
+      const btnW = 55;
+      const btnH = 8;
+      const btnX = pageWidth - 20 - btnW;
+      const btnY = yPosition + (epcCardH / 2) - (btnH / 2);
+
+      doc.setFillColor(...colors.primary);
+      doc.roundedRect(btnX, btnY, btnW, btnH, 1, 1, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+
+      const lmk = propertySummary.epcData?.lmkKey;
+      const certLabel = lmk ? 'VIEW ONLINE CERTIFICATE' : 'SEARCH EPC REGISTER';
+      const certUrl = lmk
+        ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmk}`
+        : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(result.address.split(',').pop()?.trim() || "")}`;
+
+      doc.text(certLabel, btnX + (btnW / 2), btnY + 5.2, { align: 'center' });
+      doc.link(btnX, btnY, btnW, btnH, { url: certUrl });
+
+      yPosition += epcCardH + 15;
+    }
+
     // Planning History Section - Professional Card Style
     if (planningHistory.length > 0) {
       checkNewPage(60);
@@ -1495,20 +1578,23 @@ export function AddressSearchForm() {
     }
 
 
-
-    // Summary Section
+    // Concluding Summary Section
     checkNewPage(60);
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 15, yPosition);
+    doc.setFont('times', 'normal');
+    doc.text('Final Assessment Summary', 15, yPosition);
     yPosition += 8;
+
+    doc.setFillColor(...colors.lightGreen);
+    doc.roundedRect(15, yPosition, pageWidth - 30, 25, 1, 1, 'F');
+
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    const summText = isFlat ? 'Flat identified. PD rights generally exempt.' : result.summary;
-    const summLines = doc.splitTextToSize(summText, pageWidth - 30);
-    doc.text(summLines, 15, yPosition);
-    yPosition += summLines.length * 5 + 20;
+    const summText = isFlat ? 'The identified dwelling type (Flat/Maisonette) typically does not benefit from standard permitted development rights. Any external alterations are likely to require full planning permission from the Local Planning Authority.' : result.summary;
+    const summLines = doc.splitTextToSize(summText, pageWidth - 40);
+    doc.text(summLines, 20, yPosition + 10);
+    yPosition += 35;
 
     // Legal Notice / Disclaimer
     checkNewPage(200);
