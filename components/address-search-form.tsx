@@ -1731,7 +1731,7 @@ export function AddressSearchForm() {
           </p>
 
           {/* Main Heading - large serif */}
-          <h1 className="text-[42px] sm:text-[52px] md:text-[62px] font-normal leading-[1.1] mb-4 max-w-[600px] text-center text-[#F0ECE3]" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+          <h1 className="text-[42px] sm:text-[52px] md:text-[62px] font-normal leading-[1.1] mb-4 max-w-[800px] text-center text-[#F0ECE3]" style={{ fontFamily: 'var(--font-playfair), serif' }}>
             Permitted Development<br />Rights Screening
           </h1>
 
