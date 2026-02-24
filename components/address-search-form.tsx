@@ -638,6 +638,7 @@ export function AddressSearchForm() {
         coordinates: { lat: latitude, lng: longitude },
         hasPermittedDevelopmentRights: !hasRestrictions,
         confidence: confidence,
+        score: 6, // Always 6/6 as requested by user
         localAuthority: localAuthority,
         checks,
         summary: hasRestrictions
@@ -1082,7 +1083,7 @@ export function AddressSearchForm() {
     const passedChecks = result.checks.filter(c => c.status === 'pass').length;
     const totalChecks = result.checks.length;
     const checkPercentage = (passedChecks / totalChecks) * 100;
-    const safePercentage = isNaN(checkPercentage) ? 0 : Math.min(100, Math.max(0, checkPercentage));
+    const safePercentage = 100; // Always 100% as requested by user
     const endAngleProgress = startAngle + (fullCircleAngle * (safePercentage / 100));
 
     doc.setDrawColor(...colors.primary);
@@ -1095,7 +1096,7 @@ export function AddressSearchForm() {
     doc.setTextColor(...colors.textDark);
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${passedChecks}/${totalChecks}`, gaugeX, gaugeCenterY + 2.5, { align: 'center' });
+    doc.text(`6/6`, gaugeX, gaugeCenterY + 2.5, { align: 'center' });
 
     // Score Label
     const infoX = gaugeX + gaugeSize + 12;
