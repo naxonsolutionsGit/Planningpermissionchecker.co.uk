@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Home, Calendar, Tag, Bed, Hash, Sofa, Zap } from "lucide-react"
+import { Home, Calendar, Tag, Bed, Hash, Sofa, Zap, FileText, ExternalLink } from "lucide-react"
 
 export interface PropertySummaryProps {
     data: {
@@ -50,10 +50,20 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Receptions</span>
-                                <div className="flex items-center gap-1.5 text-[15px] font-medium text-[#4A4A4A]">
-                                    <Sofa className="h-3.5 w-3.5 text-[#9A9488]" />
-                                    <span>{String(data.receptions || 'Information Unavailable')}</span>
+                                <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Certificate</span>
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-1.5 text-[15px] font-medium text-[#4A4A4A]">
+                                        <FileText className="h-3.5 w-3.5 text-[#9A9488]" />
+                                        <span>{data.titleNumber ? 'HMLR Title Register' : 'Official Record'}</span>
+                                    </div>
+                                    <a
+                                        href={`https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(data.postcode || "")}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[9px] text-[#25423D] hover:underline flex items-center gap-0.5 underline-offset-2 font-bold"
+                                    >
+                                        Access Official Record <ExternalLink className="h-2.5 w-2.5 ml-0.5" />
+                                    </a>
                                 </div>
                             </div>
                             {data.epcRating ? (

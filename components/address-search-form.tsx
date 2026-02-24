@@ -1312,24 +1312,29 @@ export function AddressSearchForm() {
     const halfW = (pageWidth - 30) / 2;
     let detailY = yPosition + 10;
 
-    const drawDetail = (label: string, value: any, x: number, y: number) => {
+    const drawDetail = (label: string, value: any, x: number, y: number, url?: string) => {
       doc.setFontSize(7);
       doc.setTextColor(...colors.textGray);
       doc.setFont('helvetica', 'bold');
       doc.text(label.toUpperCase(), x, y);
 
       doc.setFontSize(9);
-      doc.setTextColor(...colors.textDark);
-      doc.setFont('helvetica', 'normal');
-      doc.text(String(value || 'N/A'), x, y + 5);
+      doc.setTextColor(url ? colors.primary[0] : colors.textDark[0], url ? colors.primary[1] : colors.textDark[1], url ? colors.primary[2] : colors.textDark[2]);
+      doc.setFont('helvetica', url ? 'bold' : 'normal');
+      if (url) {
+        doc.textWithLink(String(value || 'N/A'), x, y + 5, { url });
+      } else {
+        doc.text(String(value || 'N/A'), x, y + 5);
+      }
     };
 
     drawDetail('Property Type', propertySummary?.propertyType || (isFlat ? 'Flat' : 'House'), 25, detailY);
     drawDetail('Tenure', propertySummary?.tenure || 'N/A', 25 + (halfW / 2), detailY);
 
     detailY += 15;
+    const certSearchUrl = `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`;
     drawDetail('Bedrooms', propertySummary?.bedrooms || 'N/A', 25, detailY);
-    drawDetail('Receptions', propertySummary?.receptions || 'N/A', 25 + (halfW / 2), detailY);
+    drawDetail('Certificate', propertySummary?.titleNumber ? 'HMLR Title Register' : 'Official Record', 25 + (halfW / 2), detailY, certSearchUrl);
 
     detailY += 15;
     drawDetail('Title Number', propertySummary?.titleNumber || 'N/A', 25, detailY);
