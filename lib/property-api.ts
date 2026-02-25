@@ -67,15 +67,8 @@ export async function fetchPropertySummary(address: string, postcode: string): P
 
         const propertyType = propertyData?.propertyType || (epcData?.isBungalow ? "Bungalow" : (epcData?.propertyType || hmlrData?.propertyType || (determinePropertyType(address) === "flat" ? "Apartment" : "Residential House")));
 
-        // Intelligent fallback for bedrooms if no data found
-        let bedrooms = propertyData?.bedrooms || epcData?.bedrooms || planningData?.bedrooms;
-        if (!bedrooms) {
-            if (propertyType.toLowerCase().includes("detached")) bedrooms = "3-5 (Estimated)";
-            else if (propertyType.toLowerCase().includes("semi-detached")) bedrooms = "3-4 (Estimated)";
-            else if (propertyType.toLowerCase().includes("terraced")) bedrooms = "2-3 (Estimated)";
-            else if (propertyType.toLowerCase().includes("apartment") || propertyType.toLowerCase().includes("flat")) bedrooms = "1-2 (Estimated)";
-            else bedrooms = "Information Unavailable";
-        }
+        // Data source based bedrooms lookup
+        const bedrooms = propertyData?.bedrooms || epcData?.bedrooms || planningData?.bedrooms || "Information Unavailable";
 
         return {
             propertyType,
