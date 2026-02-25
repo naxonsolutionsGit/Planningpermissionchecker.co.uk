@@ -137,7 +137,7 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                     <div className="space-y-5 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-8 border-[#EEECE6]">
                         <div className="space-y-1">
                             <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Last Sold Transaction</span>
-                            <div className="text-3xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{String(data.lastSoldPrice || 'Market Estimate Unavailable')}</div>
+                            <div className="text-3xl font-normal text-[#25423D]">{String(data.lastSoldPrice || 'Market Estimate Unavailable')}</div>
                             <div className="flex items-center gap-2 text-xs text-[#9A9488]">
                                 <Calendar className="h-3.5 w-3.5" />
                                 <span>Sold on <span className="text-[#4A4A4A]">{String(data.lastSoldDate || 'No recent transaction info')}</span></span>

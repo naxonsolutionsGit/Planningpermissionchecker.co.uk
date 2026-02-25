@@ -365,7 +365,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
               <div className="space-y-5 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-8 border-[#EEECE6]">
                 <div className="space-y-1">
                   <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Last Sold Value</span>
-                  <div className="text-2xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
+                  <div className="text-2xl font-normal text-[#25423D]">{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
                   <div className="flex items-center gap-2 text-[11px] text-[#9A9488]">
                     <Calendar className="h-3.5 w-3.5" />
                     <span>Transaction Date: <span className="text-[#4A4A4A] font-medium">{String(propertySummary.lastSoldDate || 'No recent data')}</span></span>
