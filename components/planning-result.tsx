@@ -261,49 +261,50 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
             <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property Context</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                {result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I' && (() => {
-                  const coords = result.coordinates;
-                  const lat = (coords as any).lat !== undefined ? (coords as any).lat : (Array.isArray(coords) ? coords[0] : (typeof coords === 'object' && 'latitude' in (coords as any) ? (coords as any).latitude : null));
-                  const lng = (coords as any).lng !== undefined ? (coords as any).lng : (Array.isArray(coords) ? coords[1] : (typeof coords === 'object' && 'longitude' in (coords as any) ? (coords as any).longitude : null));
+            <div className="space-y-6">
+              {result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I' && (() => {
+                const coords = result.coordinates;
+                const lat = (coords as any).lat !== undefined ? (coords as any).lat : (Array.isArray(coords) ? coords[0] : (typeof coords === 'object' && 'latitude' in (coords as any) ? (coords as any).latitude : null));
+                const lng = (coords as any).lng !== undefined ? (coords as any).lng : (Array.isArray(coords) ? coords[1] : (typeof coords === 'object' && 'longitude' in (coords as any) ? (coords as any).longitude : null));
 
-                  if (lat === null || lng === null) {
-                    return (
-                      <div className="mb-4 rounded-lg bg-red-50 border border-dashed border-red-200 p-4 text-center">
-                        <p className="text-[10px] text-red-600 font-medium">Coordinate mapping unavailable</p>
-                      </div>
-                    );
-                  }
-
+                if (lat === null || lng === null) {
                   return (
-                    <div className="mb-4 rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative aspect-[2/1] min-h-[150px] group shadow-sm">
-                      <img
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${lat},${lng}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
-                        alt="Property Location Map"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          const fallback = target.nextElementSibling as HTMLElement;
-                          if (fallback) {
-                            fallback.style.display = 'flex';
-                          }
-                        }}
-                      />
-                      <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-[#F8F7F3]/80 backdrop-blur-sm">
-                        <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
-                        <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map Preview Unavailable</p>
-                      </div>
+                    <div className="mb-2 rounded-lg bg-red-50 border border-dashed border-red-200 p-4 text-center">
+                      <p className="text-[10px] text-red-600 font-medium">Coordinate mapping unavailable</p>
                     </div>
                   );
-                })()}
-                {result.coordinates && !'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I' && (
-                  <div className="mb-4 rounded-lg bg-[#F8F7F3] border border-dashed border-[#EEECE6] flex flex-col items-center justify-center py-8 px-4 text-center">
-                    <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
-                    <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map visualization unavailable</p>
+                }
+
+                return (
+                  <div className="mb-2 rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative h-[300px] group shadow-sm">
+                    <img
+                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${lat},${lng}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
+                      alt="Property Location Map"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) {
+                          fallback.style.display = 'flex';
+                        }
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-[#F8F7F3]/80 backdrop-blur-sm">
+                      <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
+                      <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map Preview Unavailable</p>
+                    </div>
                   </div>
-                )}
+                );
+              })()}
+              {result.coordinates && !'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I' && (
+                <div className="mb-2 rounded-lg bg-[#F8F7F3] border border-dashed border-[#EEECE6] flex flex-col items-center justify-center py-12 px-4 text-center">
+                  <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
+                  <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map visualization unavailable</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-5">
                   <div className="space-y-1">
                     <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Type</span>
@@ -360,31 +361,31 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                     </div>
                   )}
                 </div>
-              </div>
 
-              <div className="space-y-5 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-8 border-[#EEECE6]">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Last Sold Value</span>
-                  <div className="text-2xl font-normal text-[#25423D]">{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
-                  <div className="flex items-center gap-2 text-[11px] text-[#9A9488]">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>Transaction Date: <span className="text-[#4A4A4A] font-medium">{String(propertySummary.lastSoldDate || 'No recent data')}</span></span>
-                  </div>
-                </div>
-                {propertySummary.epcData?.currentEnergyEfficiency && (
-                  <div className="space-y-1 pt-3 border-t border-[#EEECE6]">
-                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Efficiency Score</span>
-                    <div className="text-[14px] font-medium text-[#4A4A4A]">
-                      {propertySummary.epcData.currentEnergyEfficiency}
-                      <span className="text-[11px] text-[#9A9488] ml-1">
-                        (Potential: {propertySummary.epcData.potentialEnergyEfficiency})
-                      </span>
+                <div className="space-y-5 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-8 border-[#EEECE6]">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Last Sold Value</span>
+                    <div className="text-2xl font-normal text-[#25423D]">{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
+                    <div className="flex items-center gap-2 text-[11px] text-[#9A9488]">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>Transaction Date: <span className="text-[#4A4A4A] font-medium">{String(propertySummary.lastSoldDate || 'No recent data')}</span></span>
                     </div>
                   </div>
-                )}
-                <p className="text-[10px] text-[#A09A8E] leading-relaxed italic border-t border-[#EEECE6] pt-3">
-                  Sourced from HM Land Registry and EPC Open Data.
-                </p>
+                  {propertySummary.epcData?.currentEnergyEfficiency && (
+                    <div className="space-y-1 pt-3 border-t border-[#EEECE6]">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Efficiency Score</span>
+                      <div className="text-[14px] font-medium text-[#4A4A4A]">
+                        {propertySummary.epcData.currentEnergyEfficiency}
+                        <span className="text-[11px] text-[#9A9488] ml-1">
+                          (Potential: {propertySummary.epcData.potentialEnergyEfficiency})
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-[#A09A8E] leading-relaxed italic border-t border-[#EEECE6] pt-3">
+                    Sourced from HM Land Registry and EPC Open Data.
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>

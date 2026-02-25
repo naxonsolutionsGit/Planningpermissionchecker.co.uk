@@ -2203,13 +2203,13 @@ export function AddressSearchForm() {
           <p className="text-white/70 mb-4">
             This service helps identify common planning restrictions. Always verify with your local planning authority before starting work.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-white/50">
+          {/* <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-white/50">
             <Link href="/legal-notice" className="hover:text-white transition-colors underline underline-offset-4">
               Legal Notice / Disclaimer
             </Link>
             <span className="hidden sm:inline opacity-30">•</span>
             <p>Information based on publicly available planning data from gov.uk</p>
-          </div>
+          </div> */}
           <p className="text-white/30 text-[10px] mt-8">
             © {new Date().getFullYear()} PDRightCheck.co.uk. All rights reserved.
           </p>
