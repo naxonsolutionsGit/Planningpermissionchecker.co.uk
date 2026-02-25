@@ -263,7 +263,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                {result.coordinates && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (() => {
+                {result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I' && (() => {
                   const coords = result.coordinates;
                   const lat = (coords as any).lat !== undefined ? (coords as any).lat : (Array.isArray(coords) ? coords[0] : (typeof coords === 'object' && 'latitude' in (coords as any) ? (coords as any).latitude : null));
                   const lng = (coords as any).lng !== undefined ? (coords as any).lng : (Array.isArray(coords) ? coords[1] : (typeof coords === 'object' && 'longitude' in (coords as any) ? (coords as any).longitude : null));
@@ -279,7 +279,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                   return (
                     <div className="mb-4 rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative aspect-[2/1] min-h-[150px] group shadow-sm">
                       <img
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${lat},${lng}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
                         alt="Property Location Map"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         onError={(e) => {
@@ -298,7 +298,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                     </div>
                   );
                 })()}
-                {result.coordinates && !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
+                {result.coordinates && !'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I' && (
                   <div className="mb-4 rounded-lg bg-[#F8F7F3] border border-dashed border-[#EEECE6] flex flex-col items-center justify-center py-8 px-4 text-center">
                     <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
                     <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map visualization unavailable</p>
