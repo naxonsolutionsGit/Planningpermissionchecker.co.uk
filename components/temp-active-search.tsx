@@ -226,7 +226,7 @@ export function AddressSearchForm() {
     if (!input || input.length < 2) return []
 
     try {
-      const apiKey = 'AIzaSyD2RcExrf04EUfYPJedokSIqGHcuNUZHQw';
+      const apiKey = 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I';
 
       if (!apiKey) {
         console.log('No API key available, using fallback suggestions')
