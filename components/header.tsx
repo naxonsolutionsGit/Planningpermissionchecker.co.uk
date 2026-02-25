@@ -9,7 +9,7 @@ export function Header() {
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
               <Image
-                src="/Logo1.png"
+                src="/output-onlinepngtools.png"
                 alt="PD RightsCheck Logo"
                 width={48}
                 height={48}
