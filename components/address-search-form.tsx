@@ -1837,7 +1837,7 @@ export function AddressSearchForm() {
 
               <Button
                 type="submit"
-                className="w-full py-3 px-6 h-[52px] font-semibold bg-[#25423D] hover:bg-[#1A241A] text-[#E4DED2] whitespace-nowrap text-[15px] rounded-[12px] transition-colors"
+                className="w-full py-3 px-6 min-h-[52px] h-auto font-semibold bg-[#25423D] hover:bg-[#1A241A] text-[#E4DED2] whitespace-normal text-sm sm:text-[15px] rounded-[12px] transition-colors"
                 disabled={isLoading || !address.trim()}
               >
                 {isLoading ? (
@@ -1851,10 +1851,10 @@ export function AddressSearchForm() {
               </Button>
             </form>
             {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md mt-3">{error}</div>}
-
+            {/* 
             <p className="text-[11px] text-[#9A9488] mt-5 leading-relaxed text-center italic">
               Professional desktop planning screening based on<br />publicly available Local Authority data.
-            </p>
+            </p> */}
           </div>
         </div>
       </section>
