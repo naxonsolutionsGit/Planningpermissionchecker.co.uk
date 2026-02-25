@@ -19,6 +19,10 @@ export interface PropertySummary {
         currentEnergyEfficiency: string;
         potentialEnergyEfficiency: string;
         inspectionDate: string;
+        floorArea: string;
+        constructionAge: string;
+        mainFuel: string;
+        mainHeatDescription: string;
     };
     postcode?: string;
 }
@@ -331,7 +335,11 @@ async function fetchEPCData(postcode: string, address: string) {
                 potentialEnergyRating: record["potential-energy-rating"] || "",
                 currentEnergyEfficiency: record["current-energy-efficiency"] || "",
                 potentialEnergyEfficiency: record["potential-energy-efficiency"] || "",
-                inspectionDate: record["inspection-date"] || ""
+                inspectionDate: record["inspection-date"] || "",
+                floorArea: record["total-floor-area"] || "",
+                constructionAge: record["construction-age-band"] || "",
+                mainFuel: record["main-fuel"] || "",
+                mainHeatDescription: record["mainheat-description"] || ""
             }
         };
     } catch {

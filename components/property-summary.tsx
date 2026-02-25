@@ -18,6 +18,10 @@ export interface PropertySummaryProps {
             currentEnergyEfficiency: string;
             potentialEnergyEfficiency: string;
             inspectionDate: string;
+            floorArea?: string;
+            constructionAge?: string;
+            mainFuel?: string;
+            mainHeatDescription?: string;
         };
         postcode?: string;
     }
@@ -57,7 +61,7 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                                         <span>{data.titleNumber ? 'HMLR Title Register' : 'Official Record'}</span>
                                     </div>
                                     <a
-                                        href={`https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(data.postcode || "")}`}
+                                        href={data.epcData?.lmkKey ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${data.epcData.lmkKey}` : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(data.postcode || "")}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-[9px] text-[#25423D] hover:underline flex items-center gap-0.5 underline-offset-2 font-bold"

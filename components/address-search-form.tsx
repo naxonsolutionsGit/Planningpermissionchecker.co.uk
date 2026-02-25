@@ -1332,9 +1332,12 @@ export function AddressSearchForm() {
     drawDetail('Tenure', propertySummary?.tenure || 'N/A', 25 + (halfW / 2), detailY);
 
     detailY += 15;
-    const certSearchUrl = `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`;
+    const lmk = propertySummary?.epcData?.lmkKey;
+    const certUrl = lmk
+      ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmk}`
+      : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`;
     drawDetail('Bedrooms', propertySummary?.bedrooms || 'N/A', 25, detailY);
-    drawDetail('Certificate', propertySummary?.titleNumber ? 'HMLR Title Register' : 'Official Record', 25 + (halfW / 2), detailY, certSearchUrl);
+    drawDetail('Certificate', (propertySummary?.epcRating || propertySummary?.titleNumber) ? 'Official Record Found' : 'Postcode Search', 25 + (halfW / 2), detailY, certUrl);
 
     detailY += 15;
     drawDetail('Title Number', propertySummary?.titleNumber || 'N/A', 25, detailY);
@@ -1442,7 +1445,7 @@ export function AddressSearchForm() {
 
     // ===== ENERGY PERFORMANCE SECTION (Styled from Mockup) =====
     if (propertySummary?.epcRating || propertySummary?.epcData) {
-      checkNewPage(65);
+      checkNewPage(85);
 
       doc.setTextColor(...colors.textDark);
       doc.setFontSize(14);
@@ -1457,7 +1460,7 @@ export function AddressSearchForm() {
       yPosition += 10;
 
       // EPC Card
-      const epcCardH = 35;
+      const epcCardH = 48;
       doc.setFillColor(...colors.white);
       doc.setDrawColor(...colors.border);
       doc.roundedRect(15, yPosition, pageWidth - 30, epcCardH, 1, 1, 'S');
@@ -1501,7 +1504,11 @@ export function AddressSearchForm() {
         drawEPCDetail('Potential Rating', propertySummary.epcData.potentialEnergyRating || 'N/A', epcX1, epcY);
         drawEPCDetail('Efficiency Score', propertySummary.epcData.currentEnergyEfficiency || 'N/A', epcX2, epcY);
         epcY += 13;
-        drawEPCDetail('Inspection Date', propertySummary.epcData.inspectionDate || 'N/A', epcX1, epcY);
+        drawEPCDetail('Total Floor Area', propertySummary.epcData.floorArea ? `${propertySummary.epcData.floorArea} m\u00b2` : 'N/A', epcX1, epcY);
+        drawEPCDetail('Construction Age', propertySummary.epcData.constructionAge || 'N/A', epcX2, epcY);
+        epcY += 13;
+        drawEPCDetail('Heating Details', propertySummary.epcData.mainFuel || 'N/A', epcX1, epcY);
+        drawEPCDetail('Inspection Date', propertySummary.epcData.inspectionDate || 'N/A', epcX2, epcY);
       } else {
         drawEPCDetail('Record Status', 'Available Online', epcX1, epcY);
       }
