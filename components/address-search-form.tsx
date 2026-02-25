@@ -378,14 +378,12 @@ export function AddressSearchForm() {
       [section]: !prev[section]
     }))
   }
-
   const extractEntityInfo = (entity: PlanningEntity, datasetName: string) => {
     let description = `${datasetName} restriction applies at this address.`
     let documentationUrl = ""
     let designationDate = ""
     let reference = ""
     let name = ""
-
     // Add specific information from the entity
     if (entity.name) {
       name = entity.name
@@ -1795,10 +1793,10 @@ export function AddressSearchForm() {
                 <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#999] w-[18px] h-[18px]" />
                 <Input
                   type="text"
-                  placeholder="Enter property address or postcode"
+                  placeholder="Enter address or postcode"
                   value={address}
                   onChange={(e) => handleAddressChange(e.target.value)}
-                  className="pl-11 pr-4 py-3.5 h-[52px] border border-[#DDD9D0] rounded-[12px] bg-[#EEECE6] focus-visible:ring-1 focus-visible:ring-[#25423D]/20 focus-visible:border-[#25423D]/30 text-[#4A4A4A] text-[15px] placeholder:text-[#A09A8E]"
+                  className="pl-11 pr-4 py-3.5 h-[52px] border border-[#DDD9D0] rounded-[12px] bg-[#EEECE6] focus-visible:ring-1 focus-visible:ring-[#25423D]/20 focus-visible:border-[#25423D]/30 text-[#4A4A4A] text-[15px] placeholder:text-[#A09A8E] placeholder:text-[13px] sm:placeholder:text-[15px]"
                   disabled={isLoading}
                 />
 
