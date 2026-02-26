@@ -883,7 +883,8 @@ export function AddressSearchForm() {
       // 1. Background Map (Satellite view background for cover)
       if (result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I') {
         try {
-          const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${result.coordinates.lat},${result.coordinates.lng}&zoom=17&size=800x600&maptype=satellite&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`;
+          const displayAddrMap = result.address.split(',').map(s => s.trim()).join(', ');
+          const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(displayAddrMap)}&zoom=18&size=800x600&maptype=satellite&markers=color:red%7C${encodeURIComponent(displayAddrMap)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`;
           const mapResp = await fetch(mapUrl);
           if (mapResp.ok) {
             const mapBlob = await mapResp.blob();

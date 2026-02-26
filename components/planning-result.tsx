@@ -278,7 +278,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                 return (
                   <div className="mb-2 rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative h-[300px] group shadow-sm">
                     <img
-                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${lat},${lng}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
+                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(result.address)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(result.address)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
                       alt="Property Location Map"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       onError={(e) => {
