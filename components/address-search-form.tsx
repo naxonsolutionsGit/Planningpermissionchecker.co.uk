@@ -939,6 +939,21 @@ export function AddressSearchForm() {
 
       // 5. Metadata
       let metaY = 135;
+
+      // Add a semi-transparent background for readability
+      try {
+        const gState = new (doc as any).GState({ opacity: 0.8 });
+        doc.setGState(gState);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(12, 131, pageWidth - 24, 23, 1, 1, 'F');
+        // Reset transparency
+        doc.setGState(new (doc as any).GState({ opacity: 1.0 }));
+      } catch (e) {
+        // Fallback to light solid color if GState is not supported
+        doc.setFillColor(250, 250, 250);
+        doc.roundedRect(12, 131, pageWidth - 24, 23, 1, 1, 'F');
+      }
+
       const drawMeta = (label: string, value: string) => {
         doc.setFontSize(9);
         doc.setTextColor(...colors.textGray);
