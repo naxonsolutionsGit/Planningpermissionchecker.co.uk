@@ -1131,9 +1131,9 @@ export function AddressSearchForm() {
         yPosition += 18;
       };
 
-      drawSummaryCard('Policy Restriction Identified', result.checks.find(c => c.type.toLowerCase().includes('article'))?.reference || 'NONE DETECTED', 'caution');
-      drawSummaryCard('Conservation Area Check', result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'RESTRICTION' : 'PASSED', 'shield');
-      drawSummaryCard('Listed Status Check', result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'RESTRICTION' : 'PASSED', 'file');
+      // drawSummaryCard('Policy Restriction Identified', result.checks.find(c => c.type.toLowerCase().includes('article'))?.reference || 'NONE DETECTED', 'caution');
+      // drawSummaryCard('Conservation Area Check', result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'RESTRICTION' : 'PASSED', 'shield');
+      // drawSummaryCard('Listed Status Check', result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'RESTRICTION' : 'PASSED', 'file');
 
       addFooter();
 
@@ -1191,12 +1191,12 @@ export function AddressSearchForm() {
       doc.setTextColor(...colors.textDark);
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('Confidence Score', infoX, gaugeCenterY - 4);
+      // doc.text('Confidence Score', infoX, gaugeCenterY - 4);
 
       doc.setTextColor(...colors.textGray);
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.text(`${result.confidence}% confidence rating based on statutory data.`, infoX, gaugeCenterY + 2);
+      // doc.text(`${result.confidence}% confidence rating based on statutory data.`, infoX, gaugeCenterY + 2);
 
       yPosition = gaugeCenterY + gaugeSize + 15;
 
