@@ -4,7 +4,7 @@ import { Home, Calendar, Tag, Bed, Hash, Sofa, Zap, FileText, ExternalLink } fro
 export interface PropertySummaryProps {
     data: {
         propertyType: string
-        bedrooms: number | string
+        //        bedrooms: number | string
         receptions: number | string
         tenure: string
         lastSoldPrice: string
@@ -46,13 +46,15 @@ export function PropertySummary({ data, pdRightsApply = true }: PropertySummaryP
                                 <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Tenure</span>
                                 <div className="text-[15px] font-medium text-[#4A4A4A]">{String(data.tenure || 'Information Unavailable')}</div>
                             </div>
+                            {/* 
                             <div className="space-y-1">
                                 <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Bedrooms</span>
                                 <div className="flex items-center gap-1.5 text-[15px] font-medium text-[#4A4A4A]">
                                     <Bed className="h-3.5 w-3.5 text-[#9A9488]" />
-                                    <span>{String(data.bedrooms || 'Information Unavailable')}</span>
+                                    <span>{String((data as any).bedrooms || 'Information Unavailable')}</span>
                                 </div>
                             </div>
+*/}
                             <div className="space-y-1">
                                 <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Certificate</span>
                                 <div className="flex flex-col gap-1">

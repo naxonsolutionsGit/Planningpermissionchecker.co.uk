@@ -314,6 +314,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                     <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Tenure</span>
                     <div className="text-[14px] font-medium text-[#4A4A4A]">{String(propertySummary.tenure || 'Information Unavailable')}</div>
                   </div>
+                  {/* 
                   <div className="space-y-1">
                     <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Bedrooms</span>
                     <div className="flex items-center gap-1.5 text-[14px] font-medium text-[#4A4A4A]">
@@ -321,6 +322,7 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                       <span>{String(propertySummary.bedrooms || 'Information Unavailable')}</span>
                     </div>
                   </div>
+*/}
                   {propertySummary.epcRating ? (
                     <div className="space-y-1">
                       <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">EPC Rating</span>

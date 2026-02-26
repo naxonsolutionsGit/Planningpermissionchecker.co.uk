@@ -1030,7 +1030,7 @@ export function AddressSearchForm() {
       const certUrlDetails = lmkDetails
         ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmkDetails}`
         : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`;
-      drawDetail('Bedrooms', propertySummary?.bedrooms || 'N/A', 25, detailY);
+      // drawDetail('Bedrooms', propertySummary?.bedrooms || 'N/A', 25, detailY);
       drawDetail('Certificate', (propertySummary?.epcRating || propertySummary?.titleNumber) ? 'Official Record Found' : 'Postcode Search', 25 + (halfW / 2), detailY, certUrlDetails);
 
       detailY += 15;
