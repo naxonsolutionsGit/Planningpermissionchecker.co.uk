@@ -1009,12 +1009,16 @@ export function AddressSearchForm() {
         doc.text(label.toUpperCase(), x, y);
 
         doc.setFontSize(9);
+        const textValue = String(value || 'N/A');
         doc.setTextColor(url ? colors.primary[0] : colors.textDark[0], url ? colors.primary[1] : colors.textDark[1], url ? colors.primary[2] : colors.textDark[2]);
         doc.setFont('helvetica', url ? 'bold' : 'normal');
         if (url) {
-          doc.textWithLink(String(value || 'N/A'), x, y + 5, { url });
+          doc.textWithLink(textValue, x, y + 5, { url });
+          // Add navigation icon after the text
+          const textWidth = doc.getTextWidth(textValue);
+          drawLinkIcon(x + textWidth + 2, y + 4.5, 1.5);
         } else {
-          doc.text(String(value || 'N/A'), x, y + 5);
+          doc.text(textValue, x, y + 5);
         }
       };
 
