@@ -960,12 +960,81 @@ export function AddressSearchForm() {
       doc.setFont('helvetica', 'normal');
       doc.text('Prepared by: PD RightCheck \u2013 Professional Planning Screening Service', pageWidth / 2, pageHeight - 15, { align: 'center' });
 
-      // Move to next page for contents
+      // Move to next page for Property Details & Location (Top of Report Body)
       doc.addPage();
       pageNumber++;
       yPosition = 25;
 
-      // ===== PAGE 2: EXECUTIVE SUMMARY (Styled from Mockup) =====
+      // ===== PAGE 2: PROPERTY DETAILS & LOCATION (Moved to top) =====
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(14);
+      doc.setFont('times', 'normal');
+      const displayAddrFull = result.address.split(',').map(s => s.trim()).join(', ');
+      doc.text('Property Details & Location', 15, yPosition);
+      yPosition += 6;
+      doc.setTextColor(...colors.textGray);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(displayAddrFull, 15, yPosition);
+      yPosition += 12;
+
+      // Property Details Card
+      const propCardHeight = 55;
+      doc.setFillColor(...colors.white);
+      doc.setDrawColor(...colors.border);
+      doc.roundedRect(15, yPosition, pageWidth - 30, propCardHeight, 1, 1, 'S');
+
+      const halfW = (pageWidth - 30) / 2;
+      let detailY = yPosition + 10;
+
+      const drawDetail = (label: string, value: any, x: number, y: number, url?: string) => {
+        doc.setFontSize(7);
+        doc.setTextColor(...colors.textGray);
+        doc.setFont('helvetica', 'bold');
+        doc.text(label.toUpperCase(), x, y);
+
+        doc.setFontSize(9);
+        doc.setTextColor(url ? colors.primary[0] : colors.textDark[0], url ? colors.primary[1] : colors.textDark[1], url ? colors.primary[2] : colors.textDark[2]);
+        doc.setFont('helvetica', url ? 'bold' : 'normal');
+        if (url) {
+          doc.textWithLink(String(value || 'N/A'), x, y + 5, { url });
+        } else {
+          doc.text(String(value || 'N/A'), x, y + 5);
+        }
+      };
+
+      drawDetail('Property Type', propertySummary?.propertyType || (isFlat ? 'Flat' : 'House'), 25, detailY);
+      drawDetail('Tenure', propertySummary?.tenure || 'N/A', 25 + (halfW / 2), detailY);
+
+      detailY += 15;
+      const lmkDetails = propertySummary?.epcData?.lmkKey;
+      const certUrlDetails = lmkDetails
+        ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmkDetails}`
+        : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`;
+      drawDetail('Bedrooms', propertySummary?.bedrooms || 'N/A', 25, detailY);
+      drawDetail('Certificate', (propertySummary?.epcRating || propertySummary?.titleNumber) ? 'Official Record Found' : 'Postcode Search', 25 + (halfW / 2), detailY, certUrlDetails);
+
+      detailY += 15;
+      drawDetail('Title Number', propertySummary?.titleNumber || 'N/A', 25, detailY);
+
+      // Right Column (Last Sold)
+      const col2X = 25 + halfW;
+      let col2Y = yPosition + 10;
+      doc.setFontSize(7);
+      doc.setTextColor(...colors.textGray);
+      doc.setFont('helvetica', 'bold');
+      doc.text('LAST SOLD TRANSACTION', col2X, col2Y);
+      doc.setFontSize(14);
+      doc.setTextColor(...colors.textDark);
+      doc.text(String(propertySummary?.lastSoldPrice || 'N/A'), col2X, col2Y + 8);
+      doc.setFontSize(7.5);
+      doc.text(`Sold on ${propertySummary?.lastSoldDate || 'N/A'}`, col2X, col2Y + 14);
+
+      yPosition += propCardHeight + 20;
+
+      // ===== EXECUTIVE SUMMARY (Follows Property Details) =====
+      checkNewPage(60);
+
       doc.setTextColor(...colors.textDark);
       doc.setFontSize(18);
       doc.setFont('times', 'normal');
@@ -1290,77 +1359,6 @@ export function AddressSearchForm() {
         });
         yPosition += 5;
       }
-
-
-      // ===== PROPERTY DETAILS SECTION (Styled from Mockup) =====
-      checkNewPage(120);
-
-      doc.setTextColor(...colors.textDark);
-      doc.setFontSize(14);
-      doc.setFont('times', 'normal');
-      const displayAddrFull = result.address.split(',').map(s => s.trim()).join(', ');
-      doc.text('Property Details & Location', 15, yPosition);
-      yPosition += 6;
-      doc.setTextColor(...colors.textGray);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(displayAddrFull, 15, yPosition);
-      yPosition += 12;
-
-      // Property Details Card
-      const propCardHeight = 55;
-      doc.setFillColor(...colors.white);
-      doc.setDrawColor(...colors.border);
-      doc.roundedRect(15, yPosition, pageWidth - 30, propCardHeight, 1, 1, 'S');
-
-      const halfW = (pageWidth - 30) / 2;
-      let detailY = yPosition + 10;
-
-      const drawDetail = (label: string, value: any, x: number, y: number, url?: string) => {
-        doc.setFontSize(7);
-        doc.setTextColor(...colors.textGray);
-        doc.setFont('helvetica', 'bold');
-        doc.text(label.toUpperCase(), x, y);
-
-        doc.setFontSize(9);
-        doc.setTextColor(url ? colors.primary[0] : colors.textDark[0], url ? colors.primary[1] : colors.textDark[1], url ? colors.primary[2] : colors.textDark[2]);
-        doc.setFont('helvetica', url ? 'bold' : 'normal');
-        if (url) {
-          doc.textWithLink(String(value || 'N/A'), x, y + 5, { url });
-        } else {
-          doc.text(String(value || 'N/A'), x, y + 5);
-        }
-      };
-
-      drawDetail('Property Type', propertySummary?.propertyType || (isFlat ? 'Flat' : 'House'), 25, detailY);
-      drawDetail('Tenure', propertySummary?.tenure || 'N/A', 25 + (halfW / 2), detailY);
-
-      detailY += 15;
-      const lmk = propertySummary?.epcData?.lmkKey;
-      const certUrl = lmk
-        ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmk}`
-        : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`;
-      drawDetail('Bedrooms', propertySummary?.bedrooms || 'N/A', 25, detailY);
-      drawDetail('Certificate', (propertySummary?.epcRating || propertySummary?.titleNumber) ? 'Official Record Found' : 'Postcode Search', 25 + (halfW / 2), detailY, certUrl);
-
-      detailY += 15;
-      drawDetail('Title Number', propertySummary?.titleNumber || 'N/A', 25, detailY);
-
-      // Right Column (Last Sold)
-      const col2X = 25 + halfW;
-      let col2Y = yPosition + 10;
-      doc.setFontSize(7);
-      doc.setTextColor(...colors.textGray);
-      doc.setFont('helvetica', 'bold');
-      doc.text('LAST SOLD TRANSACTION', col2X, col2Y);
-      doc.setFontSize(14);
-      doc.setTextColor(...colors.textDark);
-      doc.text(String(propertySummary?.lastSoldPrice || 'N/A'), col2X, col2Y + 8);
-      doc.setFontSize(7.5);
-      doc.text(`Sold on ${propertySummary?.lastSoldDate || 'N/A'}`, col2X, col2Y + 14);
-
-      yPosition += propCardHeight + 10;
-
 
       // Helper to render a planning application card (shared by Property and Nearby sections)
       const renderPlanningCard = (app: any) => {
