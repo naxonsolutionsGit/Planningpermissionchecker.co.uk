@@ -237,45 +237,58 @@ export function PlanningResult({
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <Card className={`${getStatusColor(result.hasPermittedDevelopmentRights)} border-2 shadow-none`}>
-        <CardHeader className="text-center pb-6 pt-8">
-          <div className="flex justify-center mb-6">{getStatusIcon(result.hasPermittedDevelopmentRights)}</div>
-          <CardTitle className="text-3xl font-normal text-[#25423D] leading-tight mb-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+    <div className="space-y-8 max-w-2xl mx-auto pb-12">
+      {/* Hero Result Section - Premium Professional Feel */}
+      <Card className={`${getStatusColor(result.hasPermittedDevelopmentRights)} border-none shadow-sm overflow-hidden relative group`}>
+        {/* Subtle decorative background element */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#25423D]/5 rounded-full -mr-16 -mt-16 transition-transform duration-1000 group-hover:scale-110" />
+
+        <CardHeader className="text-center pb-6 pt-10 relative z-10">
+          <div className="flex justify-center mb-6 scale-110 transition-transform duration-500 hover:scale-125">
+            {getStatusIcon(result.hasPermittedDevelopmentRights)}
+          </div>
+          <CardTitle
+            className="text-3xl md:text-4xl font-normal text-[#25423D] leading-tight mb-3 tracking-tight"
+            style={{ fontFamily: 'var(--font-playfair), serif' }}
+          >
             {result.hasPermittedDevelopmentRights
               ? "Permitted Development Rights Likely Apply"
               : "Planning Permission Likely Required"}
           </CardTitle>
-          <div className="flex items-center justify-center gap-2 text-[#9A9488]">
-            <MapPin className="w-4 h-4" />
-            <span className="text-sm font-medium">{result.address}</span>
+          <div className="flex items-center justify-center gap-2.5 px-4 py-1.5 bg-[#EEECE6]/40 rounded-full w-fit mx-auto border border-[#EEECE6]/50">
+            <MapPin className="w-4 h-4 text-[#9A9488]" />
+            <span className="text-sm font-semibold text-[#25423D] tracking-tight">{result.address}</span>
           </div>
         </CardHeader>
-        <CardContent className="pb-8">
+        <CardContent className="pb-10 relative z-10">
           <div className="text-center max-w-md mx-auto">
-            <p className="text-sm text-[#4A4A4A] leading-relaxed">
-              Based on our analysis of <span className="font-semibold text-[#25423D]">{result.localAuthority}</span> planning policy and property data.
+            <p className="text-[15px] text-[#4A4A4A] leading-relaxed italic border-t border-[#25423D]/5 pt-4">
+              Formal assessment based on <span className="font-bold text-[#25423D]">{result.localAuthority}</span> planning policy and current property records.
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-[#EEECE6] shadow-none">
-        <CardHeader className="pb-3 text-center">
-          <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Expert Analysis Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-[#4A4A4A] leading-relaxed text-center px-4">{result.summary}</p>
-        </CardContent>
-      </Card>
+      {/* Summary Card - Integrated Feel */}
+      <div className="space-y-2">
+        <div className="text-[10px] text-[#9A9488] font-bold uppercase tracking-[0.25em] pl-1">Executive Summary</div>
+        <Card className="border-none shadow-sm bg-white/60 backdrop-blur-md overflow-hidden">
+          <CardContent className="pt-6 relative">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#25423D]/20" />
+            <p className="text-[#4A4A4A] leading-relaxed text-[16px] pl-4 font-medium">
+              {result.summary}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       {propertySummary && (
-        <Card className="border-[#EEECE6] shadow-none overflow-hidden">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property Context</CardTitle>
+        <Card className="border-none shadow-sm bg-white overflow-hidden">
+          <CardHeader className="pb-4 border-b border-[#EEECE6]/40">
+            <CardTitle className="text-2xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property Context</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
+          <CardContent className="pt-6">
+            <div className="space-y-8">
               {result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I' && (() => {
                 const coords = result.coordinates;
                 const lat = (coords as any).lat !== undefined ? (coords as any).lat : (Array.isArray(coords) ? coords[0] : (typeof coords === 'object' && 'latitude' in (coords as any) ? (coords as any).latitude : null));
@@ -284,23 +297,23 @@ export function PlanningResult({
                 if (lat === null || lng === null) {
                   return (
                     <div className="mb-2 rounded-lg bg-red-50 border border-dashed border-red-200 p-4 text-center">
-                      <p className="text-[10px] text-red-600 font-medium">Coordinate mapping unavailable</p>
+                      <p className="text-xs text-red-600 font-medium">Coordinate mapping unavailable</p>
                     </div>
                   );
                 }
 
                 return (
-                  <div className="mb-2 space-y-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider">Map Appearance</span>
-                      <div className="flex gap-1">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-[0.1em]">Satellite Mapping</span>
+                      <div className="flex gap-1.5 p-1 bg-[#F8F7F3] rounded-lg border border-[#EEECE6]/50 shadow-inner">
                         {(["satellite", "roadmap", "hybrid", "terrain"] as const).map((type) => (
                           <button
                             key={type}
                             onClick={() => setMapType(type)}
-                            className={`px-2 py-0.5 text-[9px] uppercase font-bold rounded border transition-colors ${mapType === type
-                              ? "bg-[#25423D] text-white border-[#25423D]"
-                              : "bg-white text-[#9A9488] border-[#EEECE6] hover:bg-[#F8F7F3]"
+                            className={`px-3 py-1 text-[9px] uppercase font-bold rounded-md transition-all duration-300 ${mapType === type
+                              ? "bg-white text-[#25423D] shadow-sm ring-1 ring-[#EEECE6]"
+                              : "text-[#9A9488] hover:text-[#25423D]"
                               }`}
                           >
                             {type}
@@ -308,118 +321,73 @@ export function PlanningResult({
                         ))}
                       </div>
                     </div>
-                    <div className="rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative h-[300px] group shadow-sm">
+                    <div className="rounded-xl overflow-hidden border border-[#EEECE6]/60 bg-[#F8F7F3] relative h-[320px] group shadow-inner">
                       <img
                         src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(result.address)}&zoom=18&size=800x400&maptype=${mapType}&markers=color:red%7C${encodeURIComponent(result.address)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
                         alt="Property Location Map"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          const fallback = target.nextElementSibling as HTMLElement;
-                          if (fallback) {
-                            fallback.style.display = 'flex';
-                          }
-                        }}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                       />
-                      <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-[#F8F7F3]/80 backdrop-blur-sm">
-                        <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
-                        <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map Preview Unavailable</p>
-                      </div>
+                      {/* Gradient overlay on map bottom */}
+                      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
                   </div>
                 );
               })()}
-              {result.coordinates && !'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I' && (
-                <div className="mb-2 rounded-lg bg-[#F8F7F3] border border-dashed border-[#EEECE6] flex flex-col items-center justify-center py-12 px-4 text-center">
-                  <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
-                  <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map visualization unavailable</p>
-                </div>
-              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Type</span>
-                    <div className="text-[14px] font-medium text-[#4A4A4A] capitalize">{String(propertySummary.propertyType || 'Residential Property')}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Tenure</span>
-                    <div className="text-[14px] font-medium text-[#4A4A4A]">{String(propertySummary.tenure || 'Information Unavailable')}</div>
-                  </div>
-                  {/* 
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Bedrooms</span>
-                    <div className="flex items-center gap-1.5 text-[14px] font-medium text-[#4A4A4A]">
-                      <Bed className="h-3.5 w-3.5 text-[#9A9488]" />
-                      <span>{String(propertySummary.bedrooms || 'Information Unavailable')}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-6">
+                  <div className="text-[10px] text-[#9A9488] font-bold uppercase tracking-[0.2em] border-b border-[#EEECE6]/40 pb-2">Technical Specification</div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider flex items-center gap-1.5"><Home className="w-3 h-3" /> Type</span>
+                      <div className="text-[15px] font-semibold text-[#25423D] capitalize">{String(propertySummary.propertyType || 'Residential')}</div>
                     </div>
-                  </div>
-*/}
-                  {propertySummary.epcRating ? (
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">EPC Rating</span>
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 text-[14px] font-medium text-[#4A4A4A]">
-                          <Zap className="h-3.5 w-3.5 text-[#9A9488]" />
-                          <span className={`px-2 py-0.5 rounded-sm text-[10px] font-bold text-white ${['A', 'B'].includes(propertySummary.epcRating) ? 'bg-green-600' :
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider flex items-center gap-1.5">Tenure</span>
+                      <div className="text-[15px] font-semibold text-[#25423D]">{String(propertySummary.tenure || 'N/A')}</div>
+                    </div>
+
+                    {propertySummary.epcRating && (
+                      <div className="col-span-2 space-y-1.5 pt-2">
+                        <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider flex items-center gap-1.5"><Zap className="w-3 h-3" /> Energy Performance</span>
+                        <div className="flex items-center gap-4">
+                          <span className={`px-3 py-1 rounded-full text-[11px] font-bold text-white ${['A', 'B'].includes(propertySummary.epcRating) ? 'bg-green-600' :
                             ['C'].includes(propertySummary.epcRating) ? 'bg-green-500' :
-                              ['D'].includes(propertySummary.epcRating) ? 'bg-yellow-500' :
-                                'bg-orange-500'
+                              ['D'].includes(propertySummary.epcRating) ? 'bg-yellow-500' : 'bg-orange-500'
                             }`}>
                             Rating: {propertySummary.epcRating}
                           </span>
+                          {propertySummary.epcData?.lmkKey && (
+                            <a
+                              href={`https://find-energy-certificate.service.gov.uk/energy-certificate/${propertySummary.epcData.lmkKey}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] font-bold text-[#25423D] hover:underline flex items-center gap-1 uppercase tracking-tight"
+                            >
+                              Official Certificate <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
                         </div>
-                        {propertySummary.epcData?.lmkKey && (
-                          <a
-                            href={`https://find-energy-certificate.service.gov.uk/energy-certificate/${propertySummary.epcData.lmkKey}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#25423D] hover:opacity-70 transition-opacity uppercase tracking-tight"
-                          >
-                            View Online Certificate <ExternalLink className="h-2.5 w-2.5" />
-                          </a>
-                        )}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">EPC Register</span>
-                      <a
-                        href={`https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary.postcode || result.address.split(',').pop()?.trim() || "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#25423D] bg-[#F8F7F3] border border-[#EEECE6] px-3 py-1.5 rounded-md hover:bg-[#EEECE6] transition-colors uppercase tracking-tight"
-                      >
-                        Search EPC Register <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                <div className="space-y-5 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-8 border-[#EEECE6]">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Last Sold Value</span>
-                    <div className="text-2xl font-normal text-[#25423D]">{String(propertySummary.lastSoldPrice || 'Market Estimate Unavailable')}</div>
-                    <div className="flex items-center gap-2 text-[11px] text-[#9A9488]">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>Transaction Date: <span className="text-[#4A4A4A] font-medium">{String(propertySummary.lastSoldDate || 'No recent data')}</span></span>
-                    </div>
-                  </div>
-                  {propertySummary.epcData?.currentEnergyEfficiency && (
-                    <div className="space-y-1 pt-3 border-t border-[#EEECE6]">
-                      <span className="text-[10px] text-[#9A9488] font-bold uppercase block tracking-wider">Efficiency Score</span>
-                      <div className="text-[14px] font-medium text-[#4A4A4A]">
-                        {propertySummary.epcData.currentEnergyEfficiency}
-                        <span className="text-[11px] text-[#9A9488] ml-1">
-                          (Potential: {propertySummary.epcData.potentialEnergyEfficiency})
-                        </span>
+                <div className="space-y-6 md:border-l md:pl-10 border-[#EEECE6]/60">
+                  <div className="text-[10px] text-[#9A9488] font-bold uppercase tracking-[0.2em] border-b border-[#EEECE6]/40 pb-2">Market Insight</div>
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider">Last Recorded Transaction</span>
+                      <div className="text-3xl font-light text-[#25423D] tracking-tight">{String(propertySummary.lastSoldPrice || 'N/A')}</div>
+                      <div className="flex items-center gap-2 text-[11px] text-[#9A9488]">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>Registered on <span className="text-[#25423D] font-bold">{String(propertySummary.lastSoldDate || 'N/A')}</span></span>
                       </div>
                     </div>
-                  )}
-                  <p className="text-[10px] text-[#A09A8E] leading-relaxed italic border-t border-[#EEECE6] pt-3">
-                    Sourced from HM Land Registry and EPC Open Data.
-                  </p>
+                    <p className="text-[11px] text-[#A09A8E] leading-relaxed italic pr-4">
+                      Validated via HM Land Registry and official EPC Open Data protocols.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -427,177 +395,165 @@ export function PlanningResult({
         </Card>
       )}
 
-      <Card className="border-[#EEECE6] shadow-none">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Policy Compliance Checks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {result.checks.map((check, index) => (
-              <div key={index} className="flex items-start gap-3 p-4 rounded-lg bg-[#FAF9F6] border border-[#EEECE6]/50">
-                <div className="mt-0.5">{getCheckIcon(check.status)}</div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-semibold text-[#25423D] text-[15px]">{check.type}</span>
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0 border-none ${check.status === "pass" ? "bg-[#25423D]/10 text-[#25423D]" :
-                        check.status === "fail" ? "bg-red-100 text-red-800" :
-                          "bg-[#EEECE6] text-[#4A4A4A]"
-                        }`}
-                    >
-                      {check.status === "pass" ? "Compliant" : check.status === "fail" ? "Restriction" : "Review"}
-                    </Badge>
+      {/* Compliance Section - Clean List Style */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <div className="text-[10px] text-[#9A9488] font-bold uppercase tracking-[0.25em]">Policy Compliance Checks</div>
+          <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest bg-white/50">{result.checks.length} Parameters Assessed</Badge>
+        </div>
+        <div className="space-y-3">
+          {result.checks.map((check, index) => (
+            <div key={index} className="group flex items-start gap-4 p-5 rounded-xl bg-white/40 border border-white/60 shadow-sm transition-all duration-300 hover:bg-white/80 hover:shadow-md backdrop-blur-sm">
+              <div className="mt-0.5 transform transition-transform duration-300 group-hover:scale-110">{getCheckIcon(check.status)}</div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between gap-4 mb-1.5">
+                  <span className="font-bold text-[#25423D] text-[16px] tracking-tight">{check.type}</span>
+                  <div className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${check.status === "pass" ? "text-green-700 bg-green-50" :
+                    check.status === "fail" ? "text-red-700 bg-red-50" : "text-amber-700 bg-amber-50"
+                    }`}>
+                    {check.status === "pass" ? "Passed" : check.status === "fail" ? "Restriction" : "Attention"}
                   </div>
-                  <p className="text-[13px] text-[#4A4A4A] leading-relaxed mb-2">{check.description}</p>
-                  {check.documentationUrl && (
-                    <a href={check.documentationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-[#25423D] hover:opacity-70 transition-opacity uppercase tracking-tight">
-                      Policy Guidance <ExternalLink className="h-2.5 w-2.5" />
-                    </a>
-                  )}
                 </div>
+                <p className="text-[14px] text-[#4A4A4A] leading-relaxed mb-3 opacity-90">{check.description}</p>
+                {check.documentationUrl && (
+                  <a href={check.documentationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#25423D] opacity-60 hover:opacity-100 transition-opacity uppercase tracking-widest">
+                    Technical Documentation <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
               </div>
-            ))}
-            {(propertySummary?.propertyType?.toLowerCase().includes("flat") ||
-              propertySummary?.propertyType?.toLowerCase().includes("apartment") ||
-              result.address.toLowerCase().includes("flat") ||
-              result.address.toLowerCase().includes("apartment")) && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-foreground">Important Information About Flats</span>
-                      <Badge variant="secondary" className="text-xs">Info</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Flats and maisonettes are generally exempt from standard Permitted Development restrictions.
-                      You can still search to view planning history for this address.
-                    </p>
-                  </div>
-                </div>
-              )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      {/* What This Means For You Section */}
+      {/* What This Means For You Section - Redesigned Integrated Layout */}
       {result.hasPermittedDevelopmentRights && (
-        <Card className="border-[#25423D]/20 shadow-none overflow-hidden bg-[#FAF9F6]">
-          <CardHeader className="bg-[#25423D] text-white py-4">
-            <CardTitle className="text-xl font-normal text-center uppercase tracking-wider" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+        <div className="py-8 px-4 border-y border-[#EEECE6]/40 space-y-8 relative overflow-hidden bg-[#FAF9F6]/50 rounded-2xl">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+            <CheckCircle className="w-64 h-64 text-[#25423D]" />
+          </div>
+
+          <div className="text-center space-y-3 relative z-10">
+            <div className="text-[10px] text-[#9A9488] font-bold uppercase tracking-[0.3em]">Project Scope Guidance</div>
+            <h2 className="text-3xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>
               {PD_EXPLANATORY_CONTENT.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-6">
-            <div className="space-y-4">
+            </h2>
+            <div className="w-12 h-0.5 bg-[#25423D]/20 mx-auto" />
+          </div>
+
+          <div className="max-w-xl mx-auto space-y-10 relative z-10">
+            <div className="space-y-4 text-center">
               <h3 className="text-lg font-bold text-[#25423D]">{PD_EXPLANATORY_CONTENT.subtitle}</h3>
-              <p className="text-[#4A4A4A] leading-relaxed text-[15px] italic">
-                {PD_EXPLANATORY_CONTENT.intro}
+              <p className="text-[#4A4A4A] leading-relaxed text-[16px] italic opacity-80 decoration-[#25423D]/10">
+                "{PD_EXPLANATORY_CONTENT.intro}"
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-8">
               {PD_EXPLANATORY_CONTENT.sections.map((section, idx) => (
-                <div key={idx} className="space-y-2 border-l-2 border-[#25423D]/10 pl-4 py-1">
-                  <h4 className="font-bold text-[#25423D] flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-[#25423D]" />
-                    {section.title}
-                  </h4>
-                  <p className="text-[14px] text-[#4A4A4A] leading-relaxed">
-                    {section.content}
-                  </p>
+                <div key={idx} className="flex gap-5 group">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white shadow-sm border border-[#EEECE6]/40 flex items-center justify-center text-[#25423D] font-bold text-xs mt-1 transition-colors group-hover:bg-[#25423D] group-hover:text-white">
+                    0{idx + 1}
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="font-bold text-[#25423D] text-[17px] tracking-tight">{section.title}</h4>
+                    <p className="text-[14px] text-[#4A4A4A] leading-relaxed opacity-90">
+                      {section.content}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="pt-4 border-t border-[#EEECE6] text-center">
-              <p className="text-[12px] text-[#9A9488] mb-4">
-                For detailed guidance on permitted development, please visit the official Planning Portal.
-              </p>
+            <div className="pt-6 border-t border-[#EEECE6]/40 text-center">
               <a
                 href="https://www.planningportal.co.uk/permission/common-projects"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-2 bg-[#F8F7F3] border border-[#25423D]/20 text-[#25423D] rounded-full hover:bg-white transition-all text-[12px] font-bold uppercase tracking-wider"
+                className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#25423D] text-white rounded-full hover:bg-[#1A241A] transition-all transform hover:-translate-y-1 shadow-lg shadow-[#25423D]/10 text-xs font-bold uppercase tracking-widest"
               >
-                Official Planning Guidance <ExternalLink className="h-3.5 w-3.5" />
+                Official Planning Portal <ExternalLink className="h-4 w-4" />
               </a>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Property Planning History Card */}
-      <Card className="border-[#EEECE6] shadow-none overflow-hidden">
-        <CardHeader className="p-0">
-          <button
-            onClick={() => setShowPropertyHistory(!showPropertyHistory)}
-            className="w-full flex items-center justify-between p-5 text-left hover:bg-[#F8F7F3] transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-[#EEECE6] p-2 rounded-full">
-                <History className="w-5 h-5 text-[#25423D]" />
-              </div>
-              <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property History</CardTitle>
+      <Card className="border-none shadow-sm overflow-hidden bg-white">
+        <button
+          onClick={() => setShowPropertyHistory(!showPropertyHistory)}
+          className="w-full flex items-center justify-between p-6 text-left hover:bg-[#F8F7F3]/50 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="bg-[#FAF9F6] p-2.5 rounded-xl border border-[#EEECE6]/40">
+              <History className="w-5 h-5 text-[#25423D]" />
             </div>
-            {showPropertyHistory ? <ChevronUp className="w-5 h-5 text-[#9A9488]" /> : <ChevronDown className="w-5 h-5 text-[#9A9488]" />}
-          </button>
-        </CardHeader>
+            <CardTitle className="text-2xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Property History</CardTitle>
+          </div>
+          {showPropertyHistory ? <ChevronUp className="w-5 h-5 text-[#9A9488]" /> : <ChevronDown className="w-5 h-5 text-[#9A9488]" />}
+        </button>
 
         {showPropertyHistory && (
-          <CardContent>
+          <CardContent className="pt-2 px-6 pb-6">
             {isLoadingApplications ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-[#25423D]/20 mb-3" />
-                <span className="text-xs font-bold uppercase tracking-widest text-[#9A9488]">Retrieving records...</span>
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-[#25423D]/20 mb-4" />
+                <span className="text-[10px] font-bold uppercase tracking-[.3em] text-[#9A9488]">Synchronizing Records</span>
               </div>
             ) : applicationsError ? (
-              <div className="text-center py-6">
-                <p className="text-sm text-muted-foreground">{applicationsError}</p>
+              <div className="text-center py-8">
+                <p className="text-sm text-[#9A9488] italic">{applicationsError}</p>
               </div>
             ) : propertyApps.length > 0 ? (
               <div className="space-y-4">
                 {propertyApps.map((app, index) => (
-                  <div key={`prop-${app.reference}-${index}`} className="p-4 border border-border rounded-lg bg-white shadow-sm">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          {app.reference && <Badge variant="secondary" className="text-xs font-mono">{app.reference}</Badge>}
+                  <div key={`prop-${app.reference}-${index}`} className="group p-5 border border-[#EEECE6]/50 rounded-xl bg-white hover:border-[#25423D]/20 transition-all duration-300">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {app.reference && <Badge variant="secondary" className="bg-[#FAF9F6] text-[#25423D] border-[#EEECE6]/60 text-[10px] font-mono px-2 py-0.5">{app.reference}</Badge>}
                           {app.status && (
-                            <Badge variant="outline" className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted') ? 'bg-[#25423D]/10 border-[#25423D]/30 text-[#25423D]' : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected') ? 'bg-red-50 border-red-300 text-red-800' : 'bg-yellow-50 border-yellow-300 text-yellow-800'}`}>
+                            <div className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-sm ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted') ? 'bg-green-50 text-green-700' :
+                              app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected') ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                              }`}>
                               {app.status}
-                            </Badge>
+                            </div>
                           )}
-                          <span className="text-xs text-muted-foreground">
-                            {app['decision-date'] ? `Decided: ${formatDate(app['decision-date'])}` : `Submitted: ${formatDate(app['entry-date'])}`}
+                          <span className="text-[11px] text-[#9A9488] font-medium ml-auto">
+                            {formatDate(app['decision-date'] || app['entry-date'])}
                           </span>
                         </div>
-                        <p className="text-sm font-medium text-foreground mb-1">{app.description || 'No description available'}</p>
-                        {app.address && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" /> {app.address}</p>}
-                        {app.url && (
-                          <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:text-blue-800 underline mt-2 inline-block">
-                            View history details
-                          </a>
-                        )}
+                        <p className="text-[15px] font-bold text-[#25423D] leading-snug group-hover:text-black transition-colors">{app.description}</p>
+                        <div className="flex items-center justify-between pt-2 border-t border-[#EEECE6]/20">
+                          {app.url && (
+                            <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-[#25423D] hover:underline flex items-center gap-1.5 uppercase tracking-widest opacity-60 hover:opacity-100">
+                              Full Case File <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                          <div className="flex items-center gap-1.5 text-[11px] text-[#9A9488]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#25423D]/20" />
+                            Thurrock Planning
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center text-center py-10 px-6 border border-dashed border-[#EEECE6] bg-[#F8F7F3]/30 rounded-lg">
-                <p className="text-sm text-[#9A9488] mb-6 italic">No indexed planning records found specifically for this address.</p>
-                <div className="max-w-sm space-y-4">
-                  <p className="text-[11px] text-[#A09A8E] leading-relaxed uppercase tracking-wider font-bold">
-                    Institutional Record Check
-                  </p>
+              <div className="flex flex-col items-center text-center py-14 px-8 border border-dashed border-[#EEECE6]/60 bg-[#FAF9F6]/50 rounded-2xl">
+                <History className="w-10 h-10 text-[#EEECE6] mb-4" />
+                <p className="text-[13px] text-[#9A9488] mb-8 italic max-w-sm">No direct historical planning applications have been indexed for this specific site.</p>
+                <div className="space-y-4">
+                  <div className="text-[9px] text-[#A09A8E] font-bold uppercase tracking-[.3em]">Institutional Verification</div>
                   <a
                     href="https://regs.thurrock.gov.uk/online-applications/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#25423D] text-[#FAF9F6] rounded-full hover:bg-[#1A241A] transition-all transform hover:-translate-y-0.5 text-xs font-bold uppercase tracking-widest shadow-lg shadow-black/5"
+                    className="inline-flex items-center gap-3 px-10 py-3.5 border border-[#25423D] text-[#25423D] rounded-full hover:bg-[#25423D] hover:text-white transition-all text-[11px] font-bold uppercase tracking-widest shadow-sm"
                   >
-                    Search Local Authority Portal
+                    Open Planning Register
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -607,68 +563,56 @@ export function PlanningResult({
         )}
       </Card>
 
-      {/* Planning Surrounding History Card */}
-      <Card className="border-[#EEECE6] shadow-none overflow-hidden">
-        <CardHeader className="p-0">
-          <button
-            onClick={() => setShowSurroundingHistory(!showSurroundingHistory)}
-            className="w-full flex items-center justify-between p-5 text-left hover:bg-[#F8F7F3] transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-[#EEECE6] p-2 rounded-full">
-                <MapPin className="w-5 h-5 text-[#25423D]" />
-              </div>
-              <CardTitle className="text-xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Surrounding Area History</CardTitle>
+      {/* Surrounding Area Card */}
+      <Card className="border-none shadow-sm overflow-hidden bg-white/40 backdrop-blur-sm">
+        <button
+          onClick={() => setShowSurroundingHistory(!showSurroundingHistory)}
+          className="w-full flex items-center justify-between p-6 text-left hover:bg-white/40 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="bg-[#FAF9F6] p-2.5 rounded-xl border border-[#EEECE6]/40">
+              <MapPin className="w-5 h-5 text-[#25423D]" />
             </div>
-            {showSurroundingHistory ? <ChevronUp className="w-5 h-5 text-[#9A9488]" /> : <ChevronDown className="w-5 h-5 text-[#9A9488]" />}
-          </button>
-        </CardHeader>
+            <CardTitle className="text-2xl font-normal text-[#25423D]" style={{ fontFamily: 'var(--font-playfair), serif' }}>Surrounding Area History</CardTitle>
+          </div>
+          {showSurroundingHistory ? <ChevronUp className="w-5 h-5 text-[#9A9488]" /> : <ChevronDown className="w-5 h-5 text-[#9A9488]" />}
+        </button>
 
         {showSurroundingHistory && (
-          <CardContent className="pt-2">
+          <CardContent className="pt-2 px-6 pb-6">
             {isLoadingApplications ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-[#25423D]/20 mb-3" />
-                <span className="text-xs font-bold uppercase tracking-widest text-[#9A9488]">Searching vicinity...</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#9A9488]">Scanning Vicinity</span>
               </div>
             ) : surroundingApps.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {surroundingApps.map((app, index) => (
-                  <div key={`surr-${app.reference}-${index}`} className="p-4 border border-border rounded-lg bg-white shadow-sm">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          {app.reference && <Badge variant="secondary" className="text-xs font-mono">{app.reference}</Badge>}
-                          {app.status && (
-                            <Badge variant="outline" className={`text-xs ${app.status.toLowerCase().includes('approved') || app.status.toLowerCase().includes('granted') ? 'bg-[#25423D]/10 border-[#25423D]/30 text-[#25423D]' : app.status.toLowerCase().includes('refused') || app.status.toLowerCase().includes('rejected') ? 'bg-red-50 border-red-300 text-red-800' : 'bg-yellow-50 border-yellow-300 text-yellow-800'}`}>
-                              {app.status}
-                            </Badge>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {app['decision-date'] ? `Decided: ${formatDate(app['decision-date'])}` : `Submitted: ${formatDate(app['entry-date'])}`}
-                          </span>
+                  <div key={`surr-${app.reference}-${index}`} className="p-4 border border-[#EEECE6]/30 rounded-lg bg-white/60 hover:bg-white transition-colors">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-4 mb-2">
+                          <Badge variant="outline" className="text-[9px] font-mono border-[#EEECE6]/60 text-[#9A9488]">{app.reference}</Badge>
+                          <span className="text-[10px] font-bold text-[#25423D]/60 whitespace-nowrap">{formatDate(app['decision-date'] || app['entry-date'])}</span>
                         </div>
-                        <p className="text-sm font-medium text-foreground mb-1">{app.description || 'No description available'}</p>
-                        {app.address && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" /> {app.address}</p>}
-                        {app.url && (
-                          <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:text-blue-800 underline mt-2 inline-block">
-                            View history details
-                          </a>
-                        )}
+                        <p className="text-[14px] font-medium text-[#25423D] truncate mb-1">{app.description}</p>
+                        <p className="text-[11px] text-[#9A9488] flex items-center gap-1.5 truncate">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          {app.address}
+                        </p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6">
-                <p className="text-sm text-muted-foreground">No surrounding planning applications found within the search area.</p>
+              <div className="text-center py-8">
+                <p className="text-sm text-[#9A9488] italic opacity-60">No context applications identified within 200m radius.</p>
               </div>
             )}
           </CardContent>
         )}
       </Card>
-      {/* <LegalDisclaimer confidence={result.confidence || 0} variant="full" /> */}
     </div>
   )
 }

@@ -882,35 +882,6 @@ export function AddressSearchForm() {
 
       // ===== PAGE 1: PROFESSIONAL COVER PAGE (Styled from Mockup) =====
 
-      // 1. Background Map (Satellite view background for cover)
-      if (result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I') {
-        try {
-          const displayAddrMap = result.address.split(',').map(s => s.trim()).join(', ');
-          const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(displayAddrMap)}&zoom=18&size=800x600&maptype=${mapType}&markers=color:red%7C${encodeURIComponent(displayAddrMap)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`;
-          const mapResp = await fetch(mapUrl);
-          if (mapResp.ok) {
-            const mapBlob = await mapResp.blob();
-            const reader = new FileReader();
-            const base64Promise = new Promise((resolve) => {
-              reader.onloadend = () => resolve(reader.result);
-              reader.readAsDataURL(mapBlob);
-            });
-            const base64Data = await base64Promise as string;
-
-            // Add map to bottom 60% of page
-            doc.addImage(base64Data, 'JPEG', 0, pageHeight * 0.4, pageWidth, pageHeight * 0.6);
-
-            // White gradient/overlay at top of map
-            doc.setFillColor(255, 255, 255);
-            for (let i = 0; i < 20; i++) {
-              doc.setGState(new (doc as any).GState({ opacity: 1 - (i * 0.05) }));
-              doc.rect(0, pageHeight * 0.4 + (i * 2), pageWidth, 2.5, 'F');
-            }
-            doc.setGState(new (doc as any).GState({ opacity: 1 }));
-          }
-        } catch (e) { console.error("Cover map error:", e); }
-      }
-
       // 2. Logo & Branding
       try {
         doc.addImage('/Logo1.png', 'PNG', 15, 15, 8, 8);
@@ -929,8 +900,8 @@ export function AddressSearchForm() {
       doc.setTextColor(...colors.primary);
       doc.setFontSize(32);
       doc.setFont('times', 'normal');
-      doc.text('PERMITTED DEVELOPMENT', 15, 75);
-      doc.text('FEASIBILITY REPORT', 15, 88);
+      doc.text('PERMITTED DEVELOPMENT', 15, 60);
+      doc.text('FEASIBILITY REPORT', 15, 73);
 
       // 4. Address
       doc.setTextColor(...colors.textDark);
@@ -938,39 +909,62 @@ export function AddressSearchForm() {
       doc.setFont('helvetica', 'bold');
       const displayAddr = result.address.split(',').map(s => s.trim()).join(', ');
       const addrLines = doc.splitTextToSize(displayAddr, pageWidth - 30);
-      doc.text(addrLines, 15, 110);
+      doc.text(addrLines, 15, 95);
 
-      // 5. Metadata
-      let metaY = 135;
-
-      // Add a semi-transparent background for readability
-      try {
-        const gState = new (doc as any).GState({ opacity: 0.8 });
-        doc.setGState(gState);
-        doc.setFillColor(255, 255, 255);
-        doc.roundedRect(12, 131, pageWidth - 24, 23, 1, 1, 'F');
-        // Reset transparency
-        doc.setGState(new (doc as any).GState({ opacity: 1.0 }));
-      } catch (e) {
-        // Fallback to light solid color if GState is not supported
-        doc.setFillColor(250, 250, 250);
-        doc.roundedRect(12, 131, pageWidth - 24, 23, 1, 1, 'F');
-      }
+      // 5. Metadata (Redesigned for premium look - no box, cleaner alignment)
+      let metaY = 115;
 
       const drawMeta = (label: string, value: string) => {
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setTextColor(...colors.textGray);
-        doc.setFont('helvetica', 'normal');
-        doc.text(label, 15, metaY);
-        doc.setTextColor(...colors.textDark);
         doc.setFont('helvetica', 'bold');
-        doc.text(value, 45, metaY);
-        metaY += 7;
+        doc.text(label.toUpperCase(), 15, metaY);
+
+        doc.setFontSize(10);
+        doc.setTextColor(...colors.textDark);
+        doc.setFont('helvetica', 'normal');
+        doc.text(value, 48, metaY);
+
+        // Add subtle divider line
+        doc.setDrawColor(248, 247, 243); // Lighter divider
+        doc.setLineWidth(0.1);
+        doc.line(15, metaY + 2, pageWidth - 15, metaY + 2);
+
+        metaY += 9;
       };
 
       drawMeta('Prepared:', new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }));
-      drawMeta('Report Reference:', `PC-${Date.now().toString().slice(-8)}`);
-      drawMeta('Prepared by:', 'PD RightCheck \u2013 Professional Planning Screening Service');
+      drawMeta('Reference:', `PC-${Date.now().toString().slice(-8)}`);
+      drawMeta('Location:', result.localAuthority);
+      drawMeta('Service:', 'PD RightCheck Professional Planning Screening');
+
+      // 1. Background Map (Moved down to avoid overlap)
+      if (result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I') {
+        try {
+          const displayAddrMap = result.address.split(',').map(s => s.trim()).join(', ');
+          const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(displayAddrMap)}&zoom=18&size=800x600&maptype=${mapType}&markers=color:red%7C${encodeURIComponent(displayAddrMap)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`;
+          const mapResp = await fetch(mapUrl);
+          if (mapResp.ok) {
+            const mapBlob = await mapResp.blob();
+            const reader = new FileReader();
+            const base64Promise = new Promise((resolve) => {
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(mapBlob);
+            });
+            const base64Data = await base64Promise as string;
+
+            // Start map below metadata (around 165mm)
+            const mapY = 165;
+            const mapH = pageHeight - mapY - 20; // Leave 20mm at bottom
+            doc.addImage(base64Data, 'JPEG', 0, mapY, pageWidth, mapH);
+
+            // Subtle top border/accent for the map
+            doc.setDrawColor(...colors.primary);
+            doc.setLineWidth(0.5);
+            doc.line(0, mapY, pageWidth, mapY);
+          }
+        } catch (e) { console.error("Cover map error:", e); }
+      }
 
       // Cover Page Footer
       doc.setFontSize(8);
@@ -1107,7 +1101,7 @@ export function AddressSearchForm() {
       doc.setTextColor(...colors.textGray);
       doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
-      const recText = result.score >= 5
+      const recText = (result.score || 0) >= 5
         ? ""
         : "Due to identified constraints, a full planning application or formal written confirmation from the Local Planning Authority is likely required prior to development.";
       const recLines = doc.splitTextToSize(recText, pageWidth - 30);
@@ -1214,7 +1208,7 @@ export function AddressSearchForm() {
       yPosition += 10;
 
       // Development Limitation Banner (if applicable)
-      if (result.score < 6) {
+      if ((result.score || 0) < 6) {
         doc.setFillColor(...colors.lightYellow);
         doc.roundedRect(15, yPosition, pageWidth - 30, 22, 1, 1, 'F');
         drawCaution(25, yPosition + 11, colors.warning);
