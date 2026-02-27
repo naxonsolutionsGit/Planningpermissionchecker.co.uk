@@ -13,6 +13,7 @@ import { PropertySummary } from "@/components/property-summary"
 import { fetchPropertySummary, type PropertySummary as PropertySummaryType } from "@/lib/property-api"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { PD_EXPLANATORY_CONTENT } from "@/lib/pd-explanatory-content"
 
 // Define the entity interface based on the API response
 interface PlanningEntity {
@@ -87,6 +88,7 @@ export function AddressSearchForm() {
   const [propertySummary, setPropertySummary] = useState<PropertySummaryType | null>(null)
   const [includeLandRegistry, setIncludeLandRegistry] = useState(false)
   const [isDownloadingReport, setIsDownloadingReport] = useState(false)
+  const [mapType, setMapType] = useState('satellite')
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -884,7 +886,7 @@ export function AddressSearchForm() {
       if (result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I') {
         try {
           const displayAddrMap = result.address.split(',').map(s => s.trim()).join(', ');
-          const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(displayAddrMap)}&zoom=18&size=800x600&maptype=satellite&markers=color:red%7C${encodeURIComponent(displayAddrMap)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`;
+          const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(displayAddrMap)}&zoom=18&size=800x600&maptype=${mapType}&markers=color:red%7C${encodeURIComponent(displayAddrMap)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`;
           const mapResp = await fetch(mapUrl);
           if (mapResp.ok) {
             const mapBlob = await mapResp.blob();
@@ -1099,14 +1101,14 @@ export function AddressSearchForm() {
       doc.setTextColor(...colors.textDark);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.text('Professional Recommendation:', 15, yPosition);
+      // doc.text('Professional Recommendation:', 15, yPosition);
       yPosition += 6;
 
       doc.setTextColor(...colors.textGray);
       doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
       const recText = result.score >= 5
-        ? "Based on the screening results, the property appears to retain its standard permitted development rights. However, a Lawful Development Certificate is recommended for formal confirmation."
+        ? ""
         : "Due to identified constraints, a full planning application or formal written confirmation from the Local Planning Authority is likely required prior to development.";
       const recLines = doc.splitTextToSize(recText, pageWidth - 30);
       doc.text(recLines, 15, yPosition);
@@ -1560,6 +1562,55 @@ export function AddressSearchForm() {
         yPosition += epcCardH + 15;
       }
 
+      // What This Means For You Section
+      if (result.hasPermittedDevelopmentRights) {
+        checkNewPage(100);
+        doc.addPage();
+        pageNumber++;
+        yPosition = 25;
+
+        // Header
+        doc.setFillColor(...colors.primary);
+        doc.rect(0, 0, pageWidth, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('times', 'bold');
+        doc.text(PD_EXPLANATORY_CONTENT.title.toUpperCase(), pageWidth / 2, 25, { align: 'center' });
+
+        yPosition = 55;
+        doc.setTextColor(...colors.textDark);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(PD_EXPLANATORY_CONTENT.subtitle, 15, yPosition);
+        yPosition += 10;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.textGray);
+        const introLines = doc.splitTextToSize(PD_EXPLANATORY_CONTENT.intro, pageWidth - 30);
+        doc.text(introLines, 15, yPosition);
+        yPosition += introLines.length * 5 + 10;
+
+        PD_EXPLANATORY_CONTENT.sections.forEach(section => {
+          checkNewPage(60);
+
+          doc.setTextColor(...colors.primary);
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.text(section.title, 15, yPosition);
+          yPosition += 6;
+
+          doc.setTextColor(...colors.textDark);
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          const contentLines = doc.splitTextToSize(section.content, pageWidth - 30);
+          doc.text(contentLines, 15, yPosition);
+          yPosition += contentLines.length * 5 + 10;
+        });
+
+        addFooter();
+      }
+
       // Planning History Section - Professional Card Style
       if (planningHistory.length > 0) {
         checkNewPage(60);
@@ -1630,6 +1681,7 @@ export function AddressSearchForm() {
       const summLines = doc.splitTextToSize(summText, pageWidth - 40);
       doc.text(summLines, 20, yPosition + 10);
       yPosition += 35;
+
 
       // Legal Notice / Disclaimer
       checkNewPage(200);
@@ -1738,7 +1790,12 @@ export function AddressSearchForm() {
     const pdRightsApply = (result as any).score >= 5 // Logic for the high-level indicator
     return (
       <div className="space-y-6">
-        <PlanningResultComponent result={result} propertySummary={propertySummary} />
+        <PlanningResultComponent
+          result={result}
+          propertySummary={propertySummary}
+          mapType={mapType}
+          onMapTypeChange={setMapType}
+        />
         <div className="text-center space-y-4">
           <Button
             onClick={handleDownloadReport}

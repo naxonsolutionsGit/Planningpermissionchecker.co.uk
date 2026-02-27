@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, AlertTriangle, MapPin, History, ExternalLink, Che
 import { LegalDisclaimer } from "@/components/legal-disclaimer"
 import { ConfidenceIndicator } from "@/components/confidence-indicator"
 import { useState, useEffect, useRef } from "react"
+import { PD_EXPLANATORY_CONTENT } from "@/lib/pd-explanatory-content"
 import { PropertySummary as PropertySummaryType } from "@/lib/property-api"
 
 export interface PlanningCheck {
@@ -46,15 +47,28 @@ interface PlanningApplication {
 interface PlanningResultProps {
   result: PlanningResult
   propertySummary?: PropertySummaryType | null
+  mapType?: string
+  onMapTypeChange?: (type: any) => void
 }
 
-export function PlanningResult({ result, propertySummary }: PlanningResultProps) {
+export function PlanningResult({
+  result,
+  propertySummary,
+  mapType: propMapType,
+  onMapTypeChange
+}: PlanningResultProps) {
   const [propertyApps, setPropertyApps] = useState<PlanningApplication[]>([])
   const [surroundingApps, setSurroundingApps] = useState<PlanningApplication[]>([])
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
   const [applicationsError, setApplicationsError] = useState<string | null>(null)
   const [showPropertyHistory, setShowPropertyHistory] = useState(true)
   const [showSurroundingHistory, setShowSurroundingHistory] = useState(true)
+
+  // Use prop if provided, otherwise fallback to internal state
+  const [internalMapType, setInternalMapType] = useState<"satellite" | "roadmap" | "hybrid" | "terrain">("satellite")
+  const mapType = propMapType || internalMapType
+  const setMapType = onMapTypeChange || setInternalMapType
+
   const prevAddressRef = useRef<string>("")
 
   const getStatusIcon = (hasRights: boolean) => {
@@ -276,23 +290,42 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
                 }
 
                 return (
-                  <div className="mb-2 rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative h-[300px] group shadow-sm">
-                    <img
-                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(result.address)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(result.address)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
-                      alt="Property Location Map"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const fallback = target.nextElementSibling as HTMLElement;
-                        if (fallback) {
-                          fallback.style.display = 'flex';
-                        }
-                      }}
-                    />
-                    <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-[#F8F7F3]/80 backdrop-blur-sm">
-                      <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
-                      <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map Preview Unavailable</p>
+                  <div className="mb-2 space-y-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider">Map Appearance</span>
+                      <div className="flex gap-1">
+                        {(["satellite", "roadmap", "hybrid", "terrain"] as const).map((type) => (
+                          <button
+                            key={type}
+                            onClick={() => setMapType(type)}
+                            className={`px-2 py-0.5 text-[9px] uppercase font-bold rounded border transition-colors ${mapType === type
+                              ? "bg-[#25423D] text-white border-[#25423D]"
+                              : "bg-white text-[#9A9488] border-[#EEECE6] hover:bg-[#F8F7F3]"
+                              }`}
+                          >
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="rounded-lg overflow-hidden border border-[#EEECE6] bg-[#F8F7F3] relative h-[300px] group shadow-sm">
+                      <img
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(result.address)}&zoom=18&size=800x400&maptype=${mapType}&markers=color:red%7C${encodeURIComponent(result.address)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
+                        alt="Property Location Map"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) {
+                            fallback.style.display = 'flex';
+                          }
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 flex-col items-center justify-center p-4 text-center bg-[#F8F7F3]/80 backdrop-blur-sm">
+                        <MapPin className="h-6 w-6 text-[#9A9488] mb-2" />
+                        <p className="text-[10px] text-[#25423D] font-semibold uppercase tracking-wider">Map Preview Unavailable</p>
+                      </div>
                     </div>
                   </div>
                 );
@@ -446,6 +479,53 @@ export function PlanningResult({ result, propertySummary }: PlanningResultProps)
           </div>
         </CardContent>
       </Card>
+
+      {/* What This Means For You Section */}
+      {result.hasPermittedDevelopmentRights && (
+        <Card className="border-[#25423D]/20 shadow-none overflow-hidden bg-[#FAF9F6]">
+          <CardHeader className="bg-[#25423D] text-white py-4">
+            <CardTitle className="text-xl font-normal text-center uppercase tracking-wider" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+              {PD_EXPLANATORY_CONTENT.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-[#25423D]">{PD_EXPLANATORY_CONTENT.subtitle}</h3>
+              <p className="text-[#4A4A4A] leading-relaxed text-[15px] italic">
+                {PD_EXPLANATORY_CONTENT.intro}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+              {PD_EXPLANATORY_CONTENT.sections.map((section, idx) => (
+                <div key={idx} className="space-y-2 border-l-2 border-[#25423D]/10 pl-4 py-1">
+                  <h4 className="font-bold text-[#25423D] flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-[#25423D]" />
+                    {section.title}
+                  </h4>
+                  <p className="text-[14px] text-[#4A4A4A] leading-relaxed">
+                    {section.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-4 border-t border-[#EEECE6] text-center">
+              <p className="text-[12px] text-[#9A9488] mb-4">
+                For detailed guidance on permitted development, please visit the official Planning Portal.
+              </p>
+              <a
+                href="https://www.planningportal.co.uk/permission/common-projects"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-2 bg-[#F8F7F3] border border-[#25423D]/20 text-[#25423D] rounded-full hover:bg-white transition-all text-[12px] font-bold uppercase tracking-wider"
+              >
+                Official Planning Guidance <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Property Planning History Card */}
       <Card className="border-[#EEECE6] shadow-none overflow-hidden">
