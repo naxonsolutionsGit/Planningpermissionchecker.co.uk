@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 export async function POST(request: Request) {
     try {
-        const { address, latitude, longitude, includeLandRegistry } = await request.json();
+        const { address, latitude, longitude, includeLandRegistry, email } = await request.json();
 
         if (!address) {
             return NextResponse.json({ error: "Address is required" }, { status: 400 });
@@ -19,22 +19,40 @@ export async function POST(request: Request) {
         const host = request.headers.get("host") || "localhost:3000";
         const baseUrl = `${protocol}://${host}`;
 
-        // Create Checkout Session
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            line_items: [
-                {
-                    price_data: {
-                        currency: "gbp",
-                        product_data: {
-                            name: "Professional Planning & PD Rights Screening",
-                            description: `Report for: ${address.split(',')[0]}`,
-                        },
-                        unit_amount: 700, // £7.00 in pence
+        // Build line items
+        const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+            {
+                price_data: {
+                    currency: "gbp",
+                    product_data: {
+                        name: "PD Rights Compliance Report",
+                        description: `Professional PD report for: ${address.split(',')[0]}`,
                     },
-                    quantity: 1,
+                    unit_amount: 2499, // £24.99 in pence
                 },
-            ],
+                quantity: 1,
+            },
+        ];
+
+        // Add Land Registry title as second line item if selected
+        if (includeLandRegistry) {
+            line_items.push({
+                price_data: {
+                    currency: "gbp",
+                    product_data: {
+                        name: "Official Land Registry Title",
+                        description: "HM Land Registry Title Register & Title Plan",
+                    },
+                    unit_amount: 700, // £7.00 in pence
+                },
+                quantity: 1,
+            });
+        }
+
+        // Create Checkout Session
+        const sessionParams: Stripe.Checkout.SessionCreateParams = {
+            payment_method_types: ["card"],
+            line_items,
             mode: "payment",
             success_url: `${baseUrl}/?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${baseUrl}/?canceled=true`,
@@ -44,7 +62,14 @@ export async function POST(request: Request) {
                 longitude: longitude ? String(longitude) : "",
                 includeLandRegistry: includeLandRegistry ? "true" : "false",
             },
-        });
+        };
+
+        // Add customer email if provided
+        if (email) {
+            sessionParams.customer_email = email;
+        }
+
+        const session = await stripe.checkout.sessions.create(sessionParams);
 
         return NextResponse.json({ url: session.url });
     } catch (error: any) {

@@ -3,7 +3,7 @@ import { checkPlanningRights } from "@/lib/planning-api"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2025-02-24.acacia" as any, // Bypass strict type check if needed, or use "2026-02-25.clover"
+  apiVersion: "2025-02-24.acacia" as any,
 })
 
 export async function POST(request: NextRequest) {
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const address = session.metadata?.address
     const latitude = session.metadata?.latitude ? parseFloat(session.metadata.latitude) : undefined;
     const longitude = session.metadata?.longitude ? parseFloat(session.metadata.longitude) : undefined;
+    const includeLandRegistry = session.metadata?.includeLandRegistry === "true";
 
     if (!address) {
       return NextResponse.json({ error: "No address found in the payment session." }, { status: 400 })
@@ -35,7 +36,6 @@ export async function POST(request: NextRequest) {
     const result = await checkPlanningRights(address, latitude, longitude)
 
     // For the UI to render correctly, also send back the property summary
-    // Typically this would be done by the client side, but we want to secure it.
     let propertySummary = null;
     try {
       const { fetchPropertySummary } = await import("@/lib/property-api");
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       console.warn("Could not fetch property summary attached to payment secure endpoint", e);
     }
 
-    return NextResponse.json({ ...result, propertySummary })
+    return NextResponse.json({ ...result, propertySummary, includeLandRegistry })
   } catch (error: any) {
     console.error("Planning rights check error:", error)
     return NextResponse.json({ error: error.message || "Failed to check planning rights" }, { status: 500 })

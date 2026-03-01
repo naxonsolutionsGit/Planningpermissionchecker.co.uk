@@ -95,6 +95,13 @@ export function AddressSearchForm() {
   const [isDownloadingReport, setIsDownloadingReport] = useState(false)
   const [mapType, setMapType] = useState('satellite')
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  // New states for preview/processing flow
+  const [showProcessing, setShowProcessing] = useState(false)
+  const [processingStep, setProcessingStep] = useState(0)
+  const [previewData, setPreviewData] = useState<any>(null)
+  const [showPreview, setShowPreview] = useState(false)
+  const [userEmail, setUserEmail] = useState("")
+  const [paidIncludeLandRegistry, setPaidIncludeLandRegistry] = useState(false)
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -480,7 +487,15 @@ export function AddressSearchForm() {
             // remove it from the main result to match types
             delete data.propertySummary;
           }
+          // Store land registry flag from payment session
+          if (data.includeLandRegistry) {
+            setPaidIncludeLandRegistry(true);
+          }
+          delete data.includeLandRegistry;
           setResult(data);
+          // Clear preview state
+          setShowPreview(false);
+          setPreviewData(null);
 
           // Clear query params to tidy up the URL
           router.replace("/", { scroll: false });
@@ -497,6 +512,18 @@ export function AddressSearchForm() {
     }
   }, [sessionId, router]);
 
+  // Processing animation steps
+  const processingSteps = [
+    "Identifying property classification",
+    "Confirming tenure status",
+    "Checking Article 4 directions",
+    "Reviewing conservation area overlays",
+    "Scanning planning constraints",
+    "Checking flood & green belt status",
+    "Reviewing planning history",
+    "Assessing permitted development eligibility",
+  ]
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!address.trim()) return
@@ -504,6 +531,10 @@ export function AddressSearchForm() {
     setIsLoading(true)
     setError(null)
     setResult(null)
+    setPreviewData(null)
+    setShowPreview(false)
+    setShowProcessing(true)
+    setProcessingStep(0)
 
     try {
       // Extract coordinates from suggestion or mock them
@@ -516,24 +547,84 @@ export function AddressSearchForm() {
         longitude = selectedSuggestion.location.lng
       }
 
-      // 1. Initiate Stripe Checkout
+      // Start the processing animation (8 seconds total, 1 per step)
+      const animationPromise = new Promise<void>((resolve) => {
+        let step = 0
+        const interval = setInterval(() => {
+          step++
+          setProcessingStep(step)
+          if (step >= 8) {
+            clearInterval(interval)
+            resolve()
+          }
+        }, 1000)
+      })
+
+      // Fetch preview data from server in parallel
+      const dataPromise = fetch("/api/get-report-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, latitude, longitude }),
+      }).then(async (res) => {
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || "Failed to fetch preview")
+        return data.preview
+      })
+
+      // Wait for BOTH animation AND data to complete
+      const [, preview] = await Promise.all([animationPromise, dataPromise])
+
+      setPreviewData(preview)
+      setShowProcessing(false)
+      setShowPreview(true)
+      setIsLoading(false)
+    } catch (err) {
+      console.error("Preview fetch error:", err)
+      setError(err instanceof Error ? err.message : "Failed to fetch property data. Please try again.")
+      setShowProcessing(false)
+      setIsLoading(false)
+    }
+  }
+
+  // Handle payment redirect
+  const handleUnlockReport = async () => {
+    if (!userEmail.trim()) {
+      setError("Please enter your email address to receive the report.")
+      return
+    }
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      let latitude = 51.5074
+      let longitude = -0.1278
+      if (previewData?.coordinates) {
+        latitude = previewData.coordinates.lat
+        longitude = previewData.coordinates.lng
+      }
+
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, latitude, longitude, includeLandRegistry }),
-      });
+        body: JSON.stringify({
+          address: previewData?.address || address,
+          latitude,
+          longitude,
+          includeLandRegistry,
+          email: userEmail,
+        }),
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create payment session");
+        throw new Error(data.error || "Failed to create payment session")
       }
 
       if (data.url) {
-        // Redirect to Stripe checkout
-        window.location.href = data.url;
+        window.location.href = data.url
       } else {
-        throw new Error("Invalid response from payment server");
+        throw new Error("Invalid response from payment server")
       }
     } catch (err) {
       console.error("Checkout initiation error:", err)
@@ -546,6 +637,13 @@ export function AddressSearchForm() {
     setResult(null)
     setError(null)
     setAddress("")
+    setPreviewData(null)
+    setShowPreview(false)
+    setShowProcessing(false)
+    setProcessingStep(0)
+    setUserEmail("")
+    setIncludeLandRegistry(false)
+    setPaidIncludeLandRegistry(false)
   }
 
   const handleDownloadReport = async () => {
@@ -1679,6 +1777,261 @@ export function AddressSearchForm() {
     }
   }
 
+  // Processing Animation Screen
+  if (showProcessing) {
+    return (
+      <div className="min-h-screen bg-[#25423D] flex items-center justify-center">
+        <div className="max-w-lg w-full mx-4">
+          <div className="text-center mb-10">
+            <div className="w-16 h-16 border-4 border-[#F0ECE3] border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <h2 className="text-2xl font-bold text-[#F0ECE3] mb-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+              Analysing Your Property
+            </h2>
+            <p className="text-[#B5AE9A] text-sm">{address}</p>
+          </div>
+
+          <div className="bg-[#1A241A]/50 rounded-2xl p-6 backdrop-blur-sm border border-[#F0ECE3]/10">
+            <div className="space-y-3">
+              {processingSteps.map((step, index) => {
+                const isCompleted = processingStep > index
+                const isCurrent = processingStep === index
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center gap-3 transition-all duration-500 ${isCompleted ? 'opacity-100' : isCurrent ? 'opacity-90' : 'opacity-30'
+                      }`}
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isCompleted
+                      ? 'bg-emerald-500'
+                      : isCurrent
+                        ? 'bg-[#F0ECE3]/20 border-2 border-[#F0ECE3]/60'
+                        : 'bg-[#F0ECE3]/10'
+                      }`}>
+                      {isCompleted ? (
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      ) : isCurrent ? (
+                        <div className="w-2 h-2 bg-[#F0ECE3] rounded-full animate-pulse"></div>
+                      ) : null}
+                    </div>
+                    <span className={`text-sm transition-all duration-300 ${isCompleted ? 'text-emerald-400' : isCurrent ? 'text-[#F0ECE3]' : 'text-[#B5AE9A]/50'
+                      }`}>
+                      {isCompleted ? '✓ ' : ''}{step}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <div className="w-full bg-[#F0ECE3]/10 rounded-full h-1.5">
+              <div
+                className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${(processingStep / 8) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Partial Preview Screen with Paywall
+  if (showPreview && previewData) {
+    const totalPrice = includeLandRegistry ? 31.99 : 24.99
+    return (
+      <div className="min-h-screen bg-white">
+        {/* Top bar */}
+        <div className="bg-[#25423D] py-4 px-6">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <h1 className="text-lg font-bold text-[#F0ECE3]" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+              PD RightCheck
+            </h1>
+            <Button onClick={handleNewSearch} variant="ghost" className="text-[#B5AE9A] hover:text-[#F0ECE3] hover:bg-[#F0ECE3]/10">
+              ← New Search
+            </Button>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          {/* Preview Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+              <Check className="w-4 h-4" />
+              Analysis Complete
+            </div>
+            <h2 className="text-3xl font-bold text-[#25423D] mb-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+              Property Report Preview
+            </h2>
+            <p className="text-[#4C5A63]">{previewData.address}</p>
+          </div>
+
+          {/* Visible Preview Data */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+              <div className="flex items-center gap-2 mb-2">
+                <Home className="w-4 h-4 text-[#25423D]" />
+                <span className="text-xs font-semibold text-[#25423D] uppercase tracking-wider">Property Type</span>
+              </div>
+              <p className="text-lg font-bold text-[#25423D]">{previewData.propertyType}</p>
+            </div>
+            <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-4 h-4 text-[#25423D]" />
+                <span className="text-xs font-semibold text-[#25423D] uppercase tracking-wider">Tenure</span>
+              </div>
+              <p className="text-lg font-bold text-[#25423D]">{previewData.tenure}</p>
+            </div>
+            <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+              <div className="flex items-center gap-2 mb-2">
+                <Building className="w-4 h-4 text-[#25423D]" />
+                <span className="text-xs font-semibold text-[#25423D] uppercase tracking-wider">Local Authority</span>
+              </div>
+              <p className="text-lg font-bold text-[#25423D]">{previewData.localAuthority}</p>
+            </div>
+          </div>
+
+          {/* Map Preview */}
+          {previewData.coordinates && (
+            <div className="mb-8 rounded-xl overflow-hidden border border-[#EEECE6]">
+              <img
+                src={`https://maps.googleapis.com/maps/api/staticmap?center=${previewData.coordinates.lat},${previewData.coordinates.lng}&zoom=16&size=800x300&maptype=satellite&markers=color:red|${previewData.coordinates.lat},${previewData.coordinates.lng}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
+                alt="Property location"
+                className="w-full h-[200px] object-cover"
+              />
+            </div>
+          )}
+
+          {/* Blurred/Locked Report Sections */}
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white z-10 pointer-events-none" style={{ top: '60px' }}></div>
+            <div className="filter blur-[6px] select-none pointer-events-none">
+              <div className="space-y-4">
+                <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+                  <h3 className="font-semibold text-[#25423D] mb-3">Article 4 Direction Check</h3>
+                  <div className="h-4 bg-[#EEECE6] rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-[#EEECE6] rounded w-1/2"></div>
+                </div>
+                <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+                  <h3 className="font-semibold text-[#25423D] mb-3">Conservation Area Status</h3>
+                  <div className="h-4 bg-[#EEECE6] rounded w-2/3 mb-2"></div>
+                  <div className="h-4 bg-[#EEECE6] rounded w-1/2"></div>
+                </div>
+                <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+                  <h3 className="font-semibold text-[#25423D] mb-3">Listed Building Assessment</h3>
+                  <div className="h-4 bg-[#EEECE6] rounded w-4/5 mb-2"></div>
+                  <div className="h-4 bg-[#EEECE6] rounded w-1/3"></div>
+                </div>
+                <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+                  <h3 className="font-semibold text-[#25423D] mb-3">Planning History Review</h3>
+                  <div className="h-4 bg-[#EEECE6] rounded w-2/3 mb-2"></div>
+                  <div className="h-4 bg-[#EEECE6] rounded w-3/5"></div>
+                </div>
+                <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+                  <h3 className="font-semibold text-[#25423D] mb-3">Flood Zone & Green Belt</h3>
+                  <div className="h-4 bg-[#EEECE6] rounded w-1/2 mb-2"></div>
+                  <div className="h-4 bg-[#EEECE6] rounded w-2/3"></div>
+                </div>
+                <div className="bg-[#F8F7F3] rounded-xl p-5 border border-[#EEECE6]">
+                  <h3 className="font-semibold text-[#25423D] mb-3">PD Rights Eligibility Summary</h3>
+                  <div className="h-4 bg-[#EEECE6] rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-[#EEECE6] rounded w-1/2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Unlock Section */}
+          <div className="bg-gradient-to-br from-[#25423D] to-[#1A241A] rounded-2xl p-8 text-center shadow-xl">
+            <div className="max-w-md mx-auto">
+              <div className="w-14 h-14 bg-[#F0ECE3]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-[#F0ECE3]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="m7 11 0-4a5 5 0 0 1 10 0l0 4"></path>
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-[#F0ECE3] mb-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+                Your Full PD Compliance Report Is Ready
+              </h3>
+              <p className="text-[#B5AE9A] text-sm mb-6">
+                Unlock the complete report including all planning checks, restrictions, recommendations, and downloadable PDF.
+              </p>
+
+              {/* Email Field */}
+              <div className="mb-4">
+                <Input
+                  type="email"
+                  placeholder="Enter your email to receive the report"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  className="w-full bg-white/10 border-[#F0ECE3]/20 text-[#F0ECE3] placeholder:text-[#B5AE9A]/60 focus-visible:ring-[#F0ECE3]/30 h-12 rounded-xl"
+                  required
+                />
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="bg-[#F0ECE3]/10 rounded-xl p-4 mb-4 text-left">
+                <div className="flex justify-between items-center text-[#F0ECE3] mb-2">
+                  <span className="text-sm">PD Rights Report</span>
+                  <span className="font-semibold">£24.99</span>
+                </div>
+
+                {/* Land Registry Checkbox */}
+                <div className="border-t border-[#F0ECE3]/10 pt-3 mt-2">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="lr-preview"
+                      checked={includeLandRegistry}
+                      onCheckedChange={(checked) => setIncludeLandRegistry(checked as boolean)}
+                      className="border-[#F0ECE3]/40 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="lr-preview" className="text-sm text-[#F0ECE3] cursor-pointer font-medium">
+                        Add Official Land Registry Title – £7.00
+                      </Label>
+                      <p className="text-xs text-[#B5AE9A]/70 mt-0.5">
+                        Official HM Land Registry Title Register & Title Plan attached to your report
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="border-t border-[#F0ECE3]/10 pt-3 mt-3 flex justify-between items-center">
+                  <span className="font-bold text-[#F0ECE3]">Total</span>
+                  <span className="text-xl font-bold text-[#F0ECE3]">£{totalPrice.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {error && <div className="text-sm text-red-400 bg-red-900/20 p-3 rounded-lg mb-4">{error}</div>}
+
+              <Button
+                onClick={handleUnlockReport}
+                disabled={isLoading}
+                className="w-full py-4 h-14 bg-[#F0ECE3] text-[#25423D] hover:bg-[#E4DED2] font-bold text-base rounded-xl transition-colors"
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-[#25423D] border-t-transparent rounded-full animate-spin"></div>
+                    Redirecting to payment...
+                  </div>
+                ) : (
+                  <>
+                    Unlock Full Report – £{totalPrice.toFixed(2)}
+                  </>
+                )}
+              </Button>
+
+              <p className="text-xs text-[#B5AE9A]/50 mt-4">
+                Secure payment via Stripe. No account required.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (result) {
     const pdRightsApply = (result as any).score >= 5 // Logic for the high-level indicator
     return (
@@ -1734,8 +2087,13 @@ export function AddressSearchForm() {
           </h1>
 
           {/* Sub-heading - italic serif */}
-          <p className="text-[17px] sm:text-[20px] italic text-[#B5AE9A] mb-16 text-center" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+          <p className="text-[17px] sm:text-[20px] italic text-[#B5AE9A] mb-2 text-center" style={{ fontFamily: 'var(--font-playfair), serif' }}>
             for UK Residential Properties
+          </p>
+
+          {/* Price tag */}
+          <p className="text-sm tracking-wider uppercase text-[#F0ECE3]/80 mb-16 text-center font-semibold" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+            Professional Permitted Development Compliance Report – £24.99
           </p>
 
           {/* Checklist - left aligned as centered block */}
@@ -1834,11 +2192,11 @@ export function AddressSearchForm() {
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 border-2 border-[#E4DED2] border-t-transparent rounded-full animate-spin"></div>
-                    {paymentStatus || "Redirecting to secure payment..."}
+                    Analysing property...
                   </div>
                 ) : (
                   <>
-                    Generate Professional Screening Report <ChevronRight className="w-[18px] h-[18px] ml-2 flex-shrink-0" />
+                    Start PD Check – £24.99 <ChevronRight className="w-[18px] h-[18px] ml-2 flex-shrink-0" />
                   </>
                 )}
               </Button>
@@ -2181,13 +2539,13 @@ export function AddressSearchForm() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: 'var(--font-playfair), serif' }}>Ready to Check Your Property?</h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto text-[#B5AE9A]">
-            Get instant clarity on your permitted development rights
+            Professional PD Compliance Report – just £24.99
           </p>
           <Button
             onClick={() => document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' })}
             className="py-4 px-12 h-14 font-semibold bg-[#F0ECE3] text-[#25423D] hover:bg-[#E4DED2] text-lg rounded-xl"
           >
-            Start Your PD Rights Check
+            Start Your PD Check – £24.99
           </Button>
         </div>
       </section>
