@@ -635,16 +635,25 @@ export function PlanningResult({
                 {surroundingApps.map((app, index) => (
                   <div key={`surr-${app.reference}-${index}`} className="p-4 border border-[#25423D]/20 shadow-sm rounded-lg bg-white hover:border-[#25423D]/40 hover:shadow-md transition-all duration-300">
                     <div className="flex items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-4 mb-2">
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center justify-between gap-4">
                           <Badge variant="outline" className="text-[9px] font-mono border-[#EEECE6]/60 text-[#9A9488]">{app.reference}</Badge>
                           <span className="text-[10px] font-bold text-[#25423D]/60 whitespace-nowrap">{formatDate(app['decision-date'] || app['entry-date'])}</span>
                         </div>
-                        <p className="text-[14px] font-medium text-[#25423D] truncate mb-1">{app.description}</p>
-                        <p className="text-[11px] text-[#9A9488] flex items-center gap-1.5 truncate">
-                          <MapPin className="w-3 h-3 flex-shrink-0" />
-                          {app.address}
-                        </p>
+                        <div>
+                          <p className="text-[14px] font-medium text-[#25423D] truncate mb-1">{app.description}</p>
+                          <p className="text-[11px] text-[#9A9488] flex items-center gap-1.5 truncate">
+                            <MapPin className="w-3 h-3 flex-shrink-0" />
+                            {app.address}
+                          </p>
+                        </div>
+                        {app.url && (
+                          <div className="pt-2 border-t border-[#EEECE6]/40">
+                            <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-[#25423D] hover:underline flex items-center gap-1.5 uppercase tracking-widest opacity-60 hover:opacity-100">
+                              Full Case File <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

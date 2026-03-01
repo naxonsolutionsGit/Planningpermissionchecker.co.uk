@@ -10,6 +10,7 @@ export interface PlanningRule {
   description: string
   severity: RuleSeverity
   priority: number // Higher number = higher priority
+  documentationUrl?: string
   evaluate: (property: PropertyForRules) => RuleResult
 }
 
@@ -58,6 +59,7 @@ export const planningRules: PlanningRule[] = [
     description: "Article 4 Directions remove specific Permitted Development rights",
     severity: "blocking",
     priority: 100,
+    documentationUrl: "https://www.planningportal.co.uk/planning/planning-applications/consent-types/article-4-directions",
     evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.article4Direction,
       status: property.constraints.article4Direction ? "fail" : "pass",
@@ -76,6 +78,7 @@ export const planningRules: PlanningRule[] = [
     description: "Listed buildings require Listed Building Consent for alterations",
     severity: "blocking",
     priority: 95,
+    documentationUrl: "https://www.planningportal.co.uk/planning/planning-applications/consent-types/listed-building-consent",
     evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.listedBuilding,
       status: property.constraints.listedBuilding ? "fail" : "pass",
@@ -94,6 +97,7 @@ export const planningRules: PlanningRule[] = [
     description: "Flats and maisonettes have severely limited Permitted Development rights",
     severity: "blocking",
     priority: 90,
+    documentationUrl: "https://www.planningportal.co.uk/commonprojects/commercial_and_residential/flats_and_maisonettes",
     evaluate: (property: PropertyForRules): RuleResult => {
       const isFlat = property.propertyType === "flat" || property.propertyType === "maisonette"
       return {
@@ -116,6 +120,7 @@ export const planningRules: PlanningRule[] = [
     description: "Conservation areas have additional planning controls",
     severity: "restrictive",
     priority: 80,
+    documentationUrl: "https://www.planningportal.co.uk/planning/planning-applications/consent-types/conservation-area-consent",
     evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.conservationArea,
       status: property.constraints.conservationArea ? "warning" : "pass",
@@ -134,6 +139,7 @@ export const planningRules: PlanningRule[] = [
     description: "World Heritage Sites have the highest level of protection",
     severity: "restrictive",
     priority: 85,
+    documentationUrl: "https://www.planningportal.co.uk/planning/planning-applications/consent-types/world-heritage-site-designation",
     evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.worldHeritage,
       status: property.constraints.worldHeritage ? "warning" : "pass",
@@ -152,6 +158,7 @@ export const planningRules: PlanningRule[] = [
     description: "National Parks have enhanced planning controls",
     severity: "restrictive",
     priority: 75,
+    documentationUrl: "https://www.planningportal.co.uk/planning/planning-applications/consent-types/national-park-consent",
     evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.nationalPark,
       status: property.constraints.nationalPark ? "warning" : "pass",
@@ -170,6 +177,7 @@ export const planningRules: PlanningRule[] = [
     description: "AONBs have landscape protection measures",
     severity: "restrictive",
     priority: 70,
+    documentationUrl: "https://www.planningportal.co.uk/planning/planning-applications/consent-types/aonb-consent",
     evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.aonb,
       status: property.constraints.aonb ? "warning" : "pass",
@@ -189,6 +197,7 @@ export const planningRules: PlanningRule[] = [
     description: "TPOs protect important trees and may affect development",
     severity: "advisory",
     priority: 60,
+    documentationUrl: "https://www.planningportal.co.uk/planning/planning-applications/consent-types/tree-preservation-order",
     evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.tpo,
       status: property.constraints.tpo ? "warning" : "pass",
@@ -207,6 +216,7 @@ export const planningRules: PlanningRule[] = [
     description: "Flood zones may have development restrictions",
     severity: "advisory",
     priority: 50,
+    documentationUrl: "https://www.planningportal.co.uk/planning/planning-applications/consent-types/flood-risk-assessment",
     evaluate: (property: PropertyForRules): RuleResult => ({
       applies: property.constraints.floodZone,
       status: property.constraints.floodZone ? "warning" : "pass",
@@ -256,7 +266,7 @@ export class PlanningRulesEngine {
         type: this.rules[index].name,
         status: result.status,
         description: result.message,
-        documentationUrl: "",
+        documentationUrl: this.rules[index].documentationUrl || "",
         entitiesFound: 0,
       }))
 
