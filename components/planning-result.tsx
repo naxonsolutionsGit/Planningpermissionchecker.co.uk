@@ -416,9 +416,12 @@ export function PlanningResult({
                 <div className="flex items-center justify-between gap-4 mb-1.5">
                   <span className="font-bold text-[#25423D] text-[16px] tracking-tight">{check.type}</span>
                   <div className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${check.status === "pass" ? "text-green-700 bg-green-50" :
-                    check.status === "fail" ? "text-red-700 bg-red-50" : "text-amber-700 bg-amber-50"
+                      check.status === "fail" ? "text-red-700 bg-red-50" :
+                        "text-amber-700 bg-amber-50"
                     }`}>
-                    {check.status === "pass" ? "Passed" : check.status === "fail" ? "Restriction" : "Attention"}
+                    {check.status === "pass" ? "Passed" :
+                      check.status === "fail" ? "Restriction" :
+                        "Attention"}
                   </div>
                 </div>
                 <p className="text-[14px] text-[#4A4A4A] leading-relaxed mb-3 opacity-90">{check.description}</p>

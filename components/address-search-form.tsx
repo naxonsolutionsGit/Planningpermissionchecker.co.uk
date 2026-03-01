@@ -1349,9 +1349,12 @@ export function AddressSearchForm() {
           if (check.status === 'pass') {
             doc.setTextColor(...colors.success);
             doc.text('PASSED', pageWidth - 20, yPosition, { align: 'right' });
-          } else {
+          } else if (check.status === 'fail') {
             doc.setTextColor(...colors.error);
             doc.text('RESTRICTION', pageWidth - 20, yPosition, { align: 'right' });
+          } else {
+            doc.setTextColor(...colors.warning);
+            doc.text('ATTENTION', pageWidth - 20, yPosition, { align: 'right' });
           }
 
           doc.setTextColor(...colors.textDark);
