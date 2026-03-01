@@ -1735,7 +1735,11 @@ export function AddressSearchForm() {
       addFooter();
 
       // --- NEW: Land Registry Official PDF Attachment ---
-      if (includeLandRegistry) {
+      // Check both the current state and the paid state from the session
+      const shouldIncludeLR = includeLandRegistry || paidIncludeLandRegistry;
+      console.log(`[PDF] Including Land Registry: ${shouldIncludeLR} (State: ${includeLandRegistry}, Paid: ${paidIncludeLandRegistry})`);
+
+      if (shouldIncludeLR) {
         checkNewPage(200);
         doc.addPage();
         pageNumber++;
