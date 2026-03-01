@@ -1,38 +1,38 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
+export async function POST(request: Request) {
+  const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.hostinger.com",
     port: Number(process.env.SMTP_PORT) || 465,
     secure: true, // SSL/TLS on port 465
     auth: {
-        user: process.env.SMTP_USER || "no-reply@pdrightscheck.co.uk",
-        pass: process.env.SMTP_PASS || "",
+      user: process.env.SMTP_USER || "no-reply@pdrightscheck.co.uk",
+      pass: process.env.SMTP_PASS || "",
     },
-});
+  });
 
-export async function POST(request: Request) {
-    try {
-        const { pdfBase64, email, address } = await request.json();
+  try {
+    const { pdfBase64, email, address } = await request.json();
 
-        if (!pdfBase64 || !email || !address) {
-            return NextResponse.json(
-                { error: "Missing required fields: pdfBase64, email, address" },
-                { status: 400 }
-            );
-        }
+    if (!pdfBase64 || !email || !address) {
+      return NextResponse.json(
+        { error: "Missing required fields: pdfBase64, email, address" },
+        { status: 400 }
+      );
+    }
 
-        // Sanitise the address for use in filename
-        const safeAddress = address
-            .split(",")[0]
-            .replace(/[^a-zA-Z0-9\s-]/g, "")
-            .replace(/\s+/g, "-")
-            .substring(0, 60);
+    // Sanitise the address for use in filename
+    const safeAddress = address
+      .split(",")[0]
+      .replace(/[^a-zA-Z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .substring(0, 60);
 
-        const fileName = `PDRightCheck-Report-${safeAddress}.pdf`;
+    const fileName = `PDRightCheck-Report-${safeAddress}.pdf`;
 
-        // Build professional HTML email body
-        const htmlBody = `
+    // Build professional HTML email body
+    const htmlBody = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -110,28 +110,28 @@ export async function POST(request: Request) {
 </body>
 </html>`;
 
-        // Send the email with the PDF attached
-        await transporter.sendMail({
-            from: `"PD Rights Check" <${process.env.SMTP_USER || "no-reply@pdrightscheck.co.uk"}>`,
-            to: email,
-            subject: `Your PD Rights Check Report – ${address.split(",")[0].trim()}`,
-            html: htmlBody,
-            attachments: [
-                {
-                    filename: fileName,
-                    content: Buffer.from(pdfBase64, "base64"),
-                    contentType: "application/pdf",
-                },
-            ],
-        });
+    // Send the email with the PDF attached
+    await transporter.sendMail({
+      from: `"PD Rights Check" <${process.env.SMTP_USER || "no-reply@pdrightscheck.co.uk"}>`,
+      to: email,
+      subject: `Your PD Rights Check Report – ${address.split(",")[0].trim()}`,
+      html: htmlBody,
+      attachments: [
+        {
+          filename: fileName,
+          content: Buffer.from(pdfBase64, "base64"),
+          contentType: "application/pdf",
+        },
+      ],
+    });
 
-        console.log(`Report email sent successfully to ${email} for ${address}`);
-        return NextResponse.json({ success: true });
-    } catch (error: any) {
-        console.error("Failed to send report email:", error);
-        return NextResponse.json(
-            { error: error.message || "Failed to send email" },
-            { status: 500 }
-        );
-    }
+    console.log(`Report email sent successfully to ${email} for ${address}`);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Failed to send report email:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to send email" },
+      { status: 500 }
+    );
+  }
 }
