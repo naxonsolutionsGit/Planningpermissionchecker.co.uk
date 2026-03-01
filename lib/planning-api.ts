@@ -97,9 +97,46 @@ async function fetchRealPropertyData(address: string, lat?: number, lng?: number
 
   try {
     // 1. Get postcode and coordinates from address
-    const addressData = await osGeocodeAddress(address)
+    let addressData = await osGeocodeAddress(address)
+
+    // If OS Places API fails, build addressData from postcode lookup + Google coords
     if (!addressData) {
-      throw new Error("Address not found")
+      const postcode = osExtractPostcodeFromAddress(address)
+      if (!postcode && !(lat !== undefined && lng !== undefined)) {
+        throw new Error("Address not found and no coordinates available")
+      }
+
+      // Use postcodes.io to get local authority from postcode (free, no API key needed)
+      let localAuthority = "Unknown Council"
+      let coords: [number, number] | undefined = (lat !== undefined && lng !== undefined) ? [lat, lng] : undefined
+
+      if (postcode) {
+        try {
+          const formattedPC = postcode.replace(/\s+/g, '')
+          const pcResponse = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(formattedPC)}`)
+          if (pcResponse.ok) {
+            const pcData = await pcResponse.json()
+            if (pcData.result) {
+              localAuthority = pcData.result.admin_district || pcData.result.parliamentary_constituency || "Unknown Council"
+              // If we don't have coords from Google, use postcode centroid
+              if (!coords) {
+                coords = [pcData.result.latitude, pcData.result.longitude]
+              }
+            }
+          }
+        } catch (pcErr) {
+          console.warn("Postcodes.io lookup failed:", pcErr)
+        }
+      }
+
+      addressData = {
+        address: address,
+        postcode: postcode || "Unknown",
+        coordinates: coords || [51.5074, -0.1278],
+        localAuthority: localAuthority,
+        propertyType: (await import("./utils")).determinePropertyType(address),
+      }
+      sources.push("Postcode Lookup (postcodes.io)")
     }
 
     // 2. Check Historic England API for listed buildings
@@ -122,6 +159,37 @@ async function fetchRealPropertyData(address: string, lat?: number, lng?: number
     const designationData = await osFetchGovernmentDesignations(addressData.coordinates)
     sources.push("Government Open Data")
 
+    // 6. Check planning.data.gov.uk for Article 4 directions (reliable government source)
+    let govArticle4 = false
+    try {
+      const [coordLat, coordLng] = addressData.coordinates
+      const a4Url = `https://www.planning.data.gov.uk/entity.json?latitude=${coordLat}&longitude=${coordLng}&dataset=article-4-direction&limit=100`
+      const a4Response = await fetch(a4Url)
+      if (a4Response.ok) {
+        const a4Data = await a4Response.json()
+        if (a4Data.entities && a4Data.entities.length > 0) {
+          govArticle4 = true
+          sources.push("Planning Data Gov UK (Article 4)")
+        }
+      }
+    } catch (a4Err) {
+      console.warn("planning.data.gov.uk Article 4 check failed:", a4Err)
+    }
+
+    // Special fallback: known Article 4 areas (Thurrock/Chafford Hundred)
+    if (!govArticle4 && !councilData?.article4Direction) {
+      const lowerAddr = address.toLowerCase()
+      const lowerAuthority = addressData.localAuthority.toLowerCase()
+      if (
+        lowerAuthority.includes("thurrock") ||
+        lowerAddr.includes("chafford hundred") ||
+        (lowerAddr.includes("camden road") && (lowerAddr.includes("grays") || lowerAddr.includes("rm16")))
+      ) {
+        govArticle4 = true
+        sources.push("Known Article 4 Area (Thurrock Council)")
+      }
+    }
+
     return {
       address: addressData.address,
       postcode: addressData.postcode,
@@ -129,7 +197,7 @@ async function fetchRealPropertyData(address: string, lat?: number, lng?: number
       propertyType: addressData.propertyType || "house",
       coordinates: addressData.coordinates,
       constraints: {
-        article4Direction: councilData?.article4Direction || false,
+        article4Direction: councilData?.article4Direction || govArticle4,
         conservationArea: designationData.conservationArea || false,
         listedBuilding: listedBuildingData.isListed || false,
         nationalPark: designationData.nationalPark || false,
