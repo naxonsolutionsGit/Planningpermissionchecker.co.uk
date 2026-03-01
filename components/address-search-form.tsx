@@ -1011,7 +1011,7 @@ export function AddressSearchForm() {
         ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmkDetails}`
         : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`;
 
-      drawDetail('Certificate', lmkDetails ? 'Official Record Found' : 'Postcode Search', 25, detailY, certUrlDetails);
+      drawDetail('Energy Performance', lmkDetails ? 'Official Record Found' : 'Search Official Records', 25, detailY, certUrlDetails);
 
       detailY += 15;
 
@@ -1474,7 +1474,7 @@ export function AddressSearchForm() {
         doc.setFont('helvetica', 'bold');
 
         const lmk = propertySummary.epcData?.lmkKey;
-        const certLabel = lmk ? 'VIEW ONLINE CERTIFICATE' : 'SEARCH EPC REGISTER';
+        const certLabel = lmk ? 'VIEW ENERGY PERFORMANCE CERTIFICATE' : 'ENERGY PERFORMANCE CERTIFICATE';
         const certUrl = lmk
           ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmk}`
           : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(result.address.split(',').pop()?.trim() || "")}`;
@@ -1485,13 +1485,12 @@ export function AddressSearchForm() {
         yPosition += epcCardH + 15;
       }
 
-      // What This Means For You Section
+      // What This Means For You Section — always starts on a fresh page
       if (result.hasPermittedDevelopmentRights) {
-        checkNewPage(100);
+        addFooter();
         doc.addPage();
         pageNumber++;
         yPosition = 25;
-
         // Header
         doc.setFillColor(...colors.primary);
         doc.rect(0, 0, pageWidth, 40, 'F');
