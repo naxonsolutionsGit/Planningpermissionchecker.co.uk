@@ -102,8 +102,11 @@ export function AddressSearchForm() {
   const [showPreview, setShowPreview] = useState(false)
   const [userEmail, setUserEmail] = useState("")
   const [paidIncludeLandRegistry, setPaidIncludeLandRegistry] = useState(false)
+  const [customerEmail, setCustomerEmail] = useState("")
+  const [emailSendStatus, setEmailSendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
+  const emailSentRef = useRef(false)
 
   // Handle click outside to close suggestions
   useEffect(() => {
@@ -492,6 +495,12 @@ export function AddressSearchForm() {
             setPaidIncludeLandRegistry(true);
           }
           delete data.includeLandRegistry;
+          // Store customer email for auto-sending report
+          if (data.customerEmail) {
+            setCustomerEmail(data.customerEmail);
+            emailSentRef.current = false; // Reset so useEffect triggers
+          }
+          delete data.customerEmail;
           setResult(data);
           // Clear preview state
           setShowPreview(false);
@@ -511,6 +520,18 @@ export function AddressSearchForm() {
       verifySessionAndFetchData();
     }
   }, [sessionId, router]);
+
+  // Auto-send report via email after successful payment
+  useEffect(() => {
+    if (result && customerEmail && !emailSentRef.current && emailSendStatus === 'idle') {
+      emailSentRef.current = true;
+      // Small delay to let the UI render the result first
+      const timer = setTimeout(() => {
+        handleDownloadReport(customerEmail);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [result, customerEmail]);
 
   // Processing animation steps
   const processingSteps = [
@@ -646,11 +667,15 @@ export function AddressSearchForm() {
     setUserEmail("")
     setIncludeLandRegistry(false)
     setPaidIncludeLandRegistry(false)
+    setCustomerEmail("")
+    setEmailSendStatus('idle')
+    emailSentRef.current = false
   }
 
-  const handleDownloadReport = async () => {
+  const handleDownloadReport = async (emailTo?: string) => {
     if (!result || isDownloadingReport) return
     setIsDownloadingReport(true)
+    if (emailTo) setEmailSendStatus('sending')
 
     // Dynamically import jsPDF and Chart.js
     let jsPDF: any;
@@ -1823,10 +1848,39 @@ export function AddressSearchForm() {
         doc.setLineDashPattern([], 0);
       }
 
+      // Always trigger browser download
       doc.save(`PDRightCheck-Report-${result.address.split(',')[0].replace(/\s+/g, '-')}.pdf`);
+
+      // If emailTo is provided, also send via email
+      if (emailTo) {
+        try {
+          const pdfBase64 = doc.output('datauristring').split(',')[1];
+          const emailRes = await fetch('/api/send-report-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pdfBase64,
+              email: emailTo,
+              address: result.address,
+            }),
+          });
+          if (emailRes.ok) {
+            setEmailSendStatus('sent');
+            console.log('Report emailed successfully to', emailTo);
+          } else {
+            const errData = await emailRes.json();
+            console.error('Email send failed:', errData.error);
+            setEmailSendStatus('error');
+          }
+        } catch (emailErr) {
+          console.error('Failed to send report email:', emailErr);
+          setEmailSendStatus('error');
+        }
+      }
     } catch (error) {
       console.error('Error fetching/generating PDF:', error);
       setError("An error occurred while generating the PDF report. Please try again.");
+      if (emailTo) setEmailSendStatus('error');
     } finally {
       setIsDownloadingReport(false)
     }
@@ -2118,7 +2172,7 @@ export function AddressSearchForm() {
         />
         <div className="text-center space-y-4">
           <Button
-            onClick={handleDownloadReport}
+            onClick={() => handleDownloadReport()}
             disabled={isDownloadingReport}
             className="px-8 bg-[#25423D] hover:bg-[#1A241A] text-white min-w-[200px]"
           >
@@ -2134,6 +2188,24 @@ export function AddressSearchForm() {
               </>
             )}
           </Button>
+          {emailSendStatus === 'sending' && (
+            <div className="flex items-center justify-center gap-2 text-sm text-[#25423D]">
+              <div className="w-3 h-3 border-2 border-[#25423D] border-t-transparent rounded-full animate-spin"></div>
+              Sending report to your email...
+            </div>
+          )}
+          {emailSendStatus === 'sent' && (
+            <div className="flex items-center justify-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-4 py-2">
+              <Check className="w-4 h-4" />
+              Report sent to your email successfully!
+            </div>
+          )}
+          {emailSendStatus === 'error' && (
+            <div className="flex items-center justify-center gap-2 text-sm text-orange-700 bg-orange-50 rounded-lg px-4 py-2">
+              <AlertCircle className="w-4 h-4" />
+              Could not send email. You can still download the report above.
+            </div>
+          )}
           <div className="block mt-4">
             <Button onClick={handleNewSearch} variant="outline" className="px-8 bg-transparent border-[#E6E8E6] text-[#4C5A63] hover:bg-[#F7F8F7]">
               Check Another Property

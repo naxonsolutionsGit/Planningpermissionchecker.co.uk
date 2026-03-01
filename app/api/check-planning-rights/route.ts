@@ -53,7 +53,10 @@ export async function POST(request: NextRequest) {
       console.warn("Could not fetch property summary attached to payment secure endpoint", e);
     }
 
-    return NextResponse.json({ ...result, propertySummary, includeLandRegistry })
+    // Extract customer email from the session
+    const customerEmail = session.customer_email || session.customer_details?.email || "";
+
+    return NextResponse.json({ ...result, propertySummary, includeLandRegistry, customerEmail })
   } catch (error: any) {
     console.error("Planning rights check error:", error)
     return NextResponse.json({ error: error.message || "Failed to check planning rights" }, { status: 500 })
