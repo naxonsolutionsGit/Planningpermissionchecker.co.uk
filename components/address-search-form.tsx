@@ -535,6 +535,7 @@ export function AddressSearchForm() {
     setShowPreview(false)
     setShowProcessing(true)
     setProcessingStep(0)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
 
     try {
       // Extract coordinates from suggestion or mock them
@@ -634,6 +635,7 @@ export function AddressSearchForm() {
   }
 
   const handleNewSearch = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     setResult(null)
     setError(null)
     setAddress("")
