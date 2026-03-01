@@ -287,9 +287,9 @@ export function ReportGeneratorUI({ propertyData }: ReportGeneratorUIProps) {
                             <div className="text-2xl font-bold text-yellow-600">{section.data.restrictive}</div>
                             <div className="text-sm text-muted-foreground">Restrictive</div>
                           </div>
-                          <div className="text-center p-3 bg-muted rounded">
-                            <div className="text-2xl font-bold text-[#25423D]">{section.data.confidence}%</div>
-                            <div className="text-sm text-muted-foreground">Confidence</div>
+                          <div className="text-center p-3 bg-muted rounded col-span-2">
+                            <div className="text-2xl font-bold text-[#25423D]">In Progress</div>
+                            <div className="text-sm text-muted-foreground">Assessment Status</div>
                           </div>
                         </div>
                         <div className="prose prose-sm max-w-none">

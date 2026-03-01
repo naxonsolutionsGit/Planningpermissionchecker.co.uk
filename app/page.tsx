@@ -37,7 +37,7 @@
 //                   </h1>
 //                   <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
 //                     Get a reliable, near-instant answer to: "Do full Permitted Development rights still apply to this
-//                     property?" Enter any UK property address and receive a clear result with confidence.
+//                     property?" Enter any UK property address and receive a clear result instantly.
 //                   </p>
 //                 </div>
 //               </div> */}
@@ -64,7 +64,7 @@
 //                 </div>
 //               </div>
 
-//               <LegalDisclaimer confidence={99.8} variant="compact" />
+//               <LegalDisclaimer variant="compact" />
 //             </div>
 //           </TabsContent>
 
@@ -119,7 +119,7 @@ export default function HomePage() {
                   </h1>
                   <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                     Get a reliable, near-instant answer to: "Do full Permitted Development rights still apply to this
-                    property?" Enter any UK property address and receive a clear result with confidence.
+                    property?" Enter any UK property address and receive a clear result instantly.
                   </p>
                 </div>
               </div> */}
@@ -149,7 +149,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <LegalDisclaimer confidence={99.8} variant="compact" />
+                <LegalDisclaimer variant="compact" />
               </div>
             </div>
           </TabsContent>

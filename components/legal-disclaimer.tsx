@@ -4,11 +4,10 @@ import { Shield, AlertTriangle, Info, Scale } from "lucide-react"
 import Link from "next/link"
 
 interface LegalDisclaimerProps {
-  confidence: number
   variant?: "compact" | "full"
 }
 
-export function LegalDisclaimer({ confidence, variant = "compact" }: LegalDisclaimerProps) {
+export function LegalDisclaimer({ variant = "compact" }: LegalDisclaimerProps) {
   if (variant === "compact") {
     return (
       <Alert className="bg-[#F8F7F3] border-[#EEECE6] flex justify-center items-center gap-2 [&>svg]:static [&>svg]:transform-none [&>svg]:left-auto [&>svg]:top-auto [&>svg~*]:pl-0 shadow-none">
@@ -37,7 +36,7 @@ export function LegalDisclaimer({ confidence, variant = "compact" }: LegalDiscla
           <div className="space-y-1.5">
             <p className="font-bold text-[#25423D] uppercase tracking-wider text-[11px]">Accuracy and Limitations</p>
             <p className="leading-relaxed">
-              This tool provides a {confidence}% accuracy rating based on publicly available planning data. While we
+              This tool provides a professional assessment based on publicly available planning data. While we
               strive for accuracy, planning law is complex and subject to frequent changes. This tool should be used for
               initial guidance only.
             </p>
@@ -57,41 +56,6 @@ export function LegalDisclaimer({ confidence, variant = "compact" }: LegalDiscla
               We strongly recommend seeking official pre-planning advice from your
               local authority or a qualified professional before proceeding with any development.
             </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Confidence Explanation */}
-      <Card className="border-[#EEECE6] shadow-none">
-        <CardHeader className="pb-3 px-6 pt-6">
-          <CardTitle className="text-xl font-normal text-[#25423D] flex items-center gap-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
-            <Info className="w-5 h-5 text-[#9A9488]" />
-            Understanding Confidence
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5 text-[13px] text-[#4A4A4A] px-6 pb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-1.5">
-              <div className="font-bold text-[#25423D] uppercase tracking-widest text-[10px] flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[#25423D]" />
-                95-99.8% CERTAINTY
-              </div>
-              <p className="leading-snug text-[#666]">High confidence based on clear, recent data with no conflicting information.</p>
-            </div>
-            <div className="space-y-1.5">
-              <div className="font-bold text-yellow-800 uppercase tracking-widest text-[10px] flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                85-94% CERTAINTY
-              </div>
-              <p className="leading-snug text-[#666]">Good confidence but some data limitations or complex constraints present.</p>
-            </div>
-            <div className="space-y-1.5">
-              <div className="font-bold text-red-800 uppercase tracking-widest text-[10px] flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-red-500" />
-                75-84% CERTAINTY
-              </div>
-              <p className="leading-snug text-[#666]">Lower confidence due to data gaps, complex factors, or conflicting info.</p>
-            </div>
           </div>
         </CardContent>
       </Card>

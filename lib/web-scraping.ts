@@ -5,7 +5,6 @@ export interface CouncilScrapingResult {
   conservationArea: boolean
   tpo: boolean
   planningApplications: any[]
-  confidence: number
 }
 
 export interface HistoricEnglandResult {
@@ -95,7 +94,6 @@ async function scrapeWestminsterCouncil(portalUrl: string, postcode: string): Pr
       conservationArea: conservationElements,
       tpo: tpoElements,
       planningApplications: [],
-      confidence: 85.0,
     }
   } catch (error) {
     console.error("Westminster scraping error:", error)
@@ -104,7 +102,6 @@ async function scrapeWestminsterCouncil(portalUrl: string, postcode: string): Pr
       conservationArea: false,
       tpo: false,
       planningApplications: [],
-      confidence: 60.0,
     }
   }
 }
@@ -133,7 +130,6 @@ async function scrapeBathNESCouncil(portalUrl: string, postcode: string): Promis
       conservationArea: isCityCenter,
       tpo: false,
       planningApplications: [],
-      confidence: 90.0,
     }
   } catch (error) {
     console.error("Bath NES scraping error:", error)
@@ -142,7 +138,6 @@ async function scrapeBathNESCouncil(portalUrl: string, postcode: string): Promis
       conservationArea: false,
       tpo: false,
       planningApplications: [],
-      confidence: 60.0,
     }
   }
 }
@@ -173,7 +168,6 @@ async function scrapeGenericCouncil(portalUrl: string, postcode: string): Promis
       conservationArea,
       tpo,
       planningApplications: [],
-      confidence: 70.0,
     }
   } catch (error) {
     console.error("Generic council scraping error:", error)
@@ -182,7 +176,6 @@ async function scrapeGenericCouncil(portalUrl: string, postcode: string): Promis
       conservationArea: false,
       tpo: false,
       planningApplications: [],
-      confidence: 50.0,
     }
   }
 }

@@ -58,7 +58,6 @@ export const REPORT_TEMPLATES: ReportTemplate[] = [
       "map",
       "history",
       "data_sources",
-      "confidence",
       "analysis",
       "recommendations",
       "appendices",
@@ -122,8 +121,6 @@ export class ReportGenerator {
         return this.generateMethodologySection(priority)
       case "data_sources":
         return this.generateDataSourcesSection(priority)
-      case "confidence":
-        return this.generateConfidenceSection(priority)
       case "legal_status":
         return this.generateLegalStatusSection(priority)
       case "compliance":
@@ -142,8 +139,6 @@ export class ReportGenerator {
     const status =
       blockingConstraints.length > 0 ? "BLOCKED" : restrictiveConstraints.length > 0 ? "RESTRICTED" : "PERMITTED"
 
-    const confidence = this.calculateOverallConfidence()
-
     return {
       id: "summary",
       title: "Executive Summary",
@@ -160,14 +155,12 @@ export class ReportGenerator {
 - ${this.propertyData.passedChecks !== undefined && this.propertyData.totalChecks !== undefined ? `Checks Passed: ${this.propertyData.passedChecks}/${this.propertyData.totalChecks}` : `${this.propertyData.constraints.length} planning constraints identified`}
 - ${blockingConstraints.length} blocking issues found
 - ${restrictiveConstraints.length} restrictive conditions apply
-- Overall confidence rating: ${confidence}%
 
 **Summary:**
 ${this.generateStatusSummary(status, blockingConstraints, restrictiveConstraints)}
       `,
       data: {
         status,
-        confidence,
         constraints: this.propertyData.constraints.length,
         blocking: blockingConstraints.length,
         restrictive: restrictiveConstraints.length,
@@ -201,7 +194,6 @@ ${this.generateStatusSummary(status, blockingConstraints, restrictiveConstraints
       constraint.name,
       constraint.type.replace(/_/g, " "),
       constraint.severity,
-      `${Math.round(constraint.confidence * 100)}%`,
       constraint.source,
     ])
 
@@ -212,7 +204,7 @@ ${this.generateStatusSummary(status, blockingConstraints, restrictiveConstraints
       priority,
       content: `Detailed analysis of ${this.propertyData.constraints.length} planning constraints affecting this property.`,
       data: {
-        headers: ["Constraint", "Type", "Severity", "Confidence", "Source"],
+        headers: ["Constraint", "Type", "Severity", "Source"],
         rows: constraintData,
       },
     }
@@ -264,7 +256,6 @@ PlanningCheckers.co.uk accepts no liability for decisions made based on this rep
 This report incorporates data from multiple authoritative sources including local planning authorities, government databases, and professional planning data providers.
 
 Report generated on: ${new Date().toLocaleDateString()}
-Confidence rating: ${this.calculateOverallConfidence()}%
       `,
     }
   }
@@ -319,17 +310,12 @@ This assessment utilizes multiple authoritative data sources including governmen
 1. Property identification and validation
 2. Constraint identification from multiple sources
 3. Severity assessment based on planning regulations
-4. Confidence calculation using data quality metrics
-5. Professional interpretation and recommendations
-
-**Quality Assurance:**
+4. Professional interpretation and recommendations
+5. Quality Assurance:
 - Multi-source data verification
 - Automated consistency checks
 - Regular data source monitoring
 - Professional review processes
-
-**Confidence Scoring:**
-Confidence ratings are calculated based on data source reliability, recency, and consistency across multiple sources.
       `,
     }
   }
@@ -350,30 +336,6 @@ All data sources are monitored for updates and the report reflects the most rece
 
 **Source Reliability:**
 Each data source is assigned a reliability rating based on accuracy, update frequency, and official status.
-      `,
-    }
-  }
-
-  private generateConfidenceSection(priority: number): ReportSection {
-    const confidence = this.calculateOverallConfidence()
-    return {
-      id: "confidence",
-      title: "Confidence Assessment",
-      type: "text",
-      priority,
-      content: `
-**Overall Confidence Rating: ${confidence}%**
-
-This rating reflects the reliability and consistency of the data used in this assessment.
-
-**Factors Affecting Confidence:**
-- Data source reliability and official status
-- Recency of data updates
-- Consistency across multiple sources
-- Completeness of available information
-
-**Confidence Breakdown:**
-${this.propertyData.constraints.map((c) => `- ${c.name}: ${Math.round(c.confidence * 100)}%`).join("\n")}
       `,
     }
   }
@@ -430,7 +392,6 @@ ${this.generateComplianceRequirements()}
 **Appendix A: Technical Specifications**
 - Data collection methodology
 - Quality assurance procedures
-- Confidence calculation algorithms
 
 **Appendix B: Regulatory References**
 - Relevant planning legislation
@@ -443,13 +404,6 @@ ${this.generateComplianceRequirements()}
 - Additional resources and guidance
       `,
     }
-  }
-
-  private calculateOverallConfidence(): number {
-    if (this.propertyData.constraints.length === 0) return 95
-    const avgConfidence =
-      this.propertyData.constraints.reduce((sum, c) => sum + c.confidence, 0) / this.propertyData.constraints.length
-    return Math.round(avgConfidence * 100)
   }
 
   private generateStatusSummary(
@@ -481,7 +435,7 @@ ${this.generateComplianceRequirements()}
       analysis.push("\n**Constraint Analysis:**")
       this.propertyData.constraints.forEach((constraint) => {
         analysis.push(
-          `- **${constraint.name}**: ${constraint.description} (${constraint.severity} - ${Math.round(constraint.confidence * 100)}% confidence)`,
+          `- **${constraint.name}**: ${constraint.description} (${constraint.severity})`,
         )
       })
     }

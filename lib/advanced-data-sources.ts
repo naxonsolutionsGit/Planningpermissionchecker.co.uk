@@ -25,7 +25,6 @@ export interface PlanningConstraint {
   name: string
   description: string
   severity: "blocking" | "restrictive" | "advisory"
-  confidence: number
   source: string
   lastVerified: Date
   geometry?: GeoJSON.Geometry
@@ -223,7 +222,6 @@ export class AdvancedDataIntegration {
           name: "Conservation Area",
           description: "This property is within a designated conservation area.",
           severity: "restrictive",
-          confidence: 0.99,
           source: "ArcGIS Conservation Areas",
           lastVerified: new Date(),
           geometry: undefined,

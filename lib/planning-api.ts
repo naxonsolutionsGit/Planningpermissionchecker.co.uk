@@ -13,7 +13,6 @@ const simulateApiDelay = () => new Promise((resolve) => setTimeout(resolve, 1500
 // Determine if property has PD rights using rules engine
 function evaluatePropertyWithRulesEngine(property: any): {
   hasRights: boolean
-  confidence: number
   checks: PlanningCheck[]
   summary: string
 } {
@@ -22,27 +21,29 @@ function evaluatePropertyWithRulesEngine(property: any): {
 
   return {
     hasRights: rulesResult.hasPermittedDevelopmentRights,
-    confidence: rulesResult.confidence,
     checks: rulesResult.checks,
     summary,
   }
 }
 
 // Main API function
-export async function checkPlanningRights(address: string): Promise<PlanningResult> {
+export async function checkPlanningRights(address: string, lat?: number, lng?: number): Promise<PlanningResult> {
   console.log(`[v0] Checking planning rights for: ${address}`)
 
   try {
     // Fetch real property data from multiple sources
-    const propertyData = await fetchRealPropertyData(address)
+    const propertyData = await fetchRealPropertyData(address, lat, lng)
 
     // Use rules engine to evaluate the property
     const evaluation = defaultRulesEngine.evaluate(propertyData)
 
     return {
       address: propertyData.address,
+      coordinates: propertyData.coordinates ? {
+        lat: propertyData.coordinates[0],
+        lng: propertyData.coordinates[1]
+      } : undefined,
       hasPermittedDevelopmentRights: evaluation.hasPermittedDevelopmentRights,
-      confidence: Math.min(propertyData.confidence, evaluation.confidence),
       localAuthority: propertyData.localAuthority,
       summary: defaultRulesEngine.generateSummary(propertyData, evaluation),
       checks: evaluation.checks,
@@ -53,26 +54,32 @@ export async function checkPlanningRights(address: string): Promise<PlanningResu
     // Return fallback result with lower confidence
     return {
       address: address,
+      coordinates: (lat !== undefined && lng !== undefined) ? { lat, lng } : undefined,
       hasPermittedDevelopmentRights: true,
-      confidence: 75.0,
       localAuthority: "Unknown Council",
       summary:
-        "Unable to access all planning data sources. This result has lower confidence. We recommend checking with your local planning authority for definitive guidance.",
+        "Unable to access all planning data sources. We recommend checking with your local planning authority for definitive guidance.",
       checks: [
         {
           type: "Data Availability",
           status: "warning",
           description: "Limited planning data available for this address. Some restrictions may not be detected.",
+          documentationUrl: "",
+          entitiesFound: 0,
         },
         {
           type: "Article 4 Direction",
           status: "warning",
           description: "Unable to verify Article 4 Direction status - check with local planning authority.",
+          documentationUrl: "",
+          entitiesFound: 0,
         },
         {
           type: "Conservation Area",
           status: "warning",
           description: "Unable to verify Conservation Area status - check with local planning authority.",
+          documentationUrl: "",
+          entitiesFound: 0,
         },
       ],
     }
@@ -85,9 +92,8 @@ export function getCouncilInfo(councilName: string) {
   return null
 }
 
-async function fetchRealPropertyData(address: string): Promise<any> {
+async function fetchRealPropertyData(address: string, lat?: number, lng?: number): Promise<any> {
   const sources: string[] = []
-  let confidence = 85.0
 
   try {
     // 1. Get postcode and coordinates from address
@@ -104,14 +110,12 @@ async function fetchRealPropertyData(address: string): Promise<any> {
     const councilData = await webScrapeCouncilData(addressData.localAuthority, addressData.postcode)
     if (councilData) {
       sources.push(`${addressData.localAuthority} Planning Portal`)
-      confidence += 5.0
     }
 
     // 4. Check Planning Portal API for planning applications
     const planningPortalData = await fetchFromPlanningPortal(addressData.postcode)
     if (planningPortalData) {
       sources.push("Planning Portal API")
-      confidence += 3.0
     }
 
     // 5. Check government datasets for designations
@@ -123,6 +127,7 @@ async function fetchRealPropertyData(address: string): Promise<any> {
       postcode: addressData.postcode,
       localAuthority: addressData.localAuthority,
       propertyType: addressData.propertyType || "house",
+      coordinates: addressData.coordinates,
       constraints: {
         article4Direction: councilData?.article4Direction || false,
         conservationArea: designationData.conservationArea || false,
@@ -133,7 +138,6 @@ async function fetchRealPropertyData(address: string): Promise<any> {
         tpo: councilData?.tpo || false,
         floodZone: designationData.floodZone || false,
       },
-      confidence: Math.min(99.8, confidence),
       sources,
     }
   } catch (error) {
@@ -144,6 +148,7 @@ async function fetchRealPropertyData(address: string): Promise<any> {
       postcode: osExtractPostcodeFromAddress(address) || "Unknown",
       localAuthority: "Unknown Council",
       propertyType: "house",
+      coordinates: (lat !== undefined && lng !== undefined) ? [lat, lng] : undefined,
       constraints: {
         article4Direction: false,
         conservationArea: false,
@@ -154,7 +159,6 @@ async function fetchRealPropertyData(address: string): Promise<any> {
         tpo: false,
         floodZone: false,
       },
-      confidence: 75.0,
       sources: ["Limited data available"],
     }
   }

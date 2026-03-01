@@ -618,15 +618,11 @@ export function AddressSearchForm() {
       const hasRestrictions = checks.some((c) => c.status === "fail")
       const hasWarnings = checks.some((c) => c.status === "warning")
 
-      // Calculate confidence based on successful API calls
-      const confidence = Math.round((successfulApiCalls / datasets.length) * 100)
-
       // Build final result
       const planningResult: PlanningResult = {
         address: address.trim(),
         coordinates: { lat: latitude, lng: longitude },
         hasPermittedDevelopmentRights: !hasRestrictions,
-        confidence: confidence,
         localAuthority: localAuthority,
         checks,
         summary: hasRestrictions

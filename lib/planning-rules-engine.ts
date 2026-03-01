@@ -18,14 +18,12 @@ export interface RuleResult {
   applies: boolean
   status: "pass" | "fail" | "warning"
   message: string
-  confidenceImpact: number // Positive or negative impact on confidence
   details?: string
 }
 
 // Rules engine evaluation result
 export interface RulesEngineResult {
   hasPermittedDevelopmentRights: boolean
-  confidence: number
   primaryReasons: string[]
   checks: PlanningCheck[]
   ruleResults: RuleResult[]
@@ -66,7 +64,6 @@ export const planningRules: PlanningRule[] = [
       message: property.constraints.article4Direction
         ? "Article 4 Direction in place - removes some or all Permitted Development rights"
         : "No Article 4 Directions found that would remove Permitted Development rights for this property",
-      confidenceImpact: property.constraints.article4Direction ? -2.0 : +1.0,
       details: property.constraints.article4Direction
         ? "Article 4 Directions are made by local planning authorities to remove permitted development rights in specific areas where normal planning controls are needed to protect local amenity or the well-being of the area."
         : undefined,
@@ -85,7 +82,6 @@ export const planningRules: PlanningRule[] = [
       message: property.constraints.listedBuilding
         ? "Property is listed or within the curtilage of a listed building - Listed Building Consent required"
         : "Property is not listed and not within the curtilage of a listed building",
-      confidenceImpact: property.constraints.listedBuilding ? -3.0 : +1.5,
       details: property.constraints.listedBuilding
         ? "Listed buildings are protected by law and any alterations, extensions or demolitions require Listed Building Consent in addition to planning permission."
         : undefined,
@@ -106,7 +102,6 @@ export const planningRules: PlanningRule[] = [
         message: isFlat
           ? `Property is a ${property.propertyType} - Permitted Development rights are severely limited for flats and maisonettes`
           : "Standard residential dwelling - full Permitted Development rights typically apply",
-        confidenceImpact: isFlat ? -1.0 : +2.0,
         details: isFlat
           ? "Flats and maisonettes have very limited permitted development rights. Most alterations and extensions require planning permission."
           : undefined,
@@ -127,7 +122,6 @@ export const planningRules: PlanningRule[] = [
       message: property.constraints.conservationArea
         ? "Property is located within a designated Conservation Area - additional planning restrictions apply"
         : "Property is not located within a designated Conservation Area",
-      confidenceImpact: property.constraints.conservationArea ? -1.5 : +0.5,
       details: property.constraints.conservationArea
         ? "Conservation areas have additional planning controls. Some permitted development rights are removed, particularly for roof extensions, cladding, and demolition."
         : undefined,
@@ -146,7 +140,6 @@ export const planningRules: PlanningRule[] = [
       message: property.constraints.worldHeritage
         ? "Property is within a World Heritage Site - exceptional planning controls apply"
         : "Property is not within a World Heritage Site",
-      confidenceImpact: property.constraints.worldHeritage ? -2.5 : +0.5,
       details: property.constraints.worldHeritage
         ? "World Heritage Sites have exceptional planning controls to preserve their outstanding universal value. Most development requires planning permission."
         : undefined,
@@ -165,7 +158,6 @@ export const planningRules: PlanningRule[] = [
       message: property.constraints.nationalPark
         ? "Property is within a National Park - enhanced planning controls apply"
         : "Property is not within a National Park",
-      confidenceImpact: property.constraints.nationalPark ? -1.0 : +0.5,
       details: property.constraints.nationalPark
         ? "National Parks have enhanced planning controls to protect landscape character. Some permitted development rights are restricted."
         : undefined,
@@ -184,7 +176,6 @@ export const planningRules: PlanningRule[] = [
       message: property.constraints.aonb
         ? "Property is within an Area of Outstanding Natural Beauty - landscape protection measures apply"
         : "Property is not within an Area of Outstanding Natural Beauty",
-      confidenceImpact: property.constraints.aonb ? -1.0 : +0.5,
       details: property.constraints.aonb
         ? "Areas of Outstanding Natural Beauty have planning policies to conserve and enhance landscape character. Some permitted development may be restricted."
         : undefined,
@@ -204,7 +195,6 @@ export const planningRules: PlanningRule[] = [
       message: property.constraints.tpo
         ? "Tree Preservation Order may affect development near protected trees"
         : "No Tree Preservation Orders identified",
-      confidenceImpact: property.constraints.tpo ? -0.5 : +0.2,
       details: property.constraints.tpo
         ? "Tree Preservation Orders protect important trees. Development affecting protected trees requires consent from the local planning authority."
         : undefined,
@@ -223,7 +213,6 @@ export const planningRules: PlanningRule[] = [
       message: property.constraints.floodZone
         ? "Property may be in a flood risk area - additional considerations may apply"
         : "No significant flood risk identified",
-      confidenceImpact: property.constraints.floodZone ? -0.5 : +0.2,
       details: property.constraints.floodZone
         ? "Properties in flood risk areas may have restrictions on certain types of development, particularly extensions and outbuildings."
         : undefined,
@@ -241,55 +230,47 @@ export class PlanningRulesEngine {
 
   // Evaluate all rules for a property
   evaluate(property: PropertyForRules): RulesEngineResult {
-    const ruleResults: RuleResult[] = []
-    const primaryReasons: string[] = []
-    let baseConfidence = 95.0
-    let hasPermittedDevelopmentRights = true
+    const rulesEngineResult: RulesEngineResult = {
+      hasPermittedDevelopmentRights: true,
+      primaryReasons: [],
+      checks: [],
+      ruleResults: [],
+    }
 
     // Evaluate each rule
     for (const rule of this.rules) {
       const result = rule.evaluate(property)
-      ruleResults.push(result)
-
-      // Apply confidence impact
-      baseConfidence += result.confidenceImpact
+      rulesEngineResult.ruleResults.push(result)
 
       // Check for blocking conditions
       if (result.applies && rule.severity === "blocking" && result.status === "fail") {
-        hasPermittedDevelopmentRights = false
-        primaryReasons.push(rule.name)
+        rulesEngineResult.hasPermittedDevelopmentRights = false
+        rulesEngineResult.primaryReasons.push(rule.name)
       }
     }
 
     // Generate planning checks from rule results
-    const checks: PlanningCheck[] = ruleResults
+    rulesEngineResult.checks = rulesEngineResult.ruleResults
       .filter((result) => result.applies || result.status === "pass")
       .map((result, index) => ({
         type: this.rules[index].name,
         status: result.status,
         description: result.message,
+        documentationUrl: "",
+        entitiesFound: 0,
       }))
 
-    // Ensure confidence is within reasonable bounds
-    const confidence = Math.min(99.8, Math.max(75.0, baseConfidence))
-
     // If no blocking rules but restrictive rules apply, add context
-    if (hasPermittedDevelopmentRights) {
-      const restrictiveRules = ruleResults.filter(
+    if (rulesEngineResult.hasPermittedDevelopmentRights) {
+      const restrictiveRules = rulesEngineResult.ruleResults.filter(
         (result, index) => result.applies && this.rules[index].severity === "restrictive",
       )
       if (restrictiveRules.length > 0) {
-        primaryReasons.push("Some restrictions may apply")
+        rulesEngineResult.primaryReasons.push("Some restrictions may apply")
       }
     }
 
-    return {
-      hasPermittedDevelopmentRights,
-      confidence,
-      primaryReasons,
-      checks,
-      ruleResults,
-    }
+    return rulesEngineResult
   }
 
   // Get detailed explanation for the decision

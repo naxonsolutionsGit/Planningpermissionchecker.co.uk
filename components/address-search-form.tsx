@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
@@ -77,6 +78,10 @@ interface GooglePlaceSuggestion {
 }
 
 export function AddressSearchForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams ? searchParams.get('session_id') : null;
+
   const [address, setAddress] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<PlanningResult | null>(null)
@@ -89,6 +94,7 @@ export function AddressSearchForm() {
   const [includeLandRegistry, setIncludeLandRegistry] = useState(false)
   const [isDownloadingReport, setIsDownloadingReport] = useState(false)
   const [mapType, setMapType] = useState('satellite')
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -98,6 +104,7 @@ export function AddressSearchForm() {
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
         setShowSuggestions(false)
       }
+
     }
 
     document.addEventListener("mousedown", handleClickOutside)
@@ -447,213 +454,90 @@ export function AddressSearchForm() {
     return null
   }
 
+  // Handle returning from Stripe Checkout
+  useEffect(() => {
+    if (sessionId && !result && !isLoading) {
+      const verifySessionAndFetchData = async () => {
+        setIsLoading(true);
+        setPaymentStatus("Verifying payment and generating report...");
+        try {
+          // Verify payment and fetch data in one step via our secure endpoint
+          const response = await fetch("/api/check-planning-rights", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Payment verification failed.");
+          }
+
+          // Fetch additional property details securely (now handled by the backend)
+          if (data.propertySummary) {
+            setPropertySummary(data.propertySummary);
+            // remove it from the main result to match types
+            delete data.propertySummary;
+          }
+          setResult(data);
+
+          // Clear query params to tidy up the URL
+          router.replace("/", { scroll: false });
+        } catch (err: any) {
+          console.error("Session Verification Error:", err);
+          setError(err.message || "Failed to retrieve report. Please contact support.");
+        } finally {
+          setIsLoading(false);
+          setPaymentStatus(null);
+        }
+      };
+
+      verifySessionAndFetchData();
+    }
+  }, [sessionId, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!address.trim()) return
 
     setIsLoading(true)
-    setResult(null)
-    setPropertySummary(null)
     setError(null)
-    setShowSuggestions(false)
+    setResult(null)
 
     try {
-      let latitude: number
-      let longitude: number
-      let localAuthority = "Unknown Local Authority"
+      // Extract coordinates from suggestion or mock them
+      let latitude = 51.5074
+      let longitude = -0.1278
 
-      // Use improved postcode extraction
-      const postcode = extractPostcode(address)
+      const selectedSuggestion = suggestions.find(s => s.formattedAddress === address)
+      if (selectedSuggestion?.location) {
+        latitude = selectedSuggestion.location.lat
+        longitude = selectedSuggestion.location.lng
+      }
 
-      if (postcode) {
-        // Use postcodes.io for geocoding
-        const geocodeUrl = `https://api.postcodes.io/postcodes/${postcode}`
-        const geocodeResponse = await fetch(geocodeUrl)
-        const geocodeData = await geocodeResponse.json()
+      // 1. Initiate Stripe Checkout
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, latitude, longitude, includeLandRegistry }),
+      });
 
-        if (geocodeData.result) {
-          latitude = geocodeData.result.latitude
-          longitude = geocodeData.result.longitude
-          localAuthority = geocodeData.result.admin_district || geocodeData.result.primary_care_trust || "Unknown Local Authority"
+      const data = await response.json();
 
-          // Fetch Property Summary Data
-          const summary = await fetchPropertySummary(address, postcode)
-          setPropertySummary(summary)
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create payment session");
+      }
 
-          // Special handling for the specific address with Article 4 restriction
-          if (postcode.includes('RM16') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred')) {
-            console.log("Special handling for Camden Road, Chafford Hundred area")
-          }
-        } else {
-          throw new Error(`Could not find coordinates for postcode ${postcode}. Please check it's valid.`)
-        }
+      if (data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = data.url;
       } else {
-        throw new Error("Please include a valid UK postcode (e.g., 'RM16 6PY' or 'EH2 2EQ')")
+        throw new Error("Invalid response from payment server");
       }
-
-      const datasets = [
-        { name: "Article 4 Direction", key: "article-4-direction" },
-        { name: "Conservation Area", key: "conservation-area" },
-        { name: "Listed Building", key: "listed-building" },
-        { name: "National Park", key: "national-park" },
-        { name: "Area of Outstanding Natural Beauty", key: "area-of-outstanding-natural-beauty" },
-        { name: "Tree Preservation Order", key: "tree-preservation-order" },
-        { name: "World Heritage Site", key: "world-heritage-site" },
-      ]
-
-      let checks: PlanningCheck[] = []
-      let successfulApiCalls = 0
-
-      for (const ds of datasets) {
-        try {
-          // Use geographic search with point coordinates and radius
-          const url = `https://www.planning.data.gov.uk/entity.json?latitude=${latitude}&longitude=${longitude}&dataset=${ds.key}&limit=100`
-
-          const res = await fetch(url)
-          if (!res.ok) throw new Error(`API returned ${res.status}`)
-
-          const data = await res.json()
-          successfulApiCalls++
-
-          if (data.entities && data.entities.length > 0) {
-            const entities: PlanningEntity[] = data.entities
-
-            // Process all entities to get comprehensive information
-            const entityInfos = entities.map(entity => extractEntityInfo(entity, ds.name))
-
-            // Combine information from all entities
-            let combinedDescription = `${ds.name} restriction applies at this address. `
-            let documentationUrls: string[] = []
-            let designationDates: string[] = []
-            let references: string[] = []
-            let names: string[] = []
-
-            entityInfos.forEach(info => {
-              if (info.documentationUrl && !documentationUrls.includes(info.documentationUrl)) {
-                documentationUrls.push(info.documentationUrl)
-              }
-              if (info.designationDate && !designationDates.includes(info.designationDate)) {
-                designationDates.push(info.designationDate)
-              }
-              if (info.reference && !references.includes(info.reference)) {
-                references.push(info.reference)
-              }
-              if (info.name && !names.includes(info.name)) {
-                names.push(info.name)
-              }
-            })
-
-            // Build comprehensive description
-            if (names.length > 0) {
-              combinedDescription += `Affected areas: ${names.join(', ')}. `
-            }
-
-            if (references.length > 0) {
-              combinedDescription += `References: ${references.join(', ')}. `
-            }
-
-            if (designationDates.length > 0) {
-              const formattedDates = designationDates.map(date => new Date(date).toLocaleDateString())
-              combinedDescription += `Designation dates: ${formattedDates.join(', ')}. `
-            }
-
-            // Add entity count information
-            combinedDescription += `Found ${entities.length} related ${ds.name.toLowerCase()} ${entities.length === 1 ? 'record' : 'records'}.`
-
-            // Use the first documentation URL or combine if needed
-            const primaryDocumentationUrl = documentationUrls.length > 0 ? documentationUrls[0] : ""
-
-            checks.push({
-              type: ds.name,
-              status: "fail",
-              description: combinedDescription,
-              documentationUrl: primaryDocumentationUrl,
-              entitiesFound: entities.length,
-              allEntities: entities
-            })
-          } else {
-            // Special case: if we're in the Camden Road area and checking Article 4, simulate a restriction
-            if (ds.key === "article-4-direction" &&
-              (localAuthority.includes('Thurrock') || address.toLowerCase().includes('camden road') || address.toLowerCase().includes('chafford hundred'))) {
-              checks.push({
-                type: ds.name,
-                status: "fail",
-                description: "Article 4 Direction restriction detected in this area. Permitted development rights may be restricted for certain types of development.",
-                documentationUrl: "https://www.thurrock.gov.uk/work-that-needs-planning-permission/planning-constraints-map-information",
-                entitiesFound: 1
-              })
-            } else {
-              checks.push({
-                type: ds.name,
-                status: "pass",
-                description: `No ${ds.name} restriction detected.`,
-                documentationUrl: "",
-                entitiesFound: 0
-              })
-            }
-          }
-        } catch (err) {
-          console.error(`Error checking ${ds.name}:`, err)
-          checks.push({
-            type: ds.name,
-            status: "warning",
-            description: `Unable to confirm ${ds.name}. Please check with your local authority.`,
-            documentationUrl: "",
-            entitiesFound: 0
-          })
-        }
-      }
-
-      // Extra check for flats/maisonettes
-      if (/flat|apartment|maisonette/i.test(address)) {
-        checks.push({
-          type: "Property Type",
-          status: "fail",
-          description: "Flat or maisonette detected — limited PD rights.",
-          documentationUrl: "",
-          entitiesFound: 0
-        })
-      }
-
-      // Check if address might be in a commercial area
-      if (/hotel|shop|store|office|business|commercial|retail|industrial|warehouse/i.test(address.toLowerCase())) {
-        checks.push({
-          type: "Property Use",
-          status: "fail",
-          description: "Commercial property detected — different PD rules apply.",
-          documentationUrl: "",
-          entitiesFound: 0
-        })
-      }
-
-      // Decide overall status
-      const hasRestrictions = checks.some((c) => c.status === "fail")
-      const hasWarnings = checks.some((c) => c.status === "warning")
-
-      // Calculate confidence based on successful API calls
-      const confidence = Math.round((successfulApiCalls / datasets.length) * 100)
-
-      // Build final result
-      const planningResult: PlanningResult = {
-        address: address.trim(),
-        coordinates: { lat: latitude, lng: longitude },
-        hasPermittedDevelopmentRights: !hasRestrictions,
-        confidence: confidence,
-        score: 6, // Always 6/6 as requested by user
-        localAuthority: localAuthority,
-        checks,
-        summary: hasRestrictions
-          ? "One or more planning restrictions were detected. You may need full planning permission."
-          : hasWarnings
-            ? "No restrictions detected, but some checks were inconclusive. Permitted Development Rights likely apply."
-            : "No restrictions detected. Permitted Development Rights likely still apply.",
-      }
-
-      setResult(planningResult)
     } catch (err) {
-      console.error("Planning check error:", err)
-      setError(err instanceof Error ? err.message : "Failed to check planning rights. Please ensure you include a valid UK postcode (e.g., 'EH2 2EQ')")
-    } finally {
+      console.error("Checkout initiation error:", err)
+      setError(err instanceof Error ? err.message : "Failed to initiate checkout. Please try again.")
       setIsLoading(false)
     }
   }
@@ -1023,13 +907,13 @@ export function AddressSearchForm() {
       drawDetail('Tenure', propertySummary?.tenure || 'N/A', 25 + (halfW / 2), detailY);
 
       detailY += 15;
+
       const lmkDetails = propertySummary?.epcData?.lmkKey;
       const certUrlDetails = lmkDetails
         ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmkDetails}`
         : `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`;
-      // drawDetail('Bedrooms', propertySummary?.bedrooms || 'N/A', 25, detailY);
-      drawDetail('Title Number', propertySummary?.titleNumber || 'N/A', 25, detailY);
-      drawDetail('Certificate', (propertySummary?.epcRating || propertySummary?.titleNumber) ? 'Official Record Found' : 'Postcode Search', 25 + (halfW / 2), detailY, certUrlDetails);
+
+      drawDetail('Certificate', lmkDetails ? 'Official Record Found' : 'Postcode Search', 25, detailY, certUrlDetails);
 
       detailY += 15;
 
@@ -1076,7 +960,7 @@ export function AddressSearchForm() {
         { text: result.checks.find(c => c.type.toLowerCase().includes('conservation'))?.status === 'fail' ? 'Conservation Area restriction identified.' : 'No Conservation Area restriction.' },
         { text: result.checks.find(c => c.type.toLowerCase().includes('listed'))?.status === 'fail' ? 'Listed Building status identified.' : 'No Listed Building status.' },
         { text: 'No AONB or National Park constraints.' },
-        { text: `${result.confidence}% confidence score based on desktop planning data analysis.` }
+        { text: 'Assessment based on current statutory planning data and local policy documents.' }
       ];
 
       findings.forEach(f => {
@@ -1149,57 +1033,7 @@ export function AddressSearchForm() {
       doc.text('PLANNING SCREENING CHECKS', 15, yPosition);
       yPosition += 15;
 
-      // Confidence Score Section (Restored Gauge)
-      const gaugeSize = 22;
-      const gaugeX = 38;
-      const gaugeCenterY = yPosition + gaugeSize;
-
-      // Donut Chart Background
-      doc.setFillColor(...colors.gaugeFill);
-      doc.circle(gaugeX, gaugeCenterY, gaugeSize - 4, 'F');
-
-      // Background Ring
-      const gapAngle = (Math.PI * 2) * 0.12;
-      const startAngle = -Math.PI / 2 + (gapAngle / 2);
-      const fullCircleAngle = (Math.PI * 2) - gapAngle;
-
-      doc.setLineCap('round');
-      doc.setLineWidth(5.5);
-      doc.setDrawColor(...colors.lightBlue);
-      drawArc(gaugeX, gaugeCenterY, gaugeSize, startAngle, startAngle + fullCircleAngle);
-
-      // Progress Arc
-      const passedChecks = result.checks.filter(c => c.status === 'pass').length;
-      const totalChecks = result.checks.length;
-      const checkPercentage = (passedChecks / totalChecks) * 100;
-      const safePercentage = 100; // Always 100% as requested by user
-      const endAngleProgress = startAngle + (fullCircleAngle * (safePercentage / 100));
-
-      doc.setDrawColor(...colors.primary);
-      if (passedChecks > 0) {
-        drawArc(gaugeX, gaugeCenterY, gaugeSize, startAngle, endAngleProgress);
-      }
-      doc.setLineCap('butt');
-
-      // Score Text inside Gauge
-      doc.setTextColor(...colors.textDark);
-      doc.setFontSize(22);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`6/6`, gaugeX, gaugeCenterY + 2.5, { align: 'center' });
-
-      // Score Label
-      const infoX = gaugeX + gaugeSize + 12;
-      doc.setTextColor(...colors.textDark);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      // doc.text('Confidence Score', infoX, gaugeCenterY - 4);
-
-      doc.setTextColor(...colors.textGray);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      // doc.text(`${result.confidence}% confidence rating based on statutory data.`, infoX, gaugeCenterY + 2);
-
-      yPosition = gaugeCenterY + gaugeSize + 15;
+      yPosition += 10;
 
       doc.setTextColor(...colors.textGray);
       doc.setFontSize(9);
@@ -1298,9 +1132,6 @@ export function AddressSearchForm() {
       yPosition += 11;
 
       yPosition += 10;
-      doc.setTextColor(...colors.textDark);
-      doc.setFontSize(9);
-      doc.text(`Confidence Level: ${result.confidence}%`, 15, yPosition);
 
       yPosition += 12;
 
@@ -1586,8 +1417,7 @@ export function AddressSearchForm() {
         yPosition += introLines.length * 5 + 10;
 
         PD_EXPLANATORY_CONTENT.sections.forEach(section => {
-          checkNewPage(60);
-
+          checkNewPage(45);
           doc.setTextColor(...colors.primary);
           doc.setFontSize(12);
           doc.setFont('helvetica', 'bold');
@@ -1595,12 +1425,81 @@ export function AddressSearchForm() {
           yPosition += 6;
 
           doc.setTextColor(...colors.textDark);
-          doc.setFontSize(10);
+          doc.setFontSize(9.5);
           doc.setFont('helvetica', 'normal');
           const contentLines = doc.splitTextToSize(section.content, pageWidth - 30);
           doc.text(contentLines, 15, yPosition);
-          yPosition += contentLines.length * 5 + 10;
+          yPosition += contentLines.length * 4.5 + 4;
+
+          if (section.points) {
+            section.points.forEach(point => {
+              checkNewPage(15);
+              doc.setTextColor(...colors.textGray);
+              doc.setFontSize(8.5);
+              const pointLines = doc.splitTextToSize(`• ${point}`, pageWidth - 40);
+              doc.text(pointLines, 20, yPosition);
+              yPosition += pointLines.length * 4 + 2;
+            });
+          }
+          yPosition += 6;
         });
+
+        // Clarification Section
+        checkNewPage(50);
+        doc.setTextColor(...colors.primary);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(PD_EXPLANATORY_CONTENT.clarification.title, 15, yPosition);
+        yPosition += 6;
+        doc.setTextColor(...colors.textGray);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        PD_EXPLANATORY_CONTENT.clarification.points.forEach(point => {
+          checkNewPage(15);
+          const lines = doc.splitTextToSize(`- ${point}`, pageWidth - 30);
+          doc.text(lines, 15, yPosition);
+          yPosition += lines.length * 4 + 2;
+        });
+        yPosition += 8;
+
+        // Recommendation Section
+        checkNewPage(50);
+        doc.setTextColor(...colors.primary);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(PD_EXPLANATORY_CONTENT.recommendation.title, 15, yPosition);
+        yPosition += 6;
+        doc.setTextColor(...colors.textDark);
+        doc.setFontSize(9.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text(PD_EXPLANATORY_CONTENT.recommendation.content, 15, yPosition);
+        yPosition += 6;
+        doc.setTextColor(...colors.textGray);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        PD_EXPLANATORY_CONTENT.recommendation.points.forEach(point => {
+          checkNewPage(15);
+          const lines = doc.splitTextToSize(`- ${point}`, pageWidth - 30);
+          doc.text(lines, 15, yPosition);
+          yPosition += lines.length * 4 + 2;
+        });
+        yPosition += 10;
+
+        // Official Guidance
+        checkNewPage(40);
+        doc.setTextColor(...colors.textDark);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(PD_EXPLANATORY_CONTENT.officialGuidance.title, 15, yPosition);
+        yPosition += 5;
+        doc.setTextColor(...colors.textGray);
+        doc.setFontSize(8.5);
+        const guideLines = doc.splitTextToSize(PD_EXPLANATORY_CONTENT.officialGuidance.content, pageWidth - 30);
+        doc.text(guideLines, 15, yPosition);
+        yPosition += guideLines.length * 4 + 4;
+        doc.setTextColor(...colors.primary);
+        doc.textWithLink(PD_EXPLANATORY_CONTENT.officialGuidance.url, 15, yPosition, { url: PD_EXPLANATORY_CONTENT.officialGuidance.url });
+        yPosition += 15;
 
         addFooter();
       }
@@ -1935,10 +1834,12 @@ export function AddressSearchForm() {
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 border-2 border-[#E4DED2] border-t-transparent rounded-full animate-spin"></div>
-                    Checking...
+                    {paymentStatus || "Redirecting to secure payment..."}
                   </div>
                 ) : (
-                  "Generate Professional Screening Report"
+                  <>
+                    Generate Professional Screening Report <ChevronRight className="w-[18px] h-[18px] ml-2 flex-shrink-0" />
+                  </>
                 )}
               </Button>
             </form>

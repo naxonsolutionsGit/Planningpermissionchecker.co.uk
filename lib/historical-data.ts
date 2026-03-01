@@ -42,7 +42,6 @@ export interface LocalAreaTrends {
 
 export interface PredictiveInsight {
   type: "approval_likelihood" | "constraint_risk" | "market_trend" | "policy_change"
-  confidence: number
   timeframe: string
   description: string
   factors: string[]
@@ -79,7 +78,6 @@ export class HistoricalDataAnalyzer {
     // Generate approval likelihood insight
     insights.push({
       type: "approval_likelihood",
-      confidence: this.calculateApprovalLikelihood(),
       timeframe: "Next 12 months",
       description: "Based on historical approval rates and current constraints",
       factors: [
@@ -94,7 +92,6 @@ export class HistoricalDataAnalyzer {
     // Generate constraint risk insight
     insights.push({
       type: "constraint_risk",
-      confidence: 0.73,
       timeframe: "Next 2-3 years",
       description: "Potential for new planning constraints in this area",
       factors: [
@@ -109,7 +106,6 @@ export class HistoricalDataAnalyzer {
     // Generate market trend insight
     insights.push({
       type: "market_trend",
-      confidence: 0.85,
       timeframe: "Next 6-18 months",
       description: "Property values likely to benefit from planning permissions",
       factors: [

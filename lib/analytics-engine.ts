@@ -38,7 +38,6 @@ export interface AnalyticsInsight {
   title: string
   description: string
   impact: "high" | "medium" | "low"
-  confidence: number
   actionable: boolean
   recommendation?: string
 }
@@ -51,7 +50,6 @@ export interface AnalyticsFilter {
   localAuthorities: string[]
   constraintTypes: string[]
   propertyTypes: string[]
-  confidenceThreshold: number
 }
 
 export class AnalyticsEngine {
@@ -98,16 +96,6 @@ export class AnalyticsEngine {
         unit: "properties",
         description: "Total properties analyzed this month",
         category: "performance",
-      },
-      {
-        id: "avg_confidence",
-        name: "Average Confidence",
-        value: 87.3,
-        change: 2.1,
-        changeType: "increase",
-        unit: "%",
-        description: "Average confidence score across all analyses",
-        category: "system",
       },
       {
         id: "constraint_rate",
@@ -236,7 +224,6 @@ export class AnalyticsEngine {
         description:
           "15% increase in conservation area constraints over the past 6 months, particularly in urban areas.",
         impact: "medium",
-        confidence: 0.87,
         actionable: true,
         recommendation: "Consider expediting applications in areas under review for conservation status.",
       },
@@ -246,7 +233,6 @@ export class AnalyticsEngine {
         title: "Unusual Approval Rate Drop in Q3",
         description: "Approval rates dropped 12% in Q3 across multiple authorities, potentially due to policy changes.",
         impact: "high",
-        confidence: 0.92,
         actionable: true,
         recommendation: "Review recent policy changes and adjust application strategies accordingly.",
       },
@@ -256,7 +242,6 @@ export class AnalyticsEngine {
         title: "High Value Impact in Suburban Extensions",
         description: "Suburban extension projects showing 25% higher value impact than historical average.",
         impact: "high",
-        confidence: 0.78,
         actionable: true,
         recommendation: "Focus marketing efforts on suburban extension opportunities.",
       },
@@ -266,7 +251,6 @@ export class AnalyticsEngine {
         title: "Data Source Reliability Concerns",
         description: "Two major data sources showing increased latency and occasional outages.",
         impact: "medium",
-        confidence: 0.95,
         actionable: true,
         recommendation: "Implement additional data source redundancy and monitoring.",
       },

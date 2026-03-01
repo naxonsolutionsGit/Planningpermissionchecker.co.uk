@@ -2,8 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, XCircle, AlertTriangle, MapPin, History, ExternalLink, ChevronDown, ChevronUp, Loader2, Bed, Home, Calendar, Zap } from "lucide-react"
-import { LegalDisclaimer } from "@/components/legal-disclaimer"
-import { ConfidenceIndicator } from "@/components/confidence-indicator"
 import { useState, useEffect, useRef } from "react"
 import { PD_EXPLANATORY_CONTENT } from "@/lib/pd-explanatory-content"
 import { PropertySummary as PropertySummaryType } from "@/lib/property-api"
@@ -25,7 +23,6 @@ export interface PlanningResult {
     lng: number
   }
   hasPermittedDevelopmentRights: boolean
-  confidence?: number
   score?: number // Overall score (e.g., 6)
   localAuthority: string
   checks: PlanningCheck[]
@@ -340,24 +337,18 @@ export function PlanningResult({
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-1.5">
                       <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider flex items-center gap-1.5"><Home className="w-3 h-3" /> Type</span>
-                      <div className="text-[15px] font-semibold text-[#25423D] capitalize">{String(propertySummary.propertyType || 'Residential')}</div>
+                      <div className="text-[15px] font-semibold text-[#25423D] capitalize">{String(propertySummary?.propertyType || 'Residential')}</div>
                     </div>
                     <div className="space-y-1.5">
                       <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider flex items-center gap-1.5">Tenure</span>
-                      <div className="text-[15px] font-semibold text-[#25423D]">{String(propertySummary.tenure || 'N/A')}</div>
+                      <div className="text-[15px] font-semibold text-[#25423D]">{String(propertySummary?.tenure || 'N/A')}</div>
                     </div>
 
-                    {propertySummary.epcRating && (
-                      <div className="col-span-2 space-y-1.5 pt-2">
-                        <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider flex items-center gap-1.5"><Zap className="w-3 h-3" /> Energy Performance</span>
+                    <div className="col-span-2 space-y-1.5 pt-2 border-t border-[#EEECE6]/40 mt-2">
+                      <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider flex items-center gap-1.5"><Zap className="w-3 h-3" /> Energy Performance</span>
+                      <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-4">
-                          <span className={`px-3 py-1 rounded-full text-[11px] font-bold text-white ${['A', 'B'].includes(propertySummary.epcRating) ? 'bg-green-600' :
-                            ['C'].includes(propertySummary.epcRating) ? 'bg-green-500' :
-                              ['D'].includes(propertySummary.epcRating) ? 'bg-yellow-500' : 'bg-orange-500'
-                            }`}>
-                            Rating: {propertySummary.epcRating}
-                          </span>
-                          {propertySummary.epcData?.lmkKey && (
+                          {propertySummary?.epcData?.lmkKey ? (
                             <a
                               href={`https://find-energy-certificate.service.gov.uk/energy-certificate/${propertySummary.epcData.lmkKey}`}
                               target="_blank"
@@ -366,10 +357,19 @@ export function PlanningResult({
                             >
                               Official Certificate <ExternalLink className="h-3 w-3" />
                             </a>
+                          ) : (
+                            <a
+                              href={`https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(propertySummary?.postcode || result.address.split(',').pop()?.trim() || "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] font-bold text-[#25423D] hover:underline flex items-center gap-1 uppercase tracking-tight"
+                            >
+                              Search EPC Register <ExternalLink className="h-3 w-3" />
+                            </a>
                           )}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
 
@@ -378,10 +378,10 @@ export function PlanningResult({
                   <div className="space-y-4">
                     <div className="space-y-1">
                       <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-wider">Last Recorded Transaction</span>
-                      <div className="text-3xl font-light text-[#25423D] tracking-tight">{String(propertySummary.lastSoldPrice || 'N/A')}</div>
+                      <div className="text-3xl font-light text-[#25423D] tracking-tight">{String(propertySummary?.lastSoldPrice || 'N/A')}</div>
                       <div className="flex items-center gap-2 text-[11px] text-[#9A9488]">
                         <Calendar className="h-3.5 w-3.5" />
-                        <span>Registered on <span className="text-[#25423D] font-bold">{String(propertySummary.lastSoldDate || 'N/A')}</span></span>
+                        <span>Registered on <span className="text-[#25423D] font-bold">{String(propertySummary?.lastSoldDate || 'N/A')}</span></span>
                       </div>
                     </div>
                     <p className="text-[11px] text-[#A09A8E] leading-relaxed italic pr-4">
@@ -449,30 +449,75 @@ export function PlanningResult({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-1 gap-10">
               {PD_EXPLANATORY_CONTENT.sections.map((section, idx) => (
-                <div key={idx} className="flex gap-5 group">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white shadow-sm border border-[#EEECE6]/40 flex items-center justify-center text-[#25423D] font-bold text-xs mt-1 transition-colors group-hover:bg-[#25423D] group-hover:text-white">
-                    0{idx + 1}
-                  </div>
-                  <div className="space-y-1.5">
-                    <h4 className="font-bold text-[#25423D] text-[17px] tracking-tight">{section.title}</h4>
-                    <p className="text-[14px] text-[#4A4A4A] leading-relaxed opacity-90">
-                      {section.content}
-                    </p>
+                <div key={idx} className="space-y-4 group">
+                  <div className="flex gap-5">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white shadow-sm border border-[#EEECE6]/40 flex items-center justify-center text-[#25423D] font-bold text-xs mt-1 transition-colors group-hover:bg-[#25423D] group-hover:text-white">
+                      0{idx + 1}
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-[#25423D] text-[17px] tracking-tight">{section.title}</h4>
+                      <p className="text-[14px] text-[#4A4A4A] leading-relaxed opacity-90">
+                        {section.content}
+                      </p>
+                      {section.points && (
+                        <ul className="space-y-2 pt-2">
+                          {section.points.map((point, pIdx) => (
+                            <li key={pIdx} className="flex gap-3 text-[13px] text-[#4A4A4A] leading-relaxed">
+                              <span className="text-[#25423D]/40 font-bold">•</span>
+                              <span>{point}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="pt-6 border-t border-[#EEECE6]/40 text-center">
+            {/* Clarification Section */}
+            <div className="space-y-4 pt-8 border-t border-[#EEECE6]/40">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+                <h4 className="font-bold text-[#25423D] text-[17px] tracking-tight">{PD_EXPLANATORY_CONTENT.clarification.title}</h4>
+              </div>
+              <ul className="space-y-3 pl-8">
+                {PD_EXPLANATORY_CONTENT.clarification.points.map((point, idx) => (
+                  <li key={idx} className="text-[14px] text-[#4A4A4A] leading-relaxed list-disc">
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Recommendation Section */}
+            <div className="space-y-4 pt-8 border-t border-[#EEECE6]/40 bg-[#25423D]/5 p-6 rounded-xl">
+              <h4 className="font-bold text-[#25423D] text-[17px] tracking-tight">{PD_EXPLANATORY_CONTENT.recommendation.title}</h4>
+              <p className="text-[14px] text-[#4A4A4A] leading-relaxed font-medium">{PD_EXPLANATORY_CONTENT.recommendation.content}</p>
+              <ul className="space-y-2 pl-4">
+                {PD_EXPLANATORY_CONTENT.recommendation.points.map((point, idx) => (
+                  <li key={idx} className="flex gap-3 text-[14px] text-[#4A4A4A] leading-relaxed">
+                    <CheckCircle className="w-4 h-4 text-[#25423D] mt-1 flex-shrink-0" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="pt-6 border-t border-[#EEECE6]/40 text-center space-y-4">
+              <div className="space-y-1">
+                <p className="text-[14px] font-bold text-[#25423D]">{PD_EXPLANATORY_CONTENT.officialGuidance.title}</p>
+                <p className="text-[13px] text-[#4A4A4A] opacity-80">{PD_EXPLANATORY_CONTENT.officialGuidance.content}</p>
+              </div>
               <a
-                href="https://www.planningportal.co.uk/permission/common-projects"
+                href={PD_EXPLANATORY_CONTENT.officialGuidance.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#25423D] text-white rounded-full hover:bg-[#1A241A] transition-all transform hover:-translate-y-1 shadow-lg shadow-[#25423D]/10 text-xs font-bold uppercase tracking-widest"
               >
-                Official Planning Portal <ExternalLink className="h-4 w-4" />
+                Official Technical Guidance <ExternalLink className="h-4 w-4" />
               </a>
             </div>
           </div>
@@ -508,7 +553,7 @@ export function PlanningResult({
             ) : propertyApps.length > 0 ? (
               <div className="space-y-4">
                 {propertyApps.map((app, index) => (
-                  <div key={`prop-${app.reference}-${index}`} className="group p-5 border border-[#EEECE6]/50 rounded-xl bg-white hover:border-[#25423D]/20 transition-all duration-300">
+                  <div key={`prop-${app.reference}-${index}`} className="group p-5 border border-[#25423D]/20 shadow-sm rounded-xl bg-white hover:border-[#25423D]/40 hover:shadow-md transition-all duration-300">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -525,7 +570,7 @@ export function PlanningResult({
                           </span>
                         </div>
                         <p className="text-[15px] font-bold text-[#25423D] leading-snug group-hover:text-black transition-colors">{app.description}</p>
-                        <div className="flex items-center justify-between pt-2 border-t border-[#EEECE6]/20">
+                        <div className="flex items-center justify-between pt-2 border-t border-[#EEECE6]/40">
                           {app.url && (
                             <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-[#25423D] hover:underline flex items-center gap-1.5 uppercase tracking-widest opacity-60 hover:opacity-100">
                               Full Case File <ExternalLink className="h-3 w-3" />
@@ -542,8 +587,8 @@ export function PlanningResult({
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center text-center py-14 px-8 border border-dashed border-[#EEECE6]/60 bg-[#FAF9F6]/50 rounded-2xl">
-                <History className="w-10 h-10 text-[#EEECE6] mb-4" />
+              <div className="flex flex-col items-center text-center py-14 px-8 border border-dashed border-[#25423D]/20 bg-[#FAF9F6]/50 rounded-2xl">
+                <History className="w-10 h-10 text-[#25423D]/30 mb-4" />
                 <p className="text-[13px] text-[#9A9488] mb-8 italic max-w-sm">No direct historical planning applications have been indexed for this specific site.</p>
                 <div className="space-y-4">
                   <div className="text-[9px] text-[#A09A8E] font-bold uppercase tracking-[.3em]">Institutional Verification</div>
@@ -588,7 +633,7 @@ export function PlanningResult({
             ) : surroundingApps.length > 0 ? (
               <div className="space-y-3">
                 {surroundingApps.map((app, index) => (
-                  <div key={`surr-${app.reference}-${index}`} className="p-4 border border-[#EEECE6]/30 rounded-lg bg-white/60 hover:bg-white transition-colors">
+                  <div key={`surr-${app.reference}-${index}`} className="p-4 border border-[#25423D]/20 shadow-sm rounded-lg bg-white hover:border-[#25423D]/40 hover:shadow-md transition-all duration-300">
                     <div className="flex items-start gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-4 mb-2">
