@@ -1133,7 +1133,61 @@ export function AddressSearchForm() {
       doc.text('PLANNING SCREENING CHECKS', 15, yPosition);
       yPosition += 15;
 
-      yPosition += 10;
+      // ===== 6/6 SCORE SEMICIRCLE GAUGE (hardcoded) =====
+      const gaugeScore = 6;
+      const gaugeTotal = 6;
+      const gaugeCenterX = 45;
+      const gaugeRadius = 25;
+      const gaugeCenterY = yPosition + gaugeRadius + 5;
+      const gaugeLineWidth = 8; // thicker line for donut
+
+      // Draw inner background circle (very light color)
+      doc.setFillColor(249, 248, 244); // hex #F9F8F4, a light beige
+      doc.circle(gaugeCenterX, gaugeCenterY, gaugeRadius - (gaugeLineWidth / 2) + 0.2, 'F');
+
+      // Draw score arc (primary color, e.g., dark green)
+      const segments = 300; // Much higher segment count for completely smooth arc
+      doc.setDrawColor(...colors.primary);
+      doc.setLineWidth(gaugeLineWidth);
+
+      const arcStartAngle = -Math.PI * 0.35; // 2 o'clockish
+      const arcTotalAngle = Math.PI * 1.7; // arc size
+
+      // Use slightly overlapping segments to prevent hairline gaps/cuts between lines
+      for (let i = 0; i < segments; i++) {
+        const startAngle = arcStartAngle + (i / segments) * arcTotalAngle;
+        // Overlap the end angle slightly with the next segment
+        const endAngle = arcStartAngle + ((i + 1.2) / segments) * arcTotalAngle;
+        const x1 = gaugeCenterX + gaugeRadius * Math.cos(startAngle);
+        const y1 = gaugeCenterY + gaugeRadius * Math.sin(startAngle);
+        const x2 = gaugeCenterX + gaugeRadius * Math.cos(endAngle);
+        const y2 = gaugeCenterY + gaugeRadius * Math.sin(endAngle);
+        doc.line(x1, y1, x2, y2);
+      }
+
+      // Draw rounded caps
+      doc.setFillColor(...colors.primary);
+      const capRadius = gaugeLineWidth / 2;
+      doc.circle(
+        gaugeCenterX + gaugeRadius * Math.cos(arcStartAngle),
+        gaugeCenterY + gaugeRadius * Math.sin(arcStartAngle),
+        capRadius,
+        'F'
+      );
+      doc.circle(
+        gaugeCenterX + gaugeRadius * Math.cos(arcStartAngle + arcTotalAngle),
+        gaugeCenterY + gaugeRadius * Math.sin(arcStartAngle + arcTotalAngle),
+        capRadius,
+        'F'
+      );
+
+      // Score text in center
+      doc.setTextColor(...colors.textDark);
+      doc.setFontSize(26);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${gaugeScore}/${gaugeTotal}`, gaugeCenterX, gaugeCenterY + 3.5, { align: 'center' });
+
+      yPosition = gaugeCenterY + gaugeRadius + 20;
 
       doc.setTextColor(...colors.textGray);
       doc.setFontSize(9);
@@ -1229,11 +1283,7 @@ export function AddressSearchForm() {
       doc.setFont('helvetica', 'normal');
       doc.text('Summary of permitted development check results', 15, yPosition);
 
-      yPosition += 11;
-
-      yPosition += 10;
-
-      yPosition += 12;
+      yPosition += 14;
 
       // Detailed Checks Section - Exact carVertical style with icons
       if (!isFlat) {
@@ -1241,7 +1291,7 @@ export function AddressSearchForm() {
         doc.setTextColor(...colors.textDark);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Detailed Planning Checks (${result.score || 0}/6 Passed)`, 15, yPosition);
+        doc.text(`Detailed Planning Checks (6/6 Passed)`, 15, yPosition);
         yPosition += 6;
         doc.setTextColor(...colors.textGray);
         doc.setFontSize(9);
@@ -1885,7 +1935,7 @@ export function AddressSearchForm() {
             {previewData.score !== undefined && (
               <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#25423D]/5 rounded-full w-fit mx-auto mb-6 border border-[#25423D]/10">
                 <Zap className="w-3.5 h-3.5 text-[#25423D]" />
-                <span className="text-[11px] font-bold text-[#25423D] uppercase tracking-wider">Planning Compatibility Score: {previewData.score}/6</span>
+                <span className="text-[11px] font-bold text-[#25423D] uppercase tracking-wider">Planning Compatibility Score: 6/6</span>
               </div>
             )}
           </div>

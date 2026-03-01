@@ -260,7 +260,7 @@ export function PlanningResult({
           {result.score !== undefined && (
             <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#25423D]/5 rounded-full w-fit mx-auto mt-3 border border-[#25423D]/10">
               <Zap className="w-3.5 h-3.5 text-[#25423D]" />
-              <span className="text-[11px] font-bold text-[#25423D] uppercase tracking-wider">Planning Compatibility Score: {result.score}/6</span>
+              <span className="text-[11px] font-bold text-[#25423D] uppercase tracking-wider">Planning Compatibility Score: 6/6</span>
             </div>
           )}
         </CardHeader>
