@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
                 hasPermittedDevelopmentRights: result.hasPermittedDevelopmentRights,
                 // Include total number of checks found (but NOT the details)
                 totalChecks: result.checks?.length || 0,
+                score: result.score
             }
         })
     } catch (error: any) {

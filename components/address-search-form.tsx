@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, MapPin, Check, X, AlertCircle, ChevronRight, Home, Building, FileText, HelpCircle, Download, ChevronDown, ChevronUp } from "lucide-react"
+import { Search, MapPin, Check, X, AlertCircle, ChevronRight, Home, Building, FileText, HelpCircle, Download, ChevronDown, ChevronUp, Zap } from "lucide-react"
 import { type PlanningResult, PlanningResult as PlanningResultComponent, type PlanningCheck } from "@/components/planning-result"
 import { PropertySummary } from "@/components/property-summary"
 import { fetchPropertySummary, type PropertySummary as PropertySummaryType } from "@/lib/property-api"
@@ -1241,7 +1241,7 @@ export function AddressSearchForm() {
         doc.setTextColor(...colors.textDark);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Detailed Planning Checks (6/6 Passed)`, 15, yPosition);
+        doc.text(`Detailed Planning Checks (${result.score || 0}/6 Passed)`, 15, yPosition);
         yPosition += 6;
         doc.setTextColor(...colors.textGray);
         doc.setFontSize(9);
@@ -1881,7 +1881,13 @@ export function AddressSearchForm() {
             <h2 className="text-3xl font-bold text-[#25423D] mb-2" style={{ fontFamily: 'var(--font-playfair), serif' }}>
               Property Report Preview
             </h2>
-            <p className="text-[#4C5A63]">{previewData.address}</p>
+            <p className="text-[#4C5A63] mb-4">{previewData.address}</p>
+            {previewData.score !== undefined && (
+              <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#25423D]/5 rounded-full w-fit mx-auto mb-6 border border-[#25423D]/10">
+                <Zap className="w-3.5 h-3.5 text-[#25423D]" />
+                <span className="text-[11px] font-bold text-[#25423D] uppercase tracking-wider">Planning Compatibility Score: {previewData.score}/6</span>
+              </div>
+            )}
           </div>
 
           {/* Visible Preview Data */}

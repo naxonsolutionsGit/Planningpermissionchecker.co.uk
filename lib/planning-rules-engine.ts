@@ -26,6 +26,7 @@ export interface RuleResult {
 export interface RulesEngineResult {
   hasPermittedDevelopmentRights: boolean
   primaryReasons: string[]
+  score: number
   checks: PlanningCheck[]
   ruleResults: RuleResult[]
 }
@@ -243,6 +244,7 @@ export class PlanningRulesEngine {
     const rulesEngineResult: RulesEngineResult = {
       hasPermittedDevelopmentRights: true,
       primaryReasons: [],
+      score: 0,
       checks: [],
       ruleResults: [],
     }
@@ -259,16 +261,47 @@ export class PlanningRulesEngine {
       }
     }
 
+    // Calculate dynamic 6/6 score based on core categories
+    let passedCategories = 0;
+
+    // 1. Article 4
+    if (!property.constraints.article4Direction) passedCategories++;
+
+    // 2. Heritage (Listed Buildings)
+    if (!property.constraints.listedBuilding) passedCategories++;
+
+    // 3. Property Classification
+    const isMultiUnit = property.propertyType === "flat" || property.propertyType === "maisonette";
+    if (!isMultiUnit) passedCategories++;
+
+    // 4. Conservation Overlays
+    if (!property.constraints.conservationArea) passedCategories++;
+
+    // 5. Landscape Protection (AONB, National Park, World Heritage)
+    const hasLandscapeProtection = property.constraints.aonb || property.constraints.nationalPark || property.constraints.worldHeritage;
+    if (!hasLandscapeProtection) passedCategories++;
+
+    // 6. Site Constraints (Flood Zone, TPO)
+    const hasSiteConstraints = property.constraints.floodZone || property.constraints.tpo;
+    if (!hasSiteConstraints) passedCategories++;
+
+    rulesEngineResult.score = passedCategories;
+
     // Generate planning checks from rule results
     rulesEngineResult.checks = rulesEngineResult.ruleResults
-      .filter((result) => result.applies || result.status === "pass")
-      .map((result, index) => ({
-        type: this.rules[index].name,
-        status: result.status,
-        description: result.message,
-        documentationUrl: this.rules[index].documentationUrl || "",
-        entitiesFound: 0,
-      }))
+      .map((result, index): PlanningCheck | null => {
+        if (result.applies || result.status === "pass") {
+          return {
+            type: this.rules[index].name,
+            status: result.status,
+            description: result.message,
+            documentationUrl: this.rules[index].documentationUrl || "",
+            entitiesFound: 0,
+          }
+        }
+        return null;
+      })
+      .filter((check): check is PlanningCheck => check !== null)
 
     // If no blocking rules but restrictive rules apply, add context
     if (rulesEngineResult.hasPermittedDevelopmentRights) {

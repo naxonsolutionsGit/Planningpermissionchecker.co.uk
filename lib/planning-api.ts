@@ -37,6 +37,24 @@ export async function checkPlanningRights(address: string, lat?: number, lng?: n
     // Use rules engine to evaluate the property
     const evaluation = defaultRulesEngine.evaluate(propertyData)
 
+    // Override documentation URLs for Thurrock Council
+    const isThurrock = propertyData.localAuthority.toLowerCase().includes("thurrock") ||
+      address.toLowerCase().includes("chafford hundred") ||
+      address.toLowerCase().includes("rm16");
+
+    const thurrockDocUrl = "https://www.thurrock.gov.uk/work-that-needs-planning-permission/planning-constraints-map-information";
+
+    const enhancedChecks = evaluation.checks.map(check => {
+      // If it's Thurrock and a restriction check (fail or warning), use Thurrock's link
+      if (isThurrock && (check.status === "fail" || check.status === "warning")) {
+        return {
+          ...check,
+          documentationUrl: thurrockDocUrl
+        };
+      }
+      return check;
+    });
+
     return {
       address: propertyData.address,
       coordinates: propertyData.coordinates ? {
@@ -46,7 +64,8 @@ export async function checkPlanningRights(address: string, lat?: number, lng?: n
       hasPermittedDevelopmentRights: evaluation.hasPermittedDevelopmentRights,
       localAuthority: propertyData.localAuthority,
       summary: defaultRulesEngine.generateSummary(propertyData, evaluation),
-      checks: evaluation.checks,
+      checks: enhancedChecks,
+      score: evaluation.score
     }
   } catch (error) {
     console.error("Planning rights check error:", error)
