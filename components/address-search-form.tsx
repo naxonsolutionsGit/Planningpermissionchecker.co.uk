@@ -2188,24 +2188,6 @@ export function AddressSearchForm() {
               </>
             )}
           </Button>
-          {emailSendStatus === 'sending' && (
-            <div className="flex items-center justify-center gap-2 text-sm text-[#25423D]">
-              <div className="w-3 h-3 border-2 border-[#25423D] border-t-transparent rounded-full animate-spin"></div>
-              Sending report to your email...
-            </div>
-          )}
-          {emailSendStatus === 'sent' && (
-            <div className="flex items-center justify-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-4 py-2">
-              <Check className="w-4 h-4" />
-              Report sent to your email successfully!
-            </div>
-          )}
-          {emailSendStatus === 'error' && (
-            <div className="flex items-center justify-center gap-2 text-sm text-orange-700 bg-orange-50 rounded-lg px-4 py-2">
-              <AlertCircle className="w-4 h-4" />
-              Could not send email. You can still download the report above.
-            </div>
-          )}
           <div className="block mt-4">
             <Button onClick={handleNewSearch} variant="outline" className="px-8 bg-transparent border-[#E6E8E6] text-[#4C5A63] hover:bg-[#F7F8F7]">
               Check Another Property
