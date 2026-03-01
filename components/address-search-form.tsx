@@ -1778,6 +1778,19 @@ export function AddressSearchForm() {
     }
   }
 
+  // Post-Payment Loading Screen
+  if (paymentStatus) {
+    return (
+      <div className="min-h-screen bg-[#25423D] flex flex-col items-center justify-center p-4">
+        <div className="w-16 h-16 border-4 border-[#F0ECE3] border-t-transparent rounded-full animate-spin mb-6"></div>
+        <h2 className="text-2xl font-bold text-[#F0ECE3] text-center" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+          {paymentStatus}
+        </h2>
+        <p className="text-[#B5AE9A] mt-2">Almost there! Getting your professional report ready.</p>
+      </div>
+    )
+  }
+
   // Processing Animation Screen
   if (showProcessing) {
     return (
