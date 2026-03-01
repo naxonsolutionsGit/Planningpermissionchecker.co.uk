@@ -15,12 +15,14 @@ async function testThurrockLinks() {
             console.log(`${i + 1}. ${check.type} [${check.status}]: ${check.documentationUrl}`);
         });
 
-        const isThurrockUrl = result.checks.some(c => c.documentationUrl === "https://www.thurrock.gov.uk/work-that-needs-planning-permission/planning-constraints-map-information");
+        const allThurrockUrls = result.checks.every(c => c.documentationUrl === "https://www.thurrock.gov.uk/work-that-needs-planning-permission/planning-constraints-map-information");
+        const hasChecks = result.checks.length > 0;
 
-        if (isThurrockUrl) {
-            console.log("\n✅ SUCCESS: Thurrock Council documentation links are correctly overridden.");
+        if (allThurrockUrls && hasChecks) {
+            console.log("\n✅ SUCCESS: All Thurrock Council documentation links are correctly overridden.");
         } else {
-            console.log("\n❌ FAILURE: Thurrock Council documentation links were not found.");
+            console.log("\n❌ FAILURE: Some or all Thurrock Council documentation links were not found or not overridden.");
+            if (!hasChecks) console.log("Note: No checks were returned for this address.");
         }
     } catch (err) {
         console.error("Test error:", err);

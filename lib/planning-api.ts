@@ -45,8 +45,8 @@ export async function checkPlanningRights(address: string, lat?: number, lng?: n
     const thurrockDocUrl = "https://www.thurrock.gov.uk/work-that-needs-planning-permission/planning-constraints-map-information";
 
     const enhancedChecks = evaluation.checks.map(check => {
-      // If it's Thurrock and a restriction check (fail or warning), use Thurrock's link
-      if (isThurrock && (check.status === "fail" || check.status === "warning")) {
+      // If it's Thurrock, use Thurrock's link for all statuses (pass, fail, warning)
+      if (isThurrock) {
         return {
           ...check,
           documentationUrl: thurrockDocUrl
