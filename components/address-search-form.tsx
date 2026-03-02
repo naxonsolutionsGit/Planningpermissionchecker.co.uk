@@ -1370,11 +1370,11 @@ export function AddressSearchForm() {
           yPosition += lns.length * 4;
 
           // Add clickable documentation link if available
-          if (check.documentationUrl) {
+          if (check.documentationUrl && check.status !== 'pass') {
             yPosition += 2;
             doc.setTextColor(...colors.primary);
             doc.setFontSize(7);
-            const label = 'View Official Documentation';
+            const label = 'Technical Documentation';
             doc.textWithLink(label, 26, yPosition, { url: check.documentationUrl });
             drawLinkIcon(26 + doc.getTextWidth(label) + 2, yPosition - 0.5);
             yPosition += 6;
