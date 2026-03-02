@@ -5,11 +5,19 @@ export async function POST(request: Request) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.hostinger.com",
     port: Number(process.env.SMTP_PORT) || 465,
-    secure: true, // SSL/TLS on port 465
+    secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER || "no-reply@pdrightscheck.co.uk",
       pass: process.env.SMTP_PASS || "",
     },
+    tls: {
+      // Do not fail on invalid certs – often needed for shared hosting SMTP on cloud functions
+      rejectUnauthorized: false,
+    },
+    // Pool connections to avoid opening too many during high traffic
+    pool: true,
+    // Add a timeout to prevent the function from hanging indefinitely
+    connectionTimeout: 10000, // 10 seconds
   });
 
   try {
