@@ -1,23 +1,14 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { SMTPClient } from "emailjs";
 
 export async function POST(request: Request) {
-  const transporter = nodemailer.createTransport({
+  const client = new SMTPClient({
+    user: process.env.SMTP_USER || "no-reply@pdrightscheck.co.uk",
+    password: process.env.SMTP_PASS || "",
     host: process.env.SMTP_HOST || "smtp.hostinger.com",
     port: Number(process.env.SMTP_PORT) || 465,
-    secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER || "no-reply@pdrightscheck.co.uk",
-      pass: process.env.SMTP_PASS || "",
-    },
-    tls: {
-      // Do not fail on invalid certs – often needed for shared hosting SMTP on cloud functions
-      rejectUnauthorized: false,
-    },
-    // Pool connections to avoid opening too many during high traffic
-    pool: true,
-    // Add a timeout to prevent the function from hanging indefinitely
-    connectionTimeout: 10000, // 10 seconds
+    ssl: Number(process.env.SMTP_PORT) === 465,
+    tls: Number(process.env.SMTP_PORT) !== 465,
   });
 
   try {
@@ -119,24 +110,26 @@ export async function POST(request: Request) {
 </html>`;
 
     // Send the email with the PDF attached
-    await transporter.sendMail({
+    await client.sendAsync({
+      text: "Your PD Rights Check report is attached.",
       from: `"PD Rights Check" <${process.env.SMTP_USER || "no-reply@pdrightscheck.co.uk"}>`,
       to: email,
       subject: `Your PD Rights Check Report – ${address.split(",")[0].trim()}`,
-      html: htmlBody,
-      attachments: [
+      attachment: [
+        { data: htmlBody, alternative: true },
         {
-          filename: fileName,
-          content: Buffer.from(pdfBase64, "base64"),
-          contentType: "application/pdf",
+          data: pdfBase64,
+          name: fileName,
+          type: "application/pdf",
+          base64: true
         },
       ],
     });
 
-    console.log(`Report email sent successfully to ${email} for ${address}`);
+    console.log(`Report email sent successfully via emailjs to ${email} for ${address}`);
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Failed to send report email:", error);
+    console.error("Failed to send report email via emailjs:", error);
     return NextResponse.json(
       { error: error.message || "Failed to send email" },
       { status: 500 }
