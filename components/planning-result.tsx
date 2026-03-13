@@ -267,7 +267,7 @@ export function PlanningResult({
         </CardContent>
       </Card>
 
-      {/* Summary Card - Integrated Feel */}
+      {/* Executive Summary Section - Commented out as requested
       <div className="space-y-2">
         <div className="text-[10px] text-[#9A9488] font-bold uppercase tracking-[0.25em] pl-1">Executive Summary</div>
         <Card className="border-none shadow-sm bg-white/60 backdrop-blur-md overflow-hidden">
@@ -279,6 +279,7 @@ export function PlanningResult({
           </CardContent>
         </Card>
       </div>
+      */}
 
       {propertySummary && (
         <Card className="border-none shadow-sm bg-white overflow-hidden">
