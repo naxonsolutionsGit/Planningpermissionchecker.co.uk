@@ -2290,7 +2290,7 @@ export function AddressSearchForm() {
             )}
           </Button>
           <div className="block mt-4">
-            <Button onClick={handleNewSearch} variant="outline" className="px-8 bg-transparent border-[#E6E8E6] text-[#4C5A63] hover:bg-[#F7F8F7]">
+            <Button onClick={handleNewSearch} variant="outline" className="px-8 bg-transparent border-[#E6E8E6] text-[#4C5A63] hover:bg-[#F7F8F7] hover:text-[#25423D]">
               Check Another Property
             </Button>
           </div>
