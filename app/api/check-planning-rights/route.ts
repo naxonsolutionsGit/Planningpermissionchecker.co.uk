@@ -8,25 +8,56 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId } = await request.json()
+    const { sessionId, address: reqAddress, latitude: reqLat, longitude: reqLng, email: reqEmail } = await request.json()
 
     if (!sessionId) {
       return NextResponse.json({ error: "Missing payment session ID. Payment is required to view results." }, { status: 400 })
     }
 
-    // Retrieve the session from Stripe
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
+    let address: string | undefined;
+    let latitude: number | undefined;
+    let longitude: number | undefined;
+    let includeLandRegistry = false;
+    let customerEmail = "";
 
-    // Verify payment was successful
-    if (session.payment_status !== "paid") {
-      return NextResponse.json({ error: "Payment has not been completed." }, { status: 402 })
+    // Check for 100% discount bypass token
+    if (sessionId.startsWith("FREE_BYPASS_")) {
+      const parts = sessionId.split("_");
+      const timestamp = parseInt(parts[2]);
+      const signature = parts[3];
+
+      // Simple time-based expiration (e.g., 1 hour)
+      if (Date.now() - timestamp > 3600000) {
+        return NextResponse.json({ error: "Free session expired. Please try again." }, { status: 402 });
+      }
+
+      // Verify signature
+      const expectedSignature = Buffer.from(`${timestamp}-${process.env.STRIPE_SECRET_KEY}`).toString('base64').substring(0, 16);
+      if (signature !== expectedSignature) {
+        return NextResponse.json({ error: "Invalid payment session." }, { status: 403 });
+      }
+
+      // Use the provided address from request metadata (since we can't get it from Stripe)
+      address = reqAddress;
+      latitude = reqLat;
+      longitude = reqLng;
+      customerEmail = reqEmail || "promocode-user@planningchecker.co.uk"; 
+    } else {
+      // Retrieve the session from Stripe
+      const session = await stripe.checkout.sessions.retrieve(sessionId)
+
+      // Verify payment was successful
+      if (session.payment_status !== "paid") {
+        return NextResponse.json({ error: "Payment has not been completed." }, { status: 402 })
+      }
+
+      // Extract the securely stored address from metadata
+      address = session.metadata?.address
+      latitude = session.metadata?.latitude ? parseFloat(session.metadata.latitude) : undefined;
+      longitude = session.metadata?.longitude ? parseFloat(session.metadata.longitude) : undefined;
+      includeLandRegistry = session.metadata?.includeLandRegistry === "true";
+      customerEmail = session.customer_email || session.customer_details?.email || "";
     }
-
-    // Extract the securely stored address from metadata
-    const address = session.metadata?.address
-    const latitude = session.metadata?.latitude ? parseFloat(session.metadata.latitude) : undefined;
-    const longitude = session.metadata?.longitude ? parseFloat(session.metadata.longitude) : undefined;
-    const includeLandRegistry = session.metadata?.includeLandRegistry === "true";
 
     if (!address) {
       return NextResponse.json({ error: "No address found in the payment session." }, { status: 400 })
@@ -53,8 +84,8 @@ export async function POST(request: NextRequest) {
       console.warn("Could not fetch property summary attached to payment secure endpoint", e);
     }
 
-    // Extract customer email from the session
-    const customerEmail = session.customer_email || session.customer_details?.email || "";
+    // Extract customer email from the session (already handled above)
+    // const customerEmail = session.customer_email || session.customer_details?.email || "";
 
     return NextResponse.json({ ...result, propertySummary, includeLandRegistry, customerEmail })
   } catch (error: any) {

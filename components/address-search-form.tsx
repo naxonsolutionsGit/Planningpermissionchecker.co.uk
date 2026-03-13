@@ -98,6 +98,10 @@ export function AddressSearchForm() {
   // New states for preview/processing flow
   const [showProcessing, setShowProcessing] = useState(false)
   const [processingStep, setProcessingStep] = useState(0)
+  const [promoCode, setPromoCode] = useState("")
+  const [discount, setDiscount] = useState(0) // percentage
+  const [showPromoInput, setShowPromoInput] = useState(false)
+  const [promoError, setPromoError] = useState<string | null>(null)
   const [previewData, setPreviewData] = useState<any>(null)
   const [showPreview, setShowPreview] = useState(false)
   const [userEmail, setUserEmail] = useState("")
@@ -476,11 +480,34 @@ export function AddressSearchForm() {
         setIsLoading(true);
         setPaymentStatus("Verifying payment and generating report...");
         try {
+          // Retrieve persisted data if available (fixes state loss on redirect)
+          let currentAddress = address;
+          let currentLat = selectedLocation?.lat;
+          let currentLng = selectedLocation?.lng;
+          let currentEmail = userEmail;
+
+          if (!currentAddress || currentLat === undefined || currentLat === null) {
+            const persisted = sessionStorage.getItem("pd_search_context");
+            if (persisted) {
+              const context = JSON.parse(persisted);
+              currentAddress = context.address;
+              currentLat = context.latitude;
+              currentLng = context.longitude;
+              currentEmail = context.email;
+            }
+          }
+
           // Verify payment and fetch data in one step via our secure endpoint
           const response = await fetch("/api/check-planning-rights", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId }),
+            body: JSON.stringify({ 
+              sessionId,
+              address: currentAddress || address, // Fallback for bypass session
+              latitude: currentLat,
+              longitude: currentLng,
+              email: currentEmail || userEmail,
+            }),
           });
 
           const data = await response.json();
@@ -642,8 +669,17 @@ export function AddressSearchForm() {
           longitude,
           includeLandRegistry,
           email: userEmail,
+          promoCode: promoCode,
         }),
       })
+
+      // Persist context for bypass redirect
+      sessionStorage.setItem("pd_search_context", JSON.stringify({
+        address: previewData?.address || address,
+        latitude,
+        longitude,
+        email: userEmail
+      }));
 
       const data = await response.json()
 
@@ -2135,10 +2171,64 @@ export function AddressSearchForm() {
                   </div>
                 </div>
 
+                {/* Promocode Toggle */}
+                <div className="border-t border-[#F0ECE3]/10 pt-3 mt-2">
+                  {!showPromoInput ? (
+                    <button 
+                      onClick={() => setShowPromoInput(true)}
+                      className="text-xs text-[#B5AE9A] hover:text-[#F0ECE3] transition-colors underline underline-offset-2"
+                    >
+                      Have a promocode?
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter code"
+                          value={promoCode}
+                          onChange={(e) => {
+                            setPromoCode(e.target.value.toUpperCase());
+                            setPromoError(null);
+                          }}
+                          className="h-8 bg-white/5 border-[#F0ECE3]/20 text-[#F0ECE3] text-xs"
+                        />
+                        <Button 
+                          size="sm"
+                          className="h-8 px-3 bg-[#F0ECE3] text-[#25423D] hover:bg-[#E4DED2] text-xs"
+                          onClick={() => {
+                            const code = promoCode.toUpperCase();
+                            if (code === "FREE100") setDiscount(100);
+                            else if (code === "SAVE50") setDiscount(50);
+                            else if (code === "GET20") setDiscount(20);
+                            else setPromoError("Invalid code");
+                          }}
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                      {promoError && <p className="text-[10px] text-red-300">{promoError}</p>}
+                      {discount > 0 && !promoError && (
+                        <p className="text-[10px] text-emerald-400 font-medium">
+                          {discount}% discount applied!
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Total */}
                 <div className="border-t border-[#F0ECE3]/10 pt-3 mt-3 flex justify-between items-center">
                   <span className="font-bold text-[#F0ECE3]">Total</span>
-                  <span className="text-xl font-bold text-[#F0ECE3]">£{totalPrice.toFixed(2)}</span>
+                  <div className="text-right">
+                    {discount > 0 && (
+                      <span className="text-xs text-[#B5AE9A] line-through mr-2">
+                        £{totalPrice.toFixed(2)}
+                      </span>
+                    )}
+                    <span className="text-xl font-bold text-[#F0ECE3]">
+                      £{(totalPrice * (1 - discount / 100)).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -2156,7 +2246,7 @@ export function AddressSearchForm() {
                   </div>
                 ) : (
                   <>
-                    Unlock Full Report – £{totalPrice.toFixed(2)}
+                    Unlock Full Report – £{(totalPrice * (1 - discount / 100)).toFixed(2)}
                   </>
                 )}
               </Button>
