@@ -62,7 +62,7 @@ export function PlanningResult({
   const [showSurroundingHistory, setShowSurroundingHistory] = useState(true)
 
   // Use prop if provided, otherwise fallback to internal state
-  const [internalMapType, setInternalMapType] = useState<"satellite" | "roadmap" | "hybrid" | "terrain">("satellite")
+  const [internalMapType, setInternalMapType] = useState<"satellite" | "roadmap" | "hybrid" | "terrain">("hybrid")
   const mapType = propMapType || internalMapType
   const setMapType = onMapTypeChange || setInternalMapType
 

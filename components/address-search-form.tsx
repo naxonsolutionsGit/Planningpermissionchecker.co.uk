@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -93,7 +93,7 @@ export function AddressSearchForm() {
   const [propertySummary, setPropertySummary] = useState<PropertySummaryType | null>(null)
   const [includeLandRegistry, setIncludeLandRegistry] = useState(false)
   const [isDownloadingReport, setIsDownloadingReport] = useState(false)
-  const [mapType, setMapType] = useState('satellite')
+  const [mapType, setMapType] = useState('hybrid')
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   // New states for preview/processing flow
   const [showProcessing, setShowProcessing] = useState(false)
@@ -2026,7 +2026,7 @@ export function AddressSearchForm() {
           {previewData.coordinates && (
             <div className="mb-8 rounded-xl overflow-hidden border border-[#EEECE6]">
               <img
-                src={`https://maps.googleapis.com/maps/api/staticmap?center=${previewData.coordinates.lat},${previewData.coordinates.lng}&zoom=16&size=800x300&maptype=satellite&markers=color:red|${previewData.coordinates.lat},${previewData.coordinates.lng}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
+                src={`https://maps.googleapis.com/maps/api/staticmap?center=${previewData.coordinates.lat},${previewData.coordinates.lng}&zoom=16&size=800x300&maptype=hybrid&markers=color:red|${previewData.coordinates.lat},${previewData.coordinates.lng}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`}
                 alt="Property location"
                 className="w-full h-[200px] object-cover"
               />
