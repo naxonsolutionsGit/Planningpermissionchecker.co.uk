@@ -127,7 +127,7 @@ async function scrapeBathNESCouncil(portalUrl: string, postcode: string): Promis
 
     return {
       article4Direction: isCityCenter,
-      conservationArea: isCityCenter,
+      conservationArea: false, // Disabled unreliable hardcoded mapping
       tpo: false,
       planningApplications: [],
     }
@@ -165,7 +165,7 @@ async function scrapeGenericCouncil(portalUrl: string, postcode: string): Promis
 
     return {
       article4Direction,
-      conservationArea,
+      conservationArea: false, // Disabled unreliable keyword-based detection
       tpo,
       planningApplications: [],
     }
@@ -180,8 +180,11 @@ async function scrapeGenericCouncil(portalUrl: string, postcode: string): Promis
   }
 }
 
-export async function fetchFromHistoricEngland(coordinates: [number, number]): Promise<HistoricEnglandResult> {
+export async function fetchFromHistoricEngland(coordinates?: [number, number]): Promise<{ isListed: boolean }> {
   try {
+    if (!coordinates) {
+      return { isListed: false }
+    }
     const HISTORIC_ENGLAND_API_KEY = process.env.HISTORIC_ENGLAND_API_KEY
 
     if (!HISTORIC_ENGLAND_API_KEY) {
@@ -191,7 +194,7 @@ export async function fetchFromHistoricEngland(coordinates: [number, number]): P
 
     const apiUrl = `https://services.historicengland.org.uk/hbsmr-web/search/listed-buildings`
     const params = new URLSearchParams({
-      geometry: `POINT(${coordinates[0]} ${coordinates[1]})`,
+      geometry: `POINT(${coordinates[1]} ${coordinates[0]})`,
       buffer: "50",
       format: "json",
     })

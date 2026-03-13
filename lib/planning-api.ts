@@ -151,11 +151,15 @@ async function fetchRealPropertyData(address: string, lat?: number, lng?: number
       addressData = {
         address: address,
         postcode: postcode || "Unknown",
-        coordinates: coords || [51.5074, -0.1278],
+        coordinates: coords, 
         localAuthority: localAuthority,
         propertyType: (await import("./utils")).determinePropertyType(address),
       }
       sources.push("Postcode Lookup (postcodes.io)")
+    }
+
+    if (!addressData) {
+       throw new Error("Unable to identify property location")
     }
 
     // 2. Check Historic England API for listed buildings
@@ -181,14 +185,16 @@ async function fetchRealPropertyData(address: string, lat?: number, lng?: number
     // 6. Check planning.data.gov.uk for Article 4 directions (reliable government source)
     let govArticle4 = false
     try {
-      const [coordLat, coordLng] = addressData.coordinates
-      const a4Url = `https://www.planning.data.gov.uk/entity.json?latitude=${coordLat}&longitude=${coordLng}&dataset=article-4-direction&limit=100`
-      const a4Response = await fetch(a4Url)
-      if (a4Response.ok) {
-        const a4Data = await a4Response.json()
-        if (a4Data.entities && a4Data.entities.length > 0) {
-          govArticle4 = true
-          sources.push("Planning Data Gov UK (Article 4)")
+      if (addressData.coordinates) {
+        const [coordLat, coordLng] = addressData.coordinates
+        const a4Url = `https://www.planning.data.gov.uk/entity.json?latitude=${coordLat}&longitude=${coordLng}&dataset=article-4-direction&limit=100`
+        const a4Response = await fetch(a4Url)
+        if (a4Response.ok) {
+          const a4Data = await a4Response.json()
+          if (a4Data.entities && a4Data.entities.length > 0) {
+            govArticle4 = true
+            sources.push("Planning Data Gov UK (Article 4)")
+          }
         }
       }
     } catch (a4Err) {
@@ -217,7 +223,7 @@ async function fetchRealPropertyData(address: string, lat?: number, lng?: number
       coordinates: addressData.coordinates,
       constraints: {
         article4Direction: councilData?.article4Direction || govArticle4,
-        conservationArea: designationData.conservationArea || false,
+        conservationArea: (addressData.coordinates && designationData.conservationArea) ? true : false,
         listedBuilding: listedBuildingData.isListed || false,
         nationalPark: designationData.nationalPark || false,
         aonb: designationData.aonb || false,

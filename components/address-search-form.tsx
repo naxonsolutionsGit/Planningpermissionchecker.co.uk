@@ -104,6 +104,7 @@ export function AddressSearchForm() {
   const [paidIncludeLandRegistry, setPaidIncludeLandRegistry] = useState(false)
   const [customerEmail, setCustomerEmail] = useState("")
   const [emailSendStatus, setEmailSendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lng: number } | null>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
   const emailSentRef = useRef(false)
@@ -353,6 +354,7 @@ export function AddressSearchForm() {
   const handleAddressChange = (value: string) => {
     setAddress(value)
     setError(null)
+    setSelectedLocation(null)
 
     // Clear previous debounce timer
     if (debounceRef.current) {
@@ -390,6 +392,9 @@ export function AddressSearchForm() {
     setAddress(suggestion.formattedAddress)
     setShowSuggestions(false)
     setSuggestions([])
+    if (suggestion.location) {
+      setSelectedLocation(suggestion.location)
+    }
   }
 
   const toggleSection = (section: string) => {
@@ -560,13 +565,16 @@ export function AddressSearchForm() {
 
     try {
       // Extract coordinates from suggestion or mock them
-      let latitude = 51.5074
-      let longitude = -0.1278
+      let latitude = selectedLocation?.lat
+      let longitude = selectedLocation?.lng
 
-      const selectedSuggestion = suggestions.find(s => s.formattedAddress === address)
-      if (selectedSuggestion?.location) {
-        latitude = selectedSuggestion.location.lat
-        longitude = selectedSuggestion.location.lng
+      // Fallback: try to find in current suggestions
+      if (!latitude || !longitude) {
+        const selectedSuggestion = suggestions.find(s => s.formattedAddress === address)
+        if (selectedSuggestion?.location) {
+          latitude = selectedSuggestion.location.lat
+          longitude = selectedSuggestion.location.lng
+        }
       }
 
       // Start the processing animation (8 seconds total, 1 per step)

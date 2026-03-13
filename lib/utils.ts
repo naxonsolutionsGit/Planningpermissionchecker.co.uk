@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export interface AddressData {
   address: string
   postcode: string
-  coordinates: [number, number]
+  coordinates?: [number, number]
   localAuthority: string
   propertyType?: string
 }
@@ -62,7 +62,17 @@ export async function geocodeAddress(address: string): Promise<AddressData | nul
   }
 }
 
-export async function fetchGovernmentDesignations(coordinates: [number, number]): Promise<GovernmentDesignations> {
+export async function fetchGovernmentDesignations(coordinates?: [number, number]): Promise<GovernmentDesignations> {
+  if (!coordinates) {
+    return {
+      conservationArea: false,
+      nationalPark: false,
+      aonb: false,
+      worldHeritage: false,
+      floodZone: false,
+    }
+  }
+
   try {
     const [conservationArea] = await Promise.all([
       checkConservationArea(coordinates),
