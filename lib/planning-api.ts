@@ -65,7 +65,8 @@ export async function checkPlanningRights(address: string, lat?: number, lng?: n
       localAuthority: propertyData.localAuthority,
       summary: defaultRulesEngine.generateSummary(propertyData, evaluation),
       checks: enhancedChecks,
-      score: evaluation.score
+      score: evaluation.score,
+      totalChecks: evaluation.totalChecks
     }
   } catch (error) {
     console.error("Planning rights check error:", error)

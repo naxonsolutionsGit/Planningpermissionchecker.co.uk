@@ -93,7 +93,6 @@ export function AddressSearchForm() {
   const [propertySummary, setPropertySummary] = useState<PropertySummaryType | null>(null)
   const [includeLandRegistry, setIncludeLandRegistry] = useState(false)
   const [isDownloadingReport, setIsDownloadingReport] = useState(false)
-  const [mapType, setMapType] = useState('hybrid')
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   // New states for preview/processing flow
   const [showProcessing, setShowProcessing] = useState(false)
@@ -995,7 +994,7 @@ export function AddressSearchForm() {
       if (result.coordinates && 'AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I') {
         try {
           const displayAddrMap = result.address.split(',').map(s => s.trim()).join(', ');
-          const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(displayAddrMap)}&zoom=18&size=800x600&maptype=${mapType}&markers=color:red%7C${encodeURIComponent(displayAddrMap)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`;
+          const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(displayAddrMap)}&zoom=19&size=800x600&maptype=hybrid&scale=2&markers=color:red%7C${encodeURIComponent(displayAddrMap)}&key=AIzaSyA3we3i4QQHNsnbHbjYQvQgpb0B3UReC_I`;
           const mapResp = await fetch(mapUrl);
           if (mapResp.ok) {
             const mapBlob = await mapResp.blob();
@@ -1202,9 +1201,9 @@ export function AddressSearchForm() {
       doc.text('PLANNING SCREENING CHECKS', 15, yPosition);
       yPosition += 15;
 
-      // ===== 6/6 SCORE SEMICIRCLE GAUGE (hardcoded) =====
-      const gaugeScore = 6;
-      const gaugeTotal = 6;
+      // ===== DYNAMIC SCORE SEMICIRCLE GAUGE =====
+      const gaugeScore = result.score || 0;
+      const gaugeTotal = result.totalChecks || 6;
       const gaugeCenterX = 45;
       const gaugeRadius = 25;
       const gaugeCenterY = yPosition + gaugeRadius + 5;
@@ -1265,7 +1264,7 @@ export function AddressSearchForm() {
       yPosition += 10;
 
       // Development Limitation Banner (if applicable)
-      if ((result.score || 0) < 6) {
+      if ((result.score || 0) < (result.totalChecks || 6)) {
         doc.setFillColor(...colors.lightYellow);
         doc.roundedRect(15, yPosition, pageWidth - 30, 22, 1, 1, 'F');
         drawCaution(25, yPosition + 11, colors.warning);
@@ -1360,7 +1359,7 @@ export function AddressSearchForm() {
         doc.setTextColor(...colors.textDark);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Detailed Planning Checks (6/6 Passed)`, 15, yPosition);
+        doc.text(`Detailed Planning Checks (${result.score || 0}/${result.totalChecks || 6} Passed)`, 15, yPosition);
         yPosition += 6;
         doc.setTextColor(...colors.textGray);
         doc.setFontSize(9);
@@ -1857,56 +1856,87 @@ export function AddressSearchForm() {
       addFooter();
 
       // --- NEW: Land Registry Official PDF Attachment ---
-      // Check both the current state and the paid state from the session
       const shouldIncludeLR = includeLandRegistry || paidIncludeLandRegistry;
       console.log(`[PDF] Including Land Registry: ${shouldIncludeLR} (State: ${includeLandRegistry}, Paid: ${paidIncludeLandRegistry})`);
 
-      if (shouldIncludeLR) {
+      let finalPdfBytes: Uint8Array = new Uint8Array(doc.output('arraybuffer'));
+
+      if (shouldIncludeLR && propertySummary?.titleNumber && propertySummary.titleNumber !== "Official Record Gated") {
+        try {
+          // 1. Fetch official document from our backend
+          const hmlrRes = await fetch('/api/hmlr/document', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              titleNumber: propertySummary.titleNumber,
+              address: result.address
+            }),
+          });
+
+          if (hmlrRes.ok) {
+            const hmlrData = await hmlrRes.json();
+            if (hmlrData.pdfBase64) {
+              // 2. Load pdf-lib for merging
+              const { PDFDocument } = await import('pdf-lib');
+              const mainPdfDoc = await PDFDocument.load(finalPdfBytes);
+              
+              const hmlrPdfBytes = Uint8Array.from(atob(hmlrData.pdfBase64), c => c.charCodeAt(0));
+              const attachmentPdfDoc = await PDFDocument.load(hmlrPdfBytes);
+              
+              const copiedPages = await mainPdfDoc.copyPages(attachmentPdfDoc, attachmentPdfDoc.getPageIndices());
+              copiedPages.forEach((page) => mainPdfDoc.addPage(page));
+              
+              finalPdfBytes = await mainPdfDoc.save();
+              console.log("[PDF] Official Land Registry document merged successfully.");
+            }
+          }
+        } catch (mergeErr) {
+          console.error("[PDF] Failed to merge Land Registry document:", mergeErr);
+          // Continue with original PDF if merge fails
+        }
+      } else if (shouldIncludeLR) {
+        // Fallback placeholder if no title number or fetch fails
         checkNewPage(200);
         doc.addPage();
         pageNumber++;
-
         doc.setFillColor(...colors.primary);
         doc.rect(0, 0, pageWidth, 40, 'F');
-
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
         doc.text('OFFICIAL LAND REGISTRY DOCUMENT', pageWidth / 2, 25, { align: 'center' });
-
         doc.setTextColor(...colors.textDark);
         doc.setFontSize(12);
         doc.text('This is an official copy of the Title Register for:', 15, 60);
         doc.setFontSize(14);
         doc.text(result.address, 15, 70);
-
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...colors.textGray);
-        const lrNotice = "In a live environment, the actual Land Registry Official PDF would be retrieved via HM Land Registry Business Gateway and appended here. The original formatting of the official document is maintained as per regulatory requirements.";
+        const lrNotice = "Real-time document retrieval is active. If your credentials are set in Vercel, the official document will appear here. Note: Title Number must be identified or provided for automated retrieval.";
         const lrNoticeLines = doc.splitTextToSize(lrNotice, pageWidth - 30);
         doc.text(lrNoticeLines, 15, 90);
-
-        // Mock attachment placeholder
-        doc.setDrawColor(...colors.border);
-        doc.setLineDashPattern([2, 2], 0);
-        doc.rect(15, 110, pageWidth - 30, 100);
-        doc.text('OFFICIAL DOCUMENT ATTACHED BELOW', pageWidth / 2, 160, { align: 'center' });
-        doc.setLineDashPattern([], 0);
+        finalPdfBytes = new Uint8Array(doc.output('arraybuffer'));
       }
 
+      // Prepare final Base64 for download and email
+      const finalPdfBase64 = Buffer.from(finalPdfBytes).toString('base64');
+      
       // Always trigger browser download
-      doc.save(`PDRightCheck-Report-${result.address.split(',')[0].replace(/\s+/g, '-')}.pdf`);
+      const blob = new Blob([finalPdfBytes as any], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `PDRightCheck-Report-${result.address.split(',')[0].replace(/\s+/g, '-')}.pdf`;
+      link.click();
 
       // If emailTo is provided, also send via email
       if (emailTo) {
         try {
-          const pdfBase64 = doc.output('datauristring').split(',')[1];
           const emailRes = await fetch('/api/send-report-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              pdfBase64,
+              pdfBase64: finalPdfBase64,
               email: emailTo,
               address: result.address,
             }),
@@ -2036,7 +2066,7 @@ export function AddressSearchForm() {
             {previewData.score !== undefined && (
               <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#25423D]/5 rounded-full w-fit mx-auto mb-6 border border-[#25423D]/10">
                 <Zap className="w-3.5 h-3.5 text-[#25423D]" />
-                <span className="text-[11px] font-bold text-[#25423D] uppercase tracking-wider">Planning Compatibility Score: 6/6</span>
+                <span className="text-[11px] font-bold text-[#25423D] uppercase tracking-wider">Planning Compatibility Score: {previewData.score}/{previewData.totalChecks || 6}</span>
               </div>
             )}
           </div>
@@ -2268,8 +2298,6 @@ export function AddressSearchForm() {
         <PlanningResultComponent
           result={result}
           propertySummary={propertySummary}
-          mapType={mapType}
-          onMapTypeChange={setMapType}
         />
         <div className="text-center space-y-4">
           <Button

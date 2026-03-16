@@ -26,7 +26,7 @@ export interface RuleResult {
 export interface RulesEngineResult {
   hasPermittedDevelopmentRights: boolean
   primaryReasons: string[]
-  score: number
+  totalChecks: number
   checks: PlanningCheck[]
   ruleResults: RuleResult[]
 }
@@ -245,6 +245,7 @@ export class PlanningRulesEngine {
       hasPermittedDevelopmentRights: true,
       primaryReasons: [],
       score: 0,
+      totalChecks: 0,
       checks: [],
       ruleResults: [],
     }
@@ -261,31 +262,9 @@ export class PlanningRulesEngine {
       }
     }
 
-    // Calculate dynamic 6/6 score based on core categories
-    let passedCategories = 0;
-
-    // 1. Article 4
-    if (!property.constraints.article4Direction) passedCategories++;
-
-    // 2. Heritage (Listed Buildings)
-    if (!property.constraints.listedBuilding) passedCategories++;
-
-    // 3. Property Classification
-    const isMultiUnit = property.propertyType === "flat" || property.propertyType === "maisonette";
-    if (!isMultiUnit) passedCategories++;
-
-    // 4. Conservation Overlays
-    if (!property.constraints.conservationArea) passedCategories++;
-
-    // 5. Landscape Protection (AONB, National Park, World Heritage)
-    const hasLandscapeProtection = property.constraints.aonb || property.constraints.nationalPark || property.constraints.worldHeritage;
-    if (!hasLandscapeProtection) passedCategories++;
-
-    // 6. Site Constraints (Flood Zone, TPO)
-    const hasSiteConstraints = property.constraints.floodZone || property.constraints.tpo;
-    if (!hasSiteConstraints) passedCategories++;
-
-    rulesEngineResult.score = passedCategories;
+    // Calculate dynamic score and total checks
+    rulesEngineResult.totalChecks = this.rules.length;
+    rulesEngineResult.score = rulesEngineResult.ruleResults.filter(r => r.status === "pass").length;
 
     // Generate planning checks from rule results
     rulesEngineResult.checks = rulesEngineResult.ruleResults

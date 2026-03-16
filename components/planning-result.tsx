@@ -24,6 +24,7 @@ export interface PlanningResult {
   }
   hasPermittedDevelopmentRights: boolean
   score?: number // Overall score (e.g., 6)
+  totalChecks?: number // Total number of checks
   localAuthority: string
   checks: PlanningCheck[]
   summary: string
@@ -305,20 +306,6 @@ export function PlanningResult({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] text-[#9A9488] font-bold uppercase tracking-[0.1em]">Satellite Mapping</span>
-                      <div className="flex gap-1.5 p-1 bg-[#F8F7F3] rounded-lg border border-[#EEECE6]/50 shadow-inner">
-                        {(["satellite", "roadmap", "hybrid", "terrain"] as const).map((type) => (
-                          <button
-                            key={type}
-                            onClick={() => setMapType(type)}
-                            className={`px-3 py-1 text-[9px] uppercase font-bold rounded-md transition-all duration-300 ${mapType === type
-                              ? "bg-white text-[#25423D] shadow-sm ring-1 ring-[#EEECE6]"
-                              : "text-[#9A9488] hover:text-[#25423D]"
-                              }`}
-                          >
-                            {type}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                     <div className="rounded-xl overflow-hidden border border-[#EEECE6]/60 bg-[#F8F7F3] relative h-[320px] group shadow-inner">
                       <img
