@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -500,7 +500,7 @@ export function AddressSearchForm() {
           const response = await fetch("/api/check-planning-rights", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               sessionId,
               address: currentAddress || address, // Fallback for bypass session
               latitude: currentLat,
@@ -1879,13 +1879,13 @@ export function AddressSearchForm() {
               // 2. Load pdf-lib for merging
               const { PDFDocument } = await import('pdf-lib');
               const mainPdfDoc = await PDFDocument.load(finalPdfBytes);
-              
+
               const hmlrPdfBytes = Uint8Array.from(atob(hmlrData.pdfBase64), c => c.charCodeAt(0));
               const attachmentPdfDoc = await PDFDocument.load(hmlrPdfBytes);
-              
+
               const copiedPages = await mainPdfDoc.copyPages(attachmentPdfDoc, attachmentPdfDoc.getPageIndices());
               copiedPages.forEach((page) => mainPdfDoc.addPage(page));
-              
+
               finalPdfBytes = await mainPdfDoc.save();
               console.log("[PDF] Official Land Registry document merged successfully.");
             }
@@ -1921,7 +1921,7 @@ export function AddressSearchForm() {
 
       // Prepare final Base64 for download and email
       const finalPdfBase64 = Buffer.from(finalPdfBytes).toString('base64');
-      
+
       // Always trigger browser download
       const blob = new Blob([finalPdfBytes as any], { type: 'application/pdf' });
       const link = document.createElement('a');
@@ -2204,7 +2204,7 @@ export function AddressSearchForm() {
                 {/* Promocode Toggle */}
                 <div className="border-t border-[#F0ECE3]/10 pt-3 mt-2">
                   {!showPromoInput ? (
-                    <button 
+                    <button
                       onClick={() => setShowPromoInput(true)}
                       className="text-xs text-[#B5AE9A] hover:text-[#F0ECE3] transition-colors underline underline-offset-2"
                     >
@@ -2222,7 +2222,7 @@ export function AddressSearchForm() {
                           }}
                           className="h-8 bg-white/5 border-[#F0ECE3]/20 text-[#F0ECE3] text-xs"
                         />
-                        <Button 
+                        <Button
                           size="sm"
                           className="h-8 px-3 bg-[#F0ECE3] text-[#25423D] hover:bg-[#E4DED2] text-xs"
                           onClick={() => {
@@ -2401,7 +2401,7 @@ export function AddressSearchForm() {
                 <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#999] w-[18px] h-[18px]" />
                 <Input
                   type="text"
-                  placeholder="Enter address or postcode"
+                  placeholder="Start typing your full property address"
                   value={address}
                   onChange={(e) => handleAddressChange(e.target.value)}
                   className="pl-11 pr-4 py-3.5 h-[52px] border border-[#DDD9D0] rounded-[12px] bg-[#EEECE6] focus-visible:ring-1 focus-visible:ring-[#25423D]/20 focus-visible:border-[#25423D]/30 text-[#4A4A4A] text-[15px] placeholder:text-[#A09A8E] placeholder:text-[13px] sm:placeholder:text-[15px]"
